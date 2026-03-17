@@ -1,0 +1,1 @@
+Console.WriteLine(typeof(Microsoft.EntityFrameworkCore.MySqlDbContextOptionsBuilderExtensions).Namespace);

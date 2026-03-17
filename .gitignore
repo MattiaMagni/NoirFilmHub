@@ -1,0 +1,43 @@
+# .NET
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.user
+*.suo
+*.cache
+*.log
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# NuGet
+*.nupkg
+packages/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+# Test Results
+TestResults/
+
+# Entity Framework
+*.db
+*.mdf
+*.ldf
+
+# Secrets
+.env
+!.env.example
+
+# OS
+Thumbs.db
+.DS_Store

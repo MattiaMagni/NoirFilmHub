@@ -6,12 +6,17 @@ using FilmAPI.Endpoints;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore.InMemory;
 
 // load .env
 Env.Load();
 
-
 var builder = WebApplication.CreateBuilder(args);
+
+var dbUseAutoDetect = (Environment.GetEnvironmentVariable("DB_USE_AUTODETECT") ?? "true")
+    .Equals("true", StringComparison.OrdinalIgnoreCase);
+var dbServerVersion = Environment.GetEnvironmentVariable("DB_SERVER_VERSION") ?? "10.11.0-mariadb";
+var dbProvider = Environment.GetEnvironmentVariable("DB_PROVIDER") ?? "MySql";
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -29,13 +34,28 @@ var name = Environment.GetEnvironmentVariable("DB_NAME") ?? "film-api-db";
 var user = Environment.GetEnvironmentVariable("DB_USER") ?? "root";
 var pass = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "root";
 var connectionString = $"Server={host};Port={port};Database={name};User Id={user};Password={pass};";
-var serverVersion = ServerVersion.AutoDetect(connectionString);
-// Pomelo.EntityFrameworkCore.MySql uses UseMySql extension
-builder.Services.AddDbContext<FilmDbContext>(dbOptions => dbOptions
-    .UseMySql(connectionString, serverVersion)
-    .LogTo(Console.WriteLine, LogLevel.Information)
-    .EnableSensitiveDataLogging()
-    .EnableDetailedErrors());
+
+var serverVersion = dbUseAutoDetect
+    ? ServerVersion.AutoDetect(connectionString)
+    : ServerVersion.Parse(dbServerVersion);
+var testDbName = Environment.GetEnvironmentVariable("TEST_DB_NAME") ?? "FilmApiTests";
+
+if (dbProvider.Equals("InMemory", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddDbContext<FilmDbContext>(dbOptions => dbOptions
+        .UseInMemoryDatabase(testDbName)
+        .EnableSensitiveDataLogging()
+        .EnableDetailedErrors());
+}
+else
+{
+    // Pomelo.EntityFrameworkCore.MySql uses UseMySql extension
+    builder.Services.AddDbContext<FilmDbContext>(dbOptions => dbOptions
+        .UseMySql(connectionString, serverVersion)
+        .LogTo(Console.WriteLine, LogLevel.Information)
+        .EnableSensitiveDataLogging()
+        .EnableDetailedErrors());
+}
 
 var app = builder.Build();
 
@@ -74,3 +94,5 @@ app.MapGroup("/cinemas").MapCinemas();
 app.MapGroup("/proiezioni").MapProiezioni();
 
 app.Run();
+
+public partial class Program;

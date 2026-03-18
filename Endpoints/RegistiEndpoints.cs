@@ -21,6 +21,13 @@ public static class RegistiEndpoints
 
         group.MapPost("/", async (RegistaDTO dto, FilmDbContext db) =>
         {
+            if (string.IsNullOrWhiteSpace(dto.Nome) ||
+                string.IsNullOrWhiteSpace(dto.Cognome) ||
+                string.IsNullOrWhiteSpace(dto.Nazionalita))
+            {
+                return Results.BadRequest(new { error = "Dati regista non validi" });
+            }
+
             var entity = new Regista { Nome = dto.Nome, Cognome = dto.Cognome, Nazionalita = dto.Nazionalita };
             db.Registi.Add(entity);
             await db.SaveChangesAsync();
@@ -31,6 +38,13 @@ public static class RegistiEndpoints
         {
             var r = await db.Registi.FindAsync(id);
             if (r is null) return Results.NotFound();
+            if (string.IsNullOrWhiteSpace(dto.Nome) ||
+                string.IsNullOrWhiteSpace(dto.Cognome) ||
+                string.IsNullOrWhiteSpace(dto.Nazionalita))
+            {
+                return Results.BadRequest(new { error = "Dati regista non validi" });
+            }
+
             r.Nome = dto.Nome;
             r.Cognome = dto.Cognome;
             r.Nazionalita = dto.Nazionalita;

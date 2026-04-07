@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Dashboard Admin</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/dashboard.js" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="container page-shell">
+    <h1 class="page-title">Dashboard amministrativa</h1>
+    <p class="subtle">Accesso consentito ad admin e power user.</p>
+
+    <section class="dashboard-top">
+      <div class="kpi-grid">
+        <article class="kpi-card">
+          <span class="kpi-label">Film</span>
+          <span id="kpi-films" class="kpi-value">-</span>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Registi</span>
+          <span id="kpi-registi" class="kpi-value">-</span>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Cinema</span>
+          <span id="kpi-cinemas" class="kpi-value">-</span>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Proiezioni</span>
+          <span id="kpi-proiezioni" class="kpi-value">-</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel">
+        <h2>Prossime proiezioni</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Film</th>
+                <th>Cinema</th>
+                <th>Data</th>
+                <th>Ora</th>
+                <th>Stato</th>
+              </tr>
+            </thead>
+            <tbody id="next-shows"></tbody>
+          </table>
+        </div>
+      </article>
+      <div>
+        <article class="panel">
+          <h2>Ultimi film inseriti</h2>
+          <ul id="latest-films" class="dashboard-mini-list"></ul>
+        </article>
+        <article class="panel">
+          <h2>Carico per citta</h2>
+          <ul id="city-load" class="dashboard-mini-list"></ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireRole(["admin", "power_user"])) {
+        return;
+      }
+      await window.bootstrapLayout();
+      window.initDashboard();
+    });
+  </script>
+</body>
+</html>

@@ -11,4 +11,5 @@ public class Proiezione
     public Film Film { get; set; } = null!;
     public DateTime Data { get; set; }
     public DateTime Ora { get; set; }
+    public ICollection<Prenotazione> Prenotazioni { get; set; } = new List<Prenotazione>();
 }

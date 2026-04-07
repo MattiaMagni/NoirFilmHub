@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Registi</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/registi.js" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="container page-shell">
+    <h1 class="page-title">Gestione registi</h1>
+
+    <section class="stats-row">
+      <article class="stat"><span>CRUD</span><span class="v">Completo</span></article>
+      <article class="stat"><span>Endpoint</span><span class="v">/registi</span></article>
+      <article class="stat"><span>Vista correlata</span><span class="v">/registi/{id}/films</span></article>
+    </section>
+
+    <section class="panel">
+      <h2>Crea / Modifica regista</h2>
+      <form id="regista-form">
+        <div class="form-grid">
+          <div>
+            <label for="nome">Nome</label>
+            <input id="nome" name="nome" type="text" required>
+          </div>
+          <div>
+            <label for="cognome">Cognome</label>
+            <input id="cognome" name="cognome" type="text" required>
+          </div>
+          <div>
+            <label for="nazionalita">Nazionalita</label>
+            <input id="nazionalita" name="nazionalita" type="text" required>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="regista-submit" class="primary" type="submit">Crea regista</button>
+          <button id="regista-cancel" class="secondary hidden" type="button">Annulla modifica</button>
+        </div>
+      </form>
+      <div id="registi-status" class="status info">In attesa operazioni...</div>
+    </section>
+
+    <section class="panel">
+      <h2>Elenco registi</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Cognome</th>
+              <th>Nazionalita</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="registi-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div id="regista-films" class="subtle">Seleziona "Film" su un regista per visualizzare i film correlati.</div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireRole(["admin", "power_user"])) {
+        return;
+      }
+      await window.bootstrapLayout();
+      window.initRegistiPage();
+    });
+  </script>
+</body>
+</html>

@@ -12,4 +12,6 @@ public class Film
     public int Durata { get; set; }
     public string? CopertinaPath { get; set; }
     public string? FilmatoPath { get; set; }
+    public ICollection<FilmCategoria> FilmCategorie { get; set; } = new List<FilmCategoria>();
+    public ICollection<Proiezione> Proiezioni { get; set; } = new List<Proiezione>();
 }

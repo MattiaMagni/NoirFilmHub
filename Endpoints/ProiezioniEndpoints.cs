@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using FilmAPI.Data;
 using FilmAPI.DTOs;
 using FilmAPI.Model;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Endpoints;
 
@@ -11,47 +11,68 @@ public static class ProiezioniEndpoints
 {
     public static RouteGroupBuilder MapProiezioni(this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (FilmDbContext db) => await db.Proiezioni.AsNoTracking().ToListAsync());
+        group.MapGet("/", async (FilmDbContext db) => await db.Proiezioni.AsNoTracking().ToListAsync()).AllowAnonymous();
 
         group.MapGet("/{id:int}", async (int id, FilmDbContext db) =>
         {
             var p = await db.Proiezioni.FindAsync(id);
             return p is not null ? Results.Ok(p) : Results.NotFound();
-        });
+        }).AllowAnonymous();
 
         group.MapPost("/", async (ProiezioneCreateDTO dto, FilmDbContext db) =>
         {
             var film = await db.Films.FindAsync(dto.FilmId);
-            if (film is null) return Results.BadRequest(new { error = "Film non trovato" });
+            if (film is null)
+            {
+                return Results.BadRequest(new { error = "Film non trovato" });
+            }
+
             var cinema = await db.Cinemas.FindAsync(dto.CinemaId);
-            if (cinema is null) return Results.BadRequest(new { error = "Cinema non trovato" });
+            if (cinema is null)
+            {
+                return Results.BadRequest(new { error = "Cinema non trovato" });
+            }
 
             var p = new Proiezione { FilmId = dto.FilmId, CinemaId = dto.CinemaId, Data = dto.Data, Ora = dto.Ora };
             db.Proiezioni.Add(p);
+
             try
             {
                 await db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
-                // handle unique constraint / duplicate
                 return Results.Conflict(new { error = "Proiezione duplicata o vincolo violato", details = ex.Message });
             }
+
             return Results.Created($"/proiezioni/{p.Id}", p);
-        });
+        }).RequireAuthorization("AdminOrPowerUser");
 
         group.MapPut("/{id:int}", async (int id, ProiezioneCreateDTO dto, FilmDbContext db) =>
         {
             var p = await db.Proiezioni.FindAsync(id);
-            if (p is null) return Results.NotFound();
+            if (p is null)
+            {
+                return Results.NotFound();
+            }
+
             var film = await db.Films.FindAsync(dto.FilmId);
-            if (film is null) return Results.BadRequest(new { error = "Film non trovato" });
+            if (film is null)
+            {
+                return Results.BadRequest(new { error = "Film non trovato" });
+            }
+
             var cinema = await db.Cinemas.FindAsync(dto.CinemaId);
-            if (cinema is null) return Results.BadRequest(new { error = "Cinema non trovato" });
+            if (cinema is null)
+            {
+                return Results.BadRequest(new { error = "Cinema non trovato" });
+            }
+
             p.FilmId = dto.FilmId;
             p.CinemaId = dto.CinemaId;
             p.Data = dto.Data;
             p.Ora = dto.Ora;
+
             try
             {
                 await db.SaveChangesAsync();
@@ -60,17 +81,22 @@ public static class ProiezioniEndpoints
             {
                 return Results.Conflict(new { error = "Proiezione duplicata o vincolo violato", details = ex.Message });
             }
+
             return Results.NoContent();
-        });
+        }).RequireAuthorization("AdminOrPowerUser");
 
         group.MapDelete("/{id:int}", async (int id, FilmDbContext db) =>
         {
             var p = await db.Proiezioni.FindAsync(id);
-            if (p is null) return Results.NotFound();
+            if (p is null)
+            {
+                return Results.NotFound();
+            }
+
             db.Proiezioni.Remove(p);
             await db.SaveChangesAsync();
             return Results.NoContent();
-        });
+        }).RequireAuthorization("AdminOrPowerUser");
 
         return group;
     }

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Film</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/films.js" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="container page-shell">
+    <h1 class="page-title">Gestione film</h1>
+
+    <section class="panel">
+      <h2>Crea / Modifica film</h2>
+      <form id="film-form">
+        <div class="form-grid">
+          <div>
+            <label for="titolo">Titolo</label>
+            <input id="titolo" name="titolo" type="text" required>
+          </div>
+          <div>
+            <label for="dataProduzione">Data produzione</label>
+            <input id="dataProduzione" name="dataProduzione" type="date" required>
+          </div>
+          <div>
+            <label for="registaId">Regista ID</label>
+            <input id="registaId" name="registaId" type="number" min="1" required>
+          </div>
+          <div>
+            <label for="durata">Durata (min)</label>
+            <input id="durata" name="durata" type="number" min="1" required>
+          </div>
+          <div>
+            <label for="copertinaPath">CopertinaPath</label>
+            <input id="copertinaPath" name="copertinaPath" type="text">
+          </div>
+          <div>
+            <label for="filmatoPath">FilmatoPath</label>
+            <input id="filmatoPath" name="filmatoPath" type="text">
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Categorie</label>
+            <div id="film-categorie-options" class="actions"></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="film-submit" class="primary" type="submit">Crea film</button>
+          <button id="film-cancel" class="secondary hidden" type="button">Annulla modifica</button>
+        </div>
+      </form>
+      <div id="films-status" class="status info">In attesa operazioni...</div>
+    </section>
+
+    <section class="panel">
+      <h2>Elenco film</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Poster</th>
+              <th>Titolo</th>
+              <th>Data</th>
+              <th>RegistaId</th>
+              <th>Durata</th>
+              <th>CopertinaPath</th>
+              <th>FilmatoPath</th>
+              <th>Categorie</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="films-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireRole(["admin", "power_user"])) {
+        return;
+      }
+      await window.bootstrapLayout();
+      window.initFilmsPage();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<nav class="site-nav">
+  <div class="container nav-inner">
+    <a class="brand" href="/index.html">
+      <span class="brand-mark">NF</span>
+      <span class="brand-text">Noir Film Hub</span>
+    </a>
+
+    <button id="mobile-nav-toggle" class="mobile-nav-toggle" type="button" aria-label="Apri menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <div id="nav-links" class="nav-links">
+      <a href="/index.html" data-nav="home">Home</a>
+      <a href="/proiezioni-pubblico.html" data-nav="proiezioni-pubblico">Proiezioni</a>
+
+      <a href="/dashboard.html" data-nav="dashboard" data-auth="role" data-roles="admin,power_user">Dashboard</a>
+      <a href="/films.html" data-nav="films" data-auth="role" data-roles="admin,power_user">Film</a>
+      <a href="/registi.html" data-nav="registi" data-auth="role" data-roles="admin,power_user">Registi</a>
+      <a href="/cinemas.html" data-nav="cinemas" data-auth="role" data-roles="admin">Cinema</a>
+      <a href="/proiezioni.html" data-nav="proiezioni" data-auth="role" data-roles="admin,power_user">Proiezioni admin</a>
+      <a href="/categorie.html" data-nav="categorie" data-auth="role" data-roles="admin">Categorie</a>
+      <a href="/utenti.html" data-nav="utenti" data-auth="role" data-roles="admin">Utenti</a>
+
+      <a href="/profile.html" data-nav="profile" data-auth="authenticated">Area personale</a>
+
+      <a href="/login.html" data-nav="login" data-auth="anonymous">Login</a>
+      <a href="/register.html" data-nav="register" data-auth="anonymous">Registrazione</a>
+      <button id="nav-logout" class="btn-small secondary hidden" type="button" data-auth="authenticated">Logout</button>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,21 @@
+Utenti creati per test Iterazione 3
+
+1) Admin
+Email: admin@filmapi.local
+Password: Admin123!
+Ruolo: admin
+Note: utente seed automatico backend
+
+2) Utente autenticato (base)
+Email: utente.demo@test.local
+Password: Password1!
+Ruolo: utente
+Id: 6
+
+3) Power user
+Email: power.demo@test.local
+Password: Password1!
+Ruolo: power_user
+Id: 7
+
+Data creazione: 2026-04-07

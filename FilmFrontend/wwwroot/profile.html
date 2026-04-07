@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Area personale</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/profile.js" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="container page-shell">
+    <h1 class="page-title">Area personale</h1>
+
+    <section class="panel">
+      <h2>Dati contatto</h2>
+      <form id="profile-form">
+        <div class="form-grid">
+          <div>
+            <label for="profile-email">Email</label>
+            <input id="profile-email" type="email" disabled>
+          </div>
+          <div>
+            <label for="profile-nome">Nome</label>
+            <input id="profile-nome" name="nome" type="text" required>
+          </div>
+          <div>
+            <label for="profile-cognome">Cognome</label>
+            <input id="profile-cognome" name="cognome" type="text" required>
+          </div>
+          <div>
+            <label for="profile-telefono">Telefono</label>
+            <input id="profile-telefono" name="telefono" type="text">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Salva profilo</button>
+        </div>
+      </form>
+      <div id="profile-status" class="status info">Caricamento profilo...</div>
+    </section>
+
+    <section class="panel">
+      <h2>Programmazioni salvate</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Film</th>
+              <th>Cinema</th>
+              <th>Data</th>
+              <th>Ora</th>
+              <th>Posti</th>
+              <th>Stato</th>
+              <th>Azione</th>
+            </tr>
+          </thead>
+          <tbody id="prenotazioni-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireAuth()) {
+        return;
+      }
+      await window.bootstrapLayout();
+      await window.initProfilePage();
+    });
+  </script>
+</body>
+</html>

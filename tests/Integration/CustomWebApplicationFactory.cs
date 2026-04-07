@@ -16,6 +16,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("DB_SERVER_VERSION", "10.11.0-mariadb");
         Environment.SetEnvironmentVariable("DB_PROVIDER", "InMemory");
         Environment.SetEnvironmentVariable("TEST_DB_NAME", _dbName);
+        Environment.SetEnvironmentVariable("AUTH_ENABLED", "false");
     }
 
     public async Task InitializeAsync() => await Task.CompletedTask;

@@ -21,144 +21,78 @@ public static class FilmEndpoints
                 .ThenInclude(fc => fc.Categoria)
                 .ToListAsync();
 
-            var response = films.Select(f => new
-            {
-                f.Id,
-                f.Titolo,
-                f.DataProduzione,
-                f.RegistaId,
-                f.Durata,
-                f.CopertinaPath,
-                f.FilmatoPath,
-                CategorieIds = f.FilmCategorie.Select(fc => fc.CategoriaId).ToList(),
-                Categorie = f.FilmCategorie.Select(fc => fc.Categoria.Nome).ToList()
-            });
-
-            return Results.Ok(response);
+            return Results.Ok(films.Select(ToFilmResponse));
         }).AllowAnonymous();
 
         group.MapGet("/{id:int}", async (int id, FilmDbContext db) =>
         {
-            var f = await db.Films
+            var film = await db.Films
                 .AsNoTracking()
                 .Include(x => x.FilmCategorie)
                 .ThenInclude(fc => fc.Categoria)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
-            if (f is null)
+            if (film is null)
             {
                 return Results.NotFound();
             }
 
-            return Results.Ok(new
-            {
-                f.Id,
-                f.Titolo,
-                f.DataProduzione,
-                f.RegistaId,
-                f.Durata,
-                f.CopertinaPath,
-                f.FilmatoPath,
-                CategorieIds = f.FilmCategorie.Select(fc => fc.CategoriaId).ToList(),
-                Categorie = f.FilmCategorie.Select(fc => fc.Categoria.Nome).ToList()
-            });
+            return Results.Ok(ToFilmResponse(film));
         }).AllowAnonymous();
 
         group.MapPost("/", async (FilmDTO dto, FilmDbContext db) =>
         {
-            var reg = await db.Registi.FindAsync(dto.RegistaId);
-            if (reg is null)
+            var validationError = await ValidateFilmInputAsync(dto, db);
+            if (validationError is not null)
             {
-                return Results.BadRequest(new { error = "Regista non trovato" });
+                return validationError;
             }
 
-            if (dto.Durata <= 0)
-            {
-                return Results.BadRequest(new { error = "Durata deve essere > 0" });
-            }
-
-            var categoriaIds = (dto.CategorieIds ?? new List<int>()).Distinct().ToList();
-            if (categoriaIds.Count > 0)
-            {
-                var existingCount = await db.Categorie.CountAsync(c => categoriaIds.Contains(c.Id));
-                if (existingCount != categoriaIds.Count)
-                {
-                    return Results.BadRequest(new { error = "Una o piu categorie non esistono" });
-                }
-            }
-
-            var copertinaPath = string.IsNullOrWhiteSpace(dto.CopertinaPath) ? DefaultCoverImagePath : dto.CopertinaPath;
+            var categoriaIds = DistinctCategoriaIds(dto.CategorieIds);
             var film = new Film
             {
                 Titolo = dto.Titolo,
                 DataProduzione = dto.DataProduzione,
                 RegistaId = dto.RegistaId,
                 Durata = dto.Durata,
-                CopertinaPath = copertinaPath,
+                CopertinaPath = string.IsNullOrWhiteSpace(dto.CopertinaPath) ? DefaultCoverImagePath : dto.CopertinaPath,
                 FilmatoPath = dto.FilmatoPath
             };
 
             db.Films.Add(film);
             await db.SaveChangesAsync();
 
-            if (categoriaIds.Count > 0)
-            {
-                db.FilmCategorie.AddRange(categoriaIds.Select(categoriaId => new FilmCategoria
-                {
-                    FilmId = film.Id,
-                    CategoriaId = categoriaId
-                }));
-                await db.SaveChangesAsync();
-            }
+            AddFilmCategorie(db, film.Id, categoriaIds);
+            await db.SaveChangesAsync();
 
             return Results.Created($"/films/{film.Id}", film);
         }).RequireAuthorization("AdminOrPowerUser");
 
         group.MapPut("/{id:int}", async (int id, FilmDTO dto, FilmDbContext db) =>
         {
-            var f = await db.Films.Include(x => x.FilmCategorie).FirstOrDefaultAsync(x => x.Id == id);
-            if (f is null)
+            var film = await db.Films.Include(x => x.FilmCategorie).FirstOrDefaultAsync(x => x.Id == id);
+            if (film is null)
             {
                 return Results.NotFound();
             }
 
-            var reg = await db.Registi.FindAsync(dto.RegistaId);
-            if (reg is null)
+            var validationError = await ValidateFilmInputAsync(dto, db);
+            if (validationError is not null)
             {
-                return Results.BadRequest(new { error = "Regista non trovato" });
+                return validationError;
             }
 
-            if (dto.Durata <= 0)
-            {
-                return Results.BadRequest(new { error = "Durata deve essere > 0" });
-            }
+            var categoriaIds = DistinctCategoriaIds(dto.CategorieIds);
 
-            var categoriaIds = (dto.CategorieIds ?? new List<int>()).Distinct().ToList();
-            if (categoriaIds.Count > 0)
-            {
-                var existingCount = await db.Categorie.CountAsync(c => categoriaIds.Contains(c.Id));
-                if (existingCount != categoriaIds.Count)
-                {
-                    return Results.BadRequest(new { error = "Una o piu categorie non esistono" });
-                }
-            }
+            film.Titolo = dto.Titolo;
+            film.DataProduzione = dto.DataProduzione;
+            film.RegistaId = dto.RegistaId;
+            film.Durata = dto.Durata;
+            film.CopertinaPath = string.IsNullOrWhiteSpace(dto.CopertinaPath) ? DefaultCoverImagePath : dto.CopertinaPath;
+            film.FilmatoPath = dto.FilmatoPath;
 
-            f.Titolo = dto.Titolo;
-            f.DataProduzione = dto.DataProduzione;
-            f.RegistaId = dto.RegistaId;
-            f.Durata = dto.Durata;
-            f.CopertinaPath = string.IsNullOrWhiteSpace(dto.CopertinaPath) ? DefaultCoverImagePath : dto.CopertinaPath;
-            f.FilmatoPath = dto.FilmatoPath;
-
-            db.FilmCategorie.RemoveRange(f.FilmCategorie);
-            if (categoriaIds.Count > 0)
-            {
-                db.FilmCategorie.AddRange(categoriaIds.Select(categoriaId => new FilmCategoria
-                {
-                    FilmId = f.Id,
-                    CategoriaId = categoriaId
-                }));
-            }
+            db.FilmCategorie.RemoveRange(film.FilmCategorie);
+            AddFilmCategorie(db, film.Id, categoriaIds);
 
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -166,17 +100,80 @@ public static class FilmEndpoints
 
         group.MapDelete("/{id:int}", async (int id, FilmDbContext db) =>
         {
-            var f = await db.Films.FindAsync(id);
-            if (f is null)
+            var film = await db.Films.FindAsync(id);
+            if (film is null)
             {
                 return Results.NotFound();
             }
 
-            db.Films.Remove(f);
+            db.Films.Remove(film);
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).RequireAuthorization("AdminOrPowerUser");
 
         return group;
+    }
+
+    private static List<int> DistinctCategoriaIds(List<int>? categoriaIds)
+    {
+        return (categoriaIds ?? []).Distinct().ToList();
+    }
+
+    private static async Task<IResult?> ValidateFilmInputAsync(FilmDTO dto, FilmDbContext db)
+    {
+        if (dto.Durata <= 0)
+        {
+            return Results.BadRequest(new { error = "Durata deve essere > 0" });
+        }
+
+        var registaExists = await db.Registi.AnyAsync(r => r.Id == dto.RegistaId);
+        if (!registaExists)
+        {
+            return Results.BadRequest(new { error = "Regista non trovato" });
+        }
+
+        var categoriaIds = DistinctCategoriaIds(dto.CategorieIds);
+        if (categoriaIds.Count == 0)
+        {
+            return null;
+        }
+
+        var existingCount = await db.Categorie.CountAsync(c => categoriaIds.Contains(c.Id));
+        if (existingCount != categoriaIds.Count)
+        {
+            return Results.BadRequest(new { error = "Una o piu categorie non esistono" });
+        }
+
+        return null;
+    }
+
+    private static void AddFilmCategorie(FilmDbContext db, int filmId, List<int> categoriaIds)
+    {
+        if (categoriaIds.Count == 0)
+        {
+            return;
+        }
+
+        db.FilmCategorie.AddRange(categoriaIds.Select(categoriaId => new FilmCategoria
+        {
+            FilmId = filmId,
+            CategoriaId = categoriaId
+        }));
+    }
+
+    private static object ToFilmResponse(Film film)
+    {
+        return new
+        {
+            film.Id,
+            film.Titolo,
+            film.DataProduzione,
+            film.RegistaId,
+            film.Durata,
+            film.CopertinaPath,
+            film.FilmatoPath,
+            CategorieIds = film.FilmCategorie.Select(fc => fc.CategoriaId).ToList(),
+            Categorie = film.FilmCategorie.Select(fc => fc.Categoria.Nome).ToList()
+        };
     }
 }

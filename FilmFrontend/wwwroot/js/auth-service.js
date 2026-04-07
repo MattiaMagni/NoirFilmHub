@@ -3,6 +3,17 @@
   const REFRESH_TOKEN_KEY = "filmhub_refresh_token";
   const USER_KEY = "filmhub_user";
 
+  function normalizePath(path) {
+    const value = String(path || "").trim();
+    if (!value) {
+      return "/index.html";
+    }
+    if (/^https?:\/\//i.test(value)) {
+      return "/index.html";
+    }
+    return value.startsWith("/") ? value : `/${value}`;
+  }
+
   function parseJwt(token) {
     try {
       const payload = token.split(".")[1];
@@ -166,14 +177,14 @@
     hasRole,
     clearSession,
     saveRedirect(path) {
-      sessionStorage.setItem("auth_redirect_after_login", path || window.location.pathname);
+      sessionStorage.setItem("auth_redirect_after_login", normalizePath(path || window.location.pathname));
     },
     consumeRedirect() {
       const value = sessionStorage.getItem("auth_redirect_after_login");
       if (value) {
         sessionStorage.removeItem("auth_redirect_after_login");
       }
-      return value;
+      return normalizePath(value);
     }
   };
 })();

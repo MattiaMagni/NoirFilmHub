@@ -10,6 +10,13 @@ namespace FilmAPI.Endpoints;
 
 public static class AuthEndpoints
 {
+    private static readonly HashSet<string> RuoliValidi =
+    [
+        Model.RuoloUtente.Admin,
+        Model.RuoloUtente.PowerUser,
+        Model.RuoloUtente.Utente
+    ];
+
     public static RouteGroupBuilder MapAuth(this RouteGroupBuilder group)
     {
         group.MapPost("/register", async (RegisterRequestDTO dto, AuthService authService) =>
@@ -25,7 +32,7 @@ public static class AuthEndpoints
 
         group.MapPost("/login", async (LoginRequestDTO dto, AuthService authService) =>
         {
-            var (success, error, response) = await authService.LoginAsync(dto);
+            var (success, _, response) = await authService.LoginAsync(dto);
             if (!success || response is null)
             {
                 return Results.Unauthorized();
@@ -36,7 +43,7 @@ public static class AuthEndpoints
 
         group.MapPost("/refresh", async (RefreshTokenRequestDTO dto, AuthService authService) =>
         {
-            var (success, error, response) = await authService.RefreshAsync(dto.RefreshToken);
+            var (success, _, response) = await authService.RefreshAsync(dto.RefreshToken);
             if (!success || response is null)
             {
                 return Results.Unauthorized();
@@ -47,8 +54,7 @@ public static class AuthEndpoints
 
         group.MapPost("/logout", async (ClaimsPrincipal user, AuthService authService) =>
         {
-            var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdValue, out var userId))
+            if (!TryGetUserId(user, out var userId))
             {
                 return Results.Unauthorized();
             }
@@ -59,8 +65,7 @@ public static class AuthEndpoints
 
         group.MapGet("/me", async (ClaimsPrincipal user, FilmDbContext db) =>
         {
-            var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdValue, out var userId))
+            if (!TryGetUserId(user, out var userId))
             {
                 return Results.Unauthorized();
             }
@@ -76,8 +81,7 @@ public static class AuthEndpoints
 
         group.MapPut("/me", async (ClaimsPrincipal user, UtenteUpdateDTO dto, FilmDbContext db) =>
         {
-            var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdValue, out var userId))
+            if (!TryGetUserId(user, out var userId))
             {
                 return Results.Unauthorized();
             }
@@ -114,7 +118,7 @@ public static class AuthEndpoints
         group.MapPut("/utenti/{id:int}/ruolo", async (int id, UpdateRuoloDTO dto, FilmDbContext db) =>
         {
             var ruolo = (dto.Ruolo ?? string.Empty).Trim().ToLowerInvariant();
-            if (ruolo != Model.RuoloUtente.Admin && ruolo != Model.RuoloUtente.PowerUser && ruolo != Model.RuoloUtente.Utente)
+            if (!RuoliValidi.Contains(ruolo))
             {
                 return Results.BadRequest(new { error = "Ruolo non valido" });
             }
@@ -131,5 +135,11 @@ public static class AuthEndpoints
         }).RequireAuthorization("AdminOnly");
 
         return group;
+    }
+
+    private static bool TryGetUserId(ClaimsPrincipal user, out int userId)
+    {
+        var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(userIdValue, out userId);
     }
 }

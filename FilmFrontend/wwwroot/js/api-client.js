@@ -12,6 +12,26 @@
     return await response.text();
   }
 
+  function shouldIncludeBody(method, data) {
+    return method !== "GET" && method !== "DELETE" && data !== undefined;
+  }
+
+  function createOptions(method, data, headers) {
+    const options = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(headers || {})
+      }
+    };
+
+    if (shouldIncludeBody(method, data)) {
+      options.body = JSON.stringify(data ?? {});
+    }
+
+    return options;
+  }
+
   async function rawRequest(path, options) {
     const response = await fetch(baseUrl + path, options);
     const payload = await parseResponse(response);
@@ -84,16 +104,16 @@
   }
 
   window.ApiClientRaw = {
-    get: (path, headers) => request(path, { method: "GET", headers }, false),
-    post: (path, data, headers) => request(path, { method: "POST", body: JSON.stringify(data), headers }, false),
-    put: (path, data, headers) => request(path, { method: "PUT", body: JSON.stringify(data), headers }, false),
-    delete: (path, headers) => request(path, { method: "DELETE", headers }, false)
+    get: (path, headers) => request(path, createOptions("GET", undefined, headers), false),
+    post: (path, data, headers) => request(path, createOptions("POST", data, headers), false),
+    put: (path, data, headers) => request(path, createOptions("PUT", data, headers), false),
+    delete: (path, headers) => request(path, createOptions("DELETE", undefined, headers), false)
   };
 
   window.ApiClient = {
-    get: (path) => request(path, { method: "GET" }),
-    post: (path, data) => request(path, { method: "POST", body: JSON.stringify(data) }),
-    put: (path, data) => request(path, { method: "PUT", body: JSON.stringify(data) }),
-    delete: (path) => request(path, { method: "DELETE" })
+    get: (path) => request(path, createOptions("GET")),
+    post: (path, data) => request(path, createOptions("POST", data)),
+    put: (path, data) => request(path, createOptions("PUT", data)),
+    delete: (path) => request(path, createOptions("DELETE"))
   };
 })();

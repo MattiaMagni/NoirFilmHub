@@ -9,7 +9,6 @@ using FilmAPI.Model;
 using FilmAPI.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore.InMemory;
@@ -23,7 +22,17 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFilmFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5001", "http://127.0.0.1:5001")
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                {
+                    return false;
+                }
+
+                var host = uri.Host.ToLowerInvariant();
+                return host == "localhost" || host == "127.0.0.1";
+            })
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -166,19 +175,23 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.Use(async (context, next) =>
+app.UseStatusCodePages(async statusContext =>
 {
-    await next();
-
-    if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
+    var response = statusContext.HttpContext.Response;
+    if (response.HasStarted)
     {
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new { error = "Non autenticato" });
+        return;
     }
-    else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
+
+    if (response.StatusCode == StatusCodes.Status401Unauthorized)
     {
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new { error = "Permessi insufficienti" });
+        response.ContentType = "application/json";
+        await response.WriteAsJsonAsync(new { error = "Non autenticato" });
+    }
+    else if (response.StatusCode == StatusCodes.Status403Forbidden)
+    {
+        response.ContentType = "application/json";
+        await response.WriteAsJsonAsync(new { error = "Permessi insufficienti" });
     }
 });
 

@@ -1,4 +1,6 @@
 (function () {
+  const guestPages = ["/login.html", "/register.html"];
+
   function redirectToLogin() {
     if (window.AuthService) {
       window.AuthService.saveRedirect(window.location.pathname);
@@ -48,7 +50,7 @@
     const fallback = targetPath || "/profile.html";
     const saved = window.AuthService.consumeRedirect();
     const lowerSaved = (saved || "").toLowerCase();
-    const destination = saved && lowerSaved !== "/login.html" && lowerSaved !== "/register.html"
+    const destination = saved && !guestPages.includes(lowerSaved)
       ? saved
       : fallback;
 

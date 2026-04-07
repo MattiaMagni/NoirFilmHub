@@ -67,10 +67,26 @@ public static class PrenotazioniEndpoints
                 return Results.BadRequest(new { error = "Numero posti deve essere > 0" });
             }
 
-            var proiezione = await db.Proiezioni.FindAsync(dto.ProiezioneId);
+            var proiezione = await db.Proiezioni
+                .AsNoTracking()
+                .Include(p => p.Cinema)
+                .FirstOrDefaultAsync(p => p.Id == dto.ProiezioneId);
             if (proiezione is null)
             {
                 return Results.BadRequest(new { error = "Proiezione non trovata" });
+            }
+
+            var postiGiaPrenotati = await db.Prenotazioni
+                .Where(p => p.ProiezioneId == dto.ProiezioneId && p.Stato != "Annullata")
+                .SumAsync(p => (int?)p.NumeroPosti) ?? 0;
+
+            var postiDisponibili = proiezione.Cinema.Capienza - postiGiaPrenotati;
+            if (dto.NumeroPosti > postiDisponibili)
+            {
+                return Results.BadRequest(new
+                {
+                    error = $"Posti insufficienti: disponibili {Math.Max(0, postiDisponibili)} su {proiezione.Cinema.Capienza}"
+                });
             }
 
             var prenotazione = new Prenotazione

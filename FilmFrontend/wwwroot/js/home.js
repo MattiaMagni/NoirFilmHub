@@ -16,12 +16,16 @@
       : "<span>Copertina non disponibile</span>";
 
     return `
-      <article class="card">
+      <article class="card home-show-card">
         <div class="card-media">${cover}</div>
         <div class="card-body">
-          <h3>${film.titolo || "Senza titolo"}</h3>
-          <p class="subtle">Durata: ${film.durata || "-"} min</p>
-          <p class="subtle">Regista ID: ${film.registaId || "-"}</p>
+          <div class="home-show-head">
+            <h3 class="home-show-title">${film.titolo || "Senza titolo"}</h3>
+          </div>
+          <div class="home-show-meta">
+            <p><span>Durata</span><strong>${film.durata || "-"} min</strong></p>
+            <p><span>ID regista</span><strong>#${film.registaId || "-"}</strong></p>
+          </div>
         </div>
       </article>
     `;

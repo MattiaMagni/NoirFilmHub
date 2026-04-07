@@ -20,7 +20,7 @@
 
   function renderRows(items) {
     if (!items.length) {
-      tableBody.innerHTML = "<tr><td colspan='5' class='subtle'>Nessun cinema trovato.</td></tr>";
+      tableBody.innerHTML = "<tr><td colspan='6' class='subtle'>Nessun cinema trovato.</td></tr>";
       return;
     }
 
@@ -32,6 +32,7 @@
         <td>${c.nome || ""}</td>
         <td>${c.indirizzo || ""}</td>
         <td>${c.citta || ""}</td>
+        <td>${Number(c.capienza) || 0}</td>
         <td>
           <div class="actions">
             <button class="btn-small secondary" data-action="edit" data-id="${c.id}">Modifica</button>
@@ -62,11 +63,17 @@
     const payload = {
       nome: form.nome.value.trim(),
       indirizzo: form.indirizzo.value.trim(),
-      citta: form.citta.value.trim()
+      citta: form.citta.value.trim(),
+      capienza: Number(form.capienza.value)
     };
 
     if (!payload.nome || !payload.indirizzo || !payload.citta) {
       setStatus("Compila tutti i campi obbligatori.", "error");
+      return;
+    }
+
+    if (!Number.isInteger(payload.capienza) || payload.capienza < 20 || payload.capienza > 500) {
+      setStatus("Capienza non valida (20-500).", "error");
       return;
     }
 
@@ -100,6 +107,7 @@
         form.nome.value = cinema.nome || "";
         form.indirizzo.value = cinema.indirizzo || "";
         form.citta.value = cinema.citta || "";
+        form.capienza.value = Number(cinema.capienza) || 120;
         submitBtn.textContent = "Salva modifiche";
         cancelBtn.classList.remove("hidden");
         setStatus(`Modifica cinema #${id}`, "info");

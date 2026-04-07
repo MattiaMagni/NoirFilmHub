@@ -21,7 +21,12 @@ public static class CinemaEndpoints
 
         group.MapPost("/", async (CinemaDTO dto, FilmDbContext db) =>
         {
-            var c = new Cinema { Nome = dto.Nome, Indirizzo = dto.Indirizzo, Citta = dto.Citta };
+            if (dto.Capienza < 20 || dto.Capienza > 500)
+            {
+                return Results.BadRequest(new { error = "Capienza non valida (20-500)" });
+            }
+
+            var c = new Cinema { Nome = dto.Nome, Indirizzo = dto.Indirizzo, Citta = dto.Citta, Capienza = dto.Capienza };
             db.Cinemas.Add(c);
             await db.SaveChangesAsync();
             return Results.Created($"/cinemas/{c.Id}", c);
@@ -35,9 +40,15 @@ public static class CinemaEndpoints
                 return Results.NotFound();
             }
 
+            if (dto.Capienza < 20 || dto.Capienza > 500)
+            {
+                return Results.BadRequest(new { error = "Capienza non valida (20-500)" });
+            }
+
             c.Nome = dto.Nome;
             c.Indirizzo = dto.Indirizzo;
             c.Citta = dto.Citta;
+            c.Capienza = dto.Capienza;
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).RequireAuthorization("AdminOnly");

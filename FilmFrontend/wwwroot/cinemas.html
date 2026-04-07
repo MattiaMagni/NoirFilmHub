@@ -35,6 +35,10 @@
             <label for="citta">Citta</label>
             <input id="citta" name="citta" type="text" required>
           </div>
+          <div>
+            <label for="capienza">Capienza posti</label>
+            <input id="capienza" name="capienza" type="number" min="20" max="500" step="1" value="120" required>
+          </div>
         </div>
         <div class="actions">
           <button id="cinema-submit" class="primary" type="submit">Crea cinema</button>
@@ -54,6 +58,7 @@
               <th>Nome</th>
               <th>Indirizzo</th>
               <th>Citta</th>
+              <th>Capienza</th>
               <th>Azioni</th>
             </tr>
           </thead>

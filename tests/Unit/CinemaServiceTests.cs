@@ -32,8 +32,8 @@ public class CinemaServiceTests : IAsyncLifetime
     [Fact]
     public async Task CreateAsync_WithValidData_CreatesEntity()
     {
-        var dto = new CinemaDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" };
-        var entity = new Cinema { Nome = dto.Nome, Indirizzo = dto.Indirizzo, Citta = dto.Citta };
+        var dto = new CinemaDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 };
+        var entity = new Cinema { Nome = dto.Nome, Indirizzo = dto.Indirizzo, Citta = dto.Citta, Capienza = dto.Capienza };
         
         _context.Cinemas.Add(entity);
         await _context.SaveChangesAsync();
@@ -44,7 +44,7 @@ public class CinemaServiceTests : IAsyncLifetime
     [Fact]
     public async Task GetByIdAsync_Existing_ReturnsEntity()
     {
-        _context.Cinemas.Add(new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" });
+        _context.Cinemas.Add(new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 });
         await _context.SaveChangesAsync();
 
         var result = await _context.Cinemas.FindAsync(1);
@@ -56,7 +56,7 @@ public class CinemaServiceTests : IAsyncLifetime
     [Fact]
     public async Task UpdateAsync_WithValidData_UpdatesEntity()
     {
-        _context.Cinemas.Add(new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" });
+        _context.Cinemas.Add(new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 });
         await _context.SaveChangesAsync();
 
         var entity = await _context.Cinemas.FindAsync(1);
@@ -70,7 +70,7 @@ public class CinemaServiceTests : IAsyncLifetime
     [Fact]
     public async Task DeleteAsync_Existing_RemovesEntity()
     {
-        _context.Cinemas.Add(new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" });
+        _context.Cinemas.Add(new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 });
         await _context.SaveChangesAsync();
 
         var entity = await _context.Cinemas.FindAsync(1);

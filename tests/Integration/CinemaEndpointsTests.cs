@@ -35,7 +35,7 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         await _factory.ResetDatabaseAsync();
         var client = _factory.CreateClient();
 
-        var request = new CinemaDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" };
+        var request = new CinemaDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 };
         var response = await client.PostAsJsonAsync("/cinemas", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -50,7 +50,7 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     {
         await _factory.ResetDatabaseAsync(async db =>
         {
-            db.Cinemas.Add(new Cinema { Id = 1, Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" });
+            db.Cinemas.Add(new Cinema { Id = 1, Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 });
         });
         var client = _factory.CreateClient();
 
@@ -70,7 +70,7 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         });
         var client = _factory.CreateClient();
 
-        var request = new CinemaDTO { Nome = "Cinema Nuovo", Indirizzo = "Via Milano 5", Citta = "Roma" };
+        var request = new CinemaDTO { Nome = "Cinema Nuovo", Indirizzo = "Via Milano 5", Citta = "Roma", Capienza = 190 };
         var response = await client.PutAsJsonAsync("/cinemas/1", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -85,7 +85,7 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     {
         await _factory.ResetDatabaseAsync(async db =>
         {
-            db.Cinemas.Add(new Cinema { Id = 1, Nome = "Cinema Test", Indirizzo = "Via Test 1", Citta = "Test City" });
+            db.Cinemas.Add(new Cinema { Id = 1, Nome = "Cinema Test", Indirizzo = "Via Test 1", Citta = "Test City", Capienza = 150 });
         });
         var client = _factory.CreateClient();
 

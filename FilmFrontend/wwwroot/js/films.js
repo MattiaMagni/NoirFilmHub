@@ -1,6 +1,7 @@
 (function () {
   let editingId = null;
   let categorie = [];
+  let prefillRegistaId = null;
 
   const tableBody = document.getElementById("films-table-body");
   const form = document.getElementById("film-form");
@@ -63,6 +64,9 @@
   function resetForm() {
     editingId = null;
     form.reset();
+    if (prefillRegistaId) {
+      form.registaId.value = String(prefillRegistaId);
+    }
     setSelectedCategorieIds([]);
     submitBtn.textContent = "Crea film";
     cancelBtn.classList.add("hidden");
@@ -211,6 +215,15 @@
     if (!form || !tableBody) {
       return;
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const queryRegistaId = Number(params.get("registaId"));
+    if (Number.isInteger(queryRegistaId) && queryRegistaId > 0) {
+      prefillRegistaId = queryRegistaId;
+      form.registaId.value = String(prefillRegistaId);
+      setStatus(`Creazione film per regista #${prefillRegistaId}.`, "info");
+    }
+
     form.addEventListener("submit", submitForm);
     tableBody.addEventListener("click", handleTableClick);
     cancelBtn.addEventListener("click", resetForm);

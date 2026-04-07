@@ -134,6 +134,29 @@ public static class AuthEndpoints
             return Results.NoContent();
         }).RequireAuthorization("AdminOnly");
 
+        group.MapDelete("/utenti/{id:int}", async (int id, ClaimsPrincipal user, FilmDbContext db) =>
+        {
+            if (!TryGetUserId(user, out var currentUserId))
+            {
+                return Results.Unauthorized();
+            }
+
+            if (id == currentUserId)
+            {
+                return Results.BadRequest(new { error = "Non puoi eliminare il tuo account" });
+            }
+
+            var utente = await db.Utenti.FindAsync(id);
+            if (utente is null)
+            {
+                return Results.NotFound();
+            }
+
+            db.Utenti.Remove(utente);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).RequireAuthorization("AdminOnly");
+
         return group;
     }
 

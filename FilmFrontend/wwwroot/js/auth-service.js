@@ -184,7 +184,7 @@
       if (value) {
         sessionStorage.removeItem("auth_redirect_after_login");
       }
-      return normalizePath(value);
+      return value ? normalizePath(value) : null;
     }
   };
 })();

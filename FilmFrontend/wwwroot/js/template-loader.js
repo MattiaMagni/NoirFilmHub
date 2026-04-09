@@ -5,11 +5,13 @@ async function loadComponent(targetId, componentPath) {
   }
 
   try {
-    const response = await fetch(componentPath);
+    let response = await fetch(componentPath, { cache: "no-store" });
+    if (!response.ok) {
+      response = await fetch(componentPath);
+    }
     if (!response.ok) {
       throw new Error("Errore caricamento componente");
     }
-
     target.innerHTML = await response.text();
   } catch {
     target.innerHTML = "<div class=\"status error\">Impossibile caricare il layout comune.</div>";
@@ -28,7 +30,10 @@ async function bootstrapLayout() {
   }
 
   if (typeof window.setupNavbar === "function") {
-    await window.setupNavbar();
+    try {
+      await window.setupNavbar();
+    } catch {
+    }
   }
 }
 

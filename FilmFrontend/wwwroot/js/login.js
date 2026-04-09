@@ -33,7 +33,7 @@
       return;
     }
 
-    if (await window.AuthGuard.redirectIfAuthenticated("/profile.html")) {
+    if (await window.AuthGuard.redirectIfAuthenticated("/index.html")) {
       return;
     }
 

@@ -75,8 +75,10 @@
     const proiezioneId = Number(button.dataset.id);
     if (!window.AuthService || !window.AuthService.isAuthenticated()) {
       if (window.AuthService) {
-        window.AuthService.saveRedirect("/proiezioni-pubblico.html");
+        const currentPath = `${window.location.pathname || "/proiezioni-pubblico.html"}${window.location.search || ""}${window.location.hash || ""}`;
+        window.AuthService.saveRedirect(currentPath);
       }
+      setStatus("Per prenotare devi effettuare il login.", "info");
       window.location.replace("/login.html");
       return;
     }

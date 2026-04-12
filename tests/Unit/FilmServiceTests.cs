@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using FilmAPI.Data;
-using FilmAPI.DTOs;
 using FilmAPI.Model;
 using FluentAssertions;
 using Xunit;
@@ -67,9 +66,8 @@ public class FilmServiceTests : IAsyncLifetime
     {
         _context.Registi.Add(new Regista { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Britannica" });
         await _context.SaveChangesAsync();
-        
-        var dto = new FilmDTO { Titolo = "Inception", DataProduzione = new DateTime(2010, 7, 16), RegistaId = 1, Durata = 148 };
-        var entity = new Film { Titolo = dto.Titolo, DataProduzione = dto.DataProduzione, RegistaId = dto.RegistaId, Durata = dto.Durata };
+
+        var entity = new Film { Titolo = "Inception", DataProduzione = new DateTime(2010, 7, 16), RegistaId = 1, Durata = 148 };
         
         _context.Films.Add(entity);
         await _context.SaveChangesAsync();
@@ -80,8 +78,7 @@ public class FilmServiceTests : IAsyncLifetime
     [Fact]
     public async Task CreateAsync_WithNonExistingRegista_CreatesEntity()
     {
-        var dto = new FilmDTO { Titolo = "Inception", DataProduzione = new DateTime(2010, 7, 16), RegistaId = 999, Durata = 148 };
-        var entity = new Film { Titolo = dto.Titolo, DataProduzione = dto.DataProduzione, RegistaId = dto.RegistaId, Durata = dto.Durata };
+        var entity = new Film { Titolo = "Inception", DataProduzione = new DateTime(2010, 7, 16), RegistaId = 999, Durata = 148 };
         
         _context.Films.Add(entity);
         

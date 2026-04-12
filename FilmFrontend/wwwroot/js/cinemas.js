@@ -100,34 +100,38 @@
     const id = button.dataset.id;
     const action = button.dataset.action;
 
-    if (action === "edit") {
-      try {
-        const cinema = await window.ApiClient.get(`/cinemas/${id}`);
-        editingId = cinema.id;
-        form.nome.value = cinema.nome || "";
-        form.indirizzo.value = cinema.indirizzo || "";
-        form.citta.value = cinema.citta || "";
-        form.capienza.value = Number(cinema.capienza) || 120;
-        submitBtn.textContent = "Salva modifiche";
-        cancelBtn.classList.remove("hidden");
-        setStatus(`Modifica cinema #${id}`, "info");
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
-    }
-
-    if (action === "delete") {
-      const confirmed = window.confirm(`Confermi eliminazione del cinema ${id}?`);
-      if (!confirmed) {
+    switch (action) {
+      case "edit":
+        try {
+          const cinema = await window.ApiClient.get(`/cinemas/${id}`);
+          editingId = cinema.id;
+          form.nome.value = cinema.nome || "";
+          form.indirizzo.value = cinema.indirizzo || "";
+          form.citta.value = cinema.citta || "";
+          form.capienza.value = Number(cinema.capienza) || 120;
+          submitBtn.textContent = "Salva modifiche";
+          cancelBtn.classList.remove("hidden");
+          setStatus(`Modifica cinema #${id}`, "info");
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
+        return;
+      case "delete": {
+        const confirmed = window.confirm(`Confermi eliminazione del cinema ${id}?`);
+        if (!confirmed) {
+          return;
+        }
+        try {
+          await window.ApiClient.delete(`/cinemas/${id}`);
+          setStatus("Cinema eliminato.", "success");
+          await loadCinemas();
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
         return;
       }
-      try {
-        await window.ApiClient.delete(`/cinemas/${id}`);
-        setStatus("Cinema eliminato.", "success");
-        await loadCinemas();
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
+      default:
+        return;
     }
   }
 

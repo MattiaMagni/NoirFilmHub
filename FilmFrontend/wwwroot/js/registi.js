@@ -101,87 +101,89 @@
     const registaCognome = row && row.children[2] ? row.children[2].textContent.trim() : "";
     const registaLabel = `${registaNome} ${registaCognome}`.trim() || `#${id}`;
 
-    if (action === "edit") {
-      try {
-        const regista = await window.ApiClient.get(`/registi/${id}`);
-        editingId = regista.id;
-        form.nome.value = regista.nome || "";
-        form.cognome.value = regista.cognome || "";
-        form.nazionalita.value = regista.nazionalita || "";
-        submitBtn.textContent = "Salva modifiche";
-        cancelBtn.classList.remove("hidden");
-        setStatus(`Modifica regista #${id}`, "info");
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
-    }
-
-    if (action === "delete") {
-      const confirmed = window.confirm(`Confermi eliminazione del regista ${id}?`);
-      if (!confirmed) {
+    switch (action) {
+      case "edit":
+        try {
+          const regista = await window.ApiClient.get(`/registi/${id}`);
+          editingId = regista.id;
+          form.nome.value = regista.nome || "";
+          form.cognome.value = regista.cognome || "";
+          form.nazionalita.value = regista.nazionalita || "";
+          submitBtn.textContent = "Salva modifiche";
+          cancelBtn.classList.remove("hidden");
+          setStatus(`Modifica regista #${id}`, "info");
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
+        return;
+      case "delete": {
+        const confirmed = window.confirm(`Confermi eliminazione del regista ${id}?`);
+        if (!confirmed) {
+          return;
+        }
+        try {
+          await window.ApiClient.delete(`/registi/${id}`);
+          setStatus("Regista eliminato.", "success");
+          await loadRegisti();
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
         return;
       }
-      try {
-        await window.ApiClient.delete(`/registi/${id}`);
-        setStatus("Regista eliminato.", "success");
-        await loadRegisti();
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
-    }
-
-    if (action === "films") {
-      if (!relatedFilms) {
-        return;
-      }
-
-      relatedFilms.innerHTML = `<p class="subtle">Caricamento film del regista #${id}...</p>`;
-
-      try {
-        const films = await window.ApiClient.get(`/registi/${id}/films`);
-        if (!Array.isArray(films) || films.length === 0) {
-          relatedFilms.innerHTML = `
-            <h3>Film del regista ${registaLabel}</h3>
-            <p class="subtle">Nessun film associato a questo regista.</p>
-            <p><a class="button secondary" href="/films.html?registaId=${id}">Aggiungi film per questo regista</a></p>
-          `;
+      case "films":
+        if (!relatedFilms) {
           return;
         }
 
-        relatedFilms.innerHTML = `
-          <h3>Film del regista ${registaLabel}</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Titolo</th>
-                  <th>Data produzione</th>
-                  <th>Durata</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${films
-                  .map(
-                    (f) => `
+        relatedFilms.innerHTML = `<p class="subtle">Caricamento film del regista #${id}...</p>`;
+
+        try {
+          const films = await window.ApiClient.get(`/registi/${id}/films`);
+          if (!Array.isArray(films) || films.length === 0) {
+            relatedFilms.innerHTML = `
+              <h3>Film del regista ${registaLabel}</h3>
+              <p class="subtle">Nessun film associato a questo regista.</p>
+              <p><a class="button secondary" href="/films.html?registaId=${id}">Aggiungi film per questo regista</a></p>
+            `;
+            return;
+          }
+
+          relatedFilms.innerHTML = `
+            <h3>Film del regista ${registaLabel}</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
                   <tr>
-                    <td>${f.id}</td>
-                    <td>${f.titolo || "-"}</td>
-                    <td>${String(f.dataProduzione || "").slice(0, 10) || "-"}</td>
-                    <td>${f.durata || "-"} min</td>
+                    <th>ID</th>
+                    <th>Titolo</th>
+                    <th>Data produzione</th>
+                    <th>Durata</th>
                   </tr>
-                `
-                  )
-                  .join("")}
-              </tbody>
-            </table>
-          </div>
-          <p><a class="button secondary" href="/films.html?registaId=${id}">Gestisci film di questo regista</a></p>
-        `;
-      } catch (error) {
-        relatedFilms.innerHTML = `<p class="status error">Errore: ${error.message}</p>`;
-      }
-      return;
+                </thead>
+                <tbody>
+                  ${films
+                    .map(
+                      (f) => `
+                    <tr>
+                      <td>${f.id}</td>
+                      <td>${f.titolo || "-"}</td>
+                      <td>${String(f.dataProduzione || "").slice(0, 10) || "-"}</td>
+                      <td>${f.durata || "-"} min</td>
+                    </tr>
+                  `
+                    )
+                    .join("")}
+                </tbody>
+              </table>
+            </div>
+            <p><a class="button secondary" href="/films.html?registaId=${id}">Gestisci film di questo regista</a></p>
+          `;
+        } catch (error) {
+          relatedFilms.innerHTML = `<p class="status error">Errore: ${error.message}</p>`;
+        }
+        return;
+      default:
+        return;
     }
   }
 

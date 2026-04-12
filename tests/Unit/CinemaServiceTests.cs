@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using FilmAPI.Data;
-using FilmAPI.DTOs;
 using FilmAPI.Model;
 using FluentAssertions;
 using Xunit;
@@ -32,8 +31,7 @@ public class CinemaServiceTests : IAsyncLifetime
     [Fact]
     public async Task CreateAsync_WithValidData_CreatesEntity()
     {
-        var dto = new CinemaDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 };
-        var entity = new Cinema { Nome = dto.Nome, Indirizzo = dto.Indirizzo, Citta = dto.Citta, Capienza = dto.Capienza };
+        var entity = new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano", Capienza = 180 };
         
         _context.Cinemas.Add(entity);
         await _context.SaveChangesAsync();

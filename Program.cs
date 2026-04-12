@@ -1,6 +1,7 @@
 using DotNetEnv;
 using System.Security.Claims;
 using System.Text;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using FilmAPI.Data;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore.InMemory;
 
 // load .env
 Env.Load();

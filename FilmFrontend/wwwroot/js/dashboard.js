@@ -39,6 +39,10 @@
       return;
     }
     const sorted = [...films].sort((a, b) => String(b.dataProduzione).localeCompare(String(a.dataProduzione)));
+    if (sorted.length === 0) {
+      latestFilmsEl.innerHTML = "<li class='subtle'>Nessun film disponibile.</li>";
+      return;
+    }
     latestFilmsEl.innerHTML = sorted.slice(0, 6)
       .map((f) => `<li><strong>${f.titolo}</strong><span>${toDateLabel(f.dataProduzione)}</span></li>`)
       .join("");
@@ -91,6 +95,10 @@
     });
 
     const rows = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+    if (rows.length === 0) {
+      cityLoadEl.innerHTML = "<li class='subtle'>Nessun dato disponibile.</li>";
+      return;
+    }
     cityLoadEl.innerHTML = rows
       .map(([city, count]) => `<li><strong>${city}</strong><span class="tag info">${count} slot</span></li>`)
       .join("");
@@ -111,6 +119,11 @@
       }
       return ad.localeCompare(bd);
     });
+
+    if (sorted.length === 0) {
+      nextShowsEl.innerHTML = "<tr><td colspan='5' class='subtle'>Nessuna proiezione programmata.</td></tr>";
+      return;
+    }
 
     nextShowsEl.innerHTML = sorted.slice(0, 8)
       .map((p) => `

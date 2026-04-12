@@ -86,7 +86,10 @@ async function setupNavbar() {
     if (manageMenu) {
       const visibleMenuItems = Array.from(manageMenu.querySelectorAll("[data-auth='role']"))
         .filter((el) => !el.classList.contains("hidden"));
-      const hasAdminOnly = visibleMenuItems.some((el) => (el.getAttribute("data-roles") || "").toLowerCase().includes("admin") && !(el.getAttribute("data-roles") || "").toLowerCase().includes("power_user"));
+      const hasAdminOnly = visibleMenuItems.some((el) => {
+        const roleAttr = (el.getAttribute("data-roles") || "").toLowerCase();
+        return roleAttr.includes("admin") && !roleAttr.includes("power_user");
+      });
       manageMenu.classList.toggle("admin-has-extra", hasAdminOnly);
     }
 
@@ -98,11 +101,9 @@ async function setupNavbar() {
       });
     }
 
-    if (links.length > 0) {
-      const activeInManage = ["/dashboard.html", "/films.html", "/registi.html", "/proiezioni.html", "/cinemas.html", "/categorie.html", "/utenti.html"].includes(pathname);
-      if (manageToggle) {
-        manageToggle.classList.toggle("active", activeInManage);
-      }
+    const activeInManage = ["/dashboard.html", "/films.html", "/registi.html", "/proiezioni.html", "/cinemas.html", "/categorie.html", "/utenti.html"].includes(pathname);
+    if (manageToggle) {
+      manageToggle.classList.toggle("active", activeInManage);
     }
   } catch {
   }

@@ -20,12 +20,14 @@
     const options = {
       method,
       headers: {
-        "Content-Type": "application/json",
         ...(headers || {})
       }
     };
 
     if (shouldIncludeBody(method, data)) {
+      if (!options.headers["Content-Type"]) {
+        options.headers["Content-Type"] = "application/json";
+      }
       options.body = JSON.stringify(data ?? {});
     }
 
@@ -50,9 +52,12 @@
     const opt = options || {};
     const method = opt.method || "GET";
     const headers = {
-      "Content-Type": "application/json",
       ...(opt.headers || {})
     };
+
+    if (opt.body !== undefined && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (window.AuthService) {
       const token = await window.AuthService.ensureValidAccessToken();

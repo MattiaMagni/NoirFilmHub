@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using FilmAPI.Data;
-using FilmAPI.DTOs;
 using FilmAPI.Model;
 using FluentAssertions;
 using Xunit;
@@ -36,9 +35,8 @@ public class ProiezioneServiceTests : IAsyncLifetime
         _context.Films.Add(new Film { Titolo = "Inception", DataProduzione = new DateTime(2010, 7, 16), RegistaId = 1, Durata = 148 });
         _context.Cinemas.Add(new Cinema { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" });
         await _context.SaveChangesAsync();
-        
-        var dto = new ProiezioneCreateDTO { CinemaId = 1, FilmId = 1, Data = new DateTime(2024, 12, 25), Ora = new DateTime(1, 1, 1, 20, 0, 0) };
-        var entity = new Proiezione { CinemaId = dto.CinemaId, FilmId = dto.FilmId, Data = dto.Data, Ora = dto.Ora };
+
+        var entity = new Proiezione { CinemaId = 1, FilmId = 1, Data = new DateTime(2024, 12, 25), Ora = new DateTime(1, 1, 1, 20, 0, 0) };
         
         _context.Proiezioni.Add(entity);
         await _context.SaveChangesAsync();

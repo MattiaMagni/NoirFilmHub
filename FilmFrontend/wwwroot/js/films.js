@@ -177,37 +177,41 @@
     const id = button.dataset.id;
     const action = button.dataset.action;
 
-    if (action === "edit") {
-      try {
-        const film = await window.ApiClient.get(`/films/${id}`);
-        editingId = film.id;
-        form.titolo.value = film.titolo || "";
-        form.dataProduzione.value = (film.dataProduzione || "").slice(0, 10);
-        form.registaId.value = film.registaId || "";
-        form.durata.value = film.durata || "";
-        form.copertinaPath.value = film.copertinaPath || "";
-        form.filmatoPath.value = film.filmatoPath || "";
-        setSelectedCategorieIds(film.categorieIds || []);
-        submitBtn.textContent = "Salva modifiche";
-        cancelBtn.classList.remove("hidden");
-        setStatus(`Modifica film #${id}`, "info");
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
-    }
-
-    if (action === "delete") {
-      const confirmed = window.confirm(`Confermi eliminazione del film ${id}?`);
-      if (!confirmed) {
+    switch (action) {
+      case "edit":
+        try {
+          const film = await window.ApiClient.get(`/films/${id}`);
+          editingId = film.id;
+          form.titolo.value = film.titolo || "";
+          form.dataProduzione.value = (film.dataProduzione || "").slice(0, 10);
+          form.registaId.value = film.registaId || "";
+          form.durata.value = film.durata || "";
+          form.copertinaPath.value = film.copertinaPath || "";
+          form.filmatoPath.value = film.filmatoPath || "";
+          setSelectedCategorieIds(film.categorieIds || []);
+          submitBtn.textContent = "Salva modifiche";
+          cancelBtn.classList.remove("hidden");
+          setStatus(`Modifica film #${id}`, "info");
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
+        return;
+      case "delete": {
+        const confirmed = window.confirm(`Confermi eliminazione del film ${id}?`);
+        if (!confirmed) {
+          return;
+        }
+        try {
+          await window.ApiClient.delete(`/films/${id}`);
+          setStatus("Film eliminato.", "success");
+          await loadFilms();
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
         return;
       }
-      try {
-        await window.ApiClient.delete(`/films/${id}`);
-        setStatus("Film eliminato.", "success");
-        await loadFilms();
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
+      default:
+        return;
     }
   }
 

@@ -157,34 +157,38 @@
     const id = button.dataset.id;
     const action = button.dataset.action;
 
-    if (action === "edit") {
-      try {
-        const p = await window.ApiClient.get(`/proiezioni/${id}`);
-        editingId = p.id;
-        form.cinemaId.value = String(p.cinemaId || "");
-        form.filmId.value = String(p.filmId || "");
-        form.data.value = formatDate(p.data);
-        form.ora.value = formatTimeForInput(p.ora);
-        submitBtn.textContent = "Salva modifiche";
-        cancelBtn.classList.remove("hidden");
-        setStatus(`Modifica proiezione #${id}`, "info");
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
-    }
-
-    if (action === "delete") {
-      const confirmed = window.confirm(`Confermi eliminazione della proiezione ${id}?`);
-      if (!confirmed) {
+    switch (action) {
+      case "edit":
+        try {
+          const p = await window.ApiClient.get(`/proiezioni/${id}`);
+          editingId = p.id;
+          form.cinemaId.value = String(p.cinemaId || "");
+          form.filmId.value = String(p.filmId || "");
+          form.data.value = formatDate(p.data);
+          form.ora.value = formatTimeForInput(p.ora);
+          submitBtn.textContent = "Salva modifiche";
+          cancelBtn.classList.remove("hidden");
+          setStatus(`Modifica proiezione #${id}`, "info");
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
+        return;
+      case "delete": {
+        const confirmed = window.confirm(`Confermi eliminazione della proiezione ${id}?`);
+        if (!confirmed) {
+          return;
+        }
+        try {
+          await window.ApiClient.delete(`/proiezioni/${id}`);
+          setStatus("Proiezione eliminata.", "success");
+          await loadProiezioni();
+        } catch (error) {
+          setStatus(`Errore: ${error.message}`, "error");
+        }
         return;
       }
-      try {
-        await window.ApiClient.delete(`/proiezioni/${id}`);
-        setStatus("Proiezione eliminata.", "success");
-        await loadProiezioni();
-      } catch (error) {
-        setStatus(`Errore: ${error.message}`, "error");
-      }
+      default:
+        return;
     }
   }
 

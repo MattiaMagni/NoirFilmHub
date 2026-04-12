@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using FilmAPI.Data;
-using FilmAPI.DTOs;
 using FilmAPI.Model;
 using FluentAssertions;
 using Xunit;
@@ -64,8 +63,7 @@ public class RegistaServiceTests : IAsyncLifetime
     [Fact]
     public async Task CreateAsync_WithValidData_CreatesEntity()
     {
-        var dto = new RegistaDTO { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Britannica" };
-        var entity = new Regista { Nome = dto.Nome, Cognome = dto.Cognome, Nazionalita = dto.Nazionalita };
+        var entity = new Regista { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Britannica" };
         
         _context.Registi.Add(entity);
         await _context.SaveChangesAsync();
@@ -100,8 +98,6 @@ public class RegistaServiceTests : IAsyncLifetime
     [Fact]
     public async Task UpdateAsync_NonExisting_DoesNotThrow()
     {
-        var entity = new Regista { Id = 999, Nome = "Test", Cognome = "User", Nazionalita = "IT" };
-        
         await _context.SaveChangesAsync();
         
         var result = await _context.Registi.FindAsync(999);
@@ -125,8 +121,6 @@ public class RegistaServiceTests : IAsyncLifetime
     [Fact]
     public async Task DeleteAsync_NonExisting_DoesNotThrow()
     {
-        var entity = new Regista { Id = 999, Nome = "Test", Cognome = "User", Nazionalita = "IT" };
-        
         await _context.SaveChangesAsync();
         
         var result = await _context.Registi.FindAsync(999);

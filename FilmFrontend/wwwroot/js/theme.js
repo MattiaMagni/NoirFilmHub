@@ -84,15 +84,14 @@
 
   function bootstrapTheme() {
     applyTheme(getStoredTheme());
-    initThemeToggle();
-
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => {
-        updateThemeButton(getCurrentTheme());
+        initThemeToggle();
       }, { once: true });
-    } else {
-      updateThemeButton(getCurrentTheme());
+      return;
     }
+
+    initThemeToggle();
   }
 
   window.ThemeService = {

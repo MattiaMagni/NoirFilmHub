@@ -12,10 +12,20 @@ async function setupNavbar() {
 
     const toggle = document.getElementById("mobile-nav-toggle");
     const navLinks = document.getElementById("nav-links");
+    const nav = document.querySelector(".site-nav");
     if (toggle && navLinks) {
       toggle.addEventListener("click", () => {
         navLinks.classList.toggle("show");
       });
+    }
+
+    if (nav && document.body.classList.contains("home-cinematic")) {
+      nav.classList.add("home-transparent");
+      const onScroll = () => {
+        nav.classList.toggle("scrolled", window.scrollY > 36);
+      };
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
     }
 
     const manageToggle = document.getElementById("nav-manage-toggle");

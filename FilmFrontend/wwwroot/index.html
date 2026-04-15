@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Home</title>
-  <link rel="stylesheet" href="/css/styles.css?v=20260409-1">
+  <link rel="stylesheet" href="/css/styles.css?v=20260415-7">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -12,39 +12,51 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/home.js" defer></script>
+  <script src="/js/home.js?v=20260415-7" defer></script>
 </head>
-<body>
+<body class="home-cinematic">
   <div id="navbar-container"></div>
 
-  <main class="container page-shell">
-    <section class="hero">
-      <div class="hero-panel">
-        <p class="eyebrow">Piattaforma cinema</p>
-        <h1>Benvenuto su Noir Film Hub</h1>
-        <p>Gestisci proiezioni e prenotazioni con un'esperienza piu pulita, affidabile e orientata all'operativita.</p>
+  <main class="page-shell home-shell">
+    <section class="hero-cinematic">
+      <div class="container hero-cinematic-inner">
+        <p class="eyebrow">Noir Film Hub</p>
+        <h1>La tua serata cinema inizia qui</h1>
+        <p>Scopri titoli in evidenza, consulta le prossime proiezioni e gestisci il tuo profilo in un'esperienza visiva ispirata alle piattaforme streaming moderne.</p>
         <div class="cta-row">
-          <a class="button primary" href="/proiezioni-pubblico.html">Vai alle proiezioni</a>
-          <a class="button secondary" href="/login.html">Area riservata</a>
+          <a class="button primary" href="/proiezioni-pubblico.html">Guarda le proiezioni</a>
+          <a class="button ghost" href="/login.html">Area riservata</a>
+        </div>
+        <div class="hero-kpis" aria-label="Indicatori home">
+          <article class="hero-kpi">
+            <span>In evidenza</span>
+            <strong id="home-kpi-visible">0</strong>
+          </article>
+          <article class="hero-kpi">
+            <span>Catalogo totale</span>
+            <strong id="home-kpi-total">0</strong>
+          </article>
         </div>
       </div>
     </section>
 
-    <section class="section">
-      <h2 class="home-section-title">Film in programmazione</h2>
+    <section class="container section section-home-films">
+      <div class="home-section-head">
+        <h2 class="home-section-title">Film in programmazione</h2>
+      </div>
       <div id="home-status" class="status info">Caricamento film in corso...</div>
-      <div id="home-films-list" class="grid-cards"></div>
+      <div id="home-films-list" class="movie-carousel" aria-live="polite"></div>
     </section>
 
-    <section class="section">
-      <div>
+    <section class="container section section-quick-access">
+      <div class="quick-access-panel">
         <h2>Accesso rapido</h2>
         <div class="grid-cards">
           <article class="card">
             <div class="card-body">
               <span class="tag accent">Catalogo</span>
               <h3>Scopri le proiezioni</h3>
-              <p class="subtle">Consulta la programmazione attiva con una panoramica immediata per sala e fascia oraria.</p>
+              <p class="subtle">Programmazione aggiornata in tempo reale.</p>
               <p><a class="button secondary" href="/proiezioni-pubblico.html">Apri proiezioni</a></p>
             </div>
           </article>
@@ -53,7 +65,7 @@
             <div class="card-body">
               <span class="tag info">Anagrafica</span>
               <h3>Crea il tuo account</h3>
-              <p class="subtle">Crea un profilo cliente per centralizzare prenotazioni, dati di contatto e storico attivita.</p>
+              <p class="subtle">Salva preferenze e gestisci i tuoi dati.</p>
               <p><a class="button secondary" href="/register.html">Registrati</a></p>
             </div>
           </article>
@@ -62,7 +74,7 @@
             <div class="card-body">
               <span class="tag secondary">Programmazione</span>
               <h3>Area personale</h3>
-              <p class="subtle">Monitora account e preferenze dalla tua area personale dopo il login.</p>
+              <p class="subtle">Prenotazioni e storico in un unico pannello.</p>
               <p><a class="button secondary" href="/profile.html">Apri profilo</a></p>
             </div>
           </article>
@@ -70,6 +82,29 @@
       </div>
     </section>
   </main>
+
+  <div id="film-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="film-modal-title">
+    <div class="modal-panel">
+      <button id="film-modal-close" class="btn-small secondary modal-close" type="button" aria-label="Chiudi dettagli film">Chiudi</button>
+      <div class="modal-grid">
+        <div class="modal-poster-wrap">
+          <img id="film-modal-poster" class="modal-poster" alt="Poster film" />
+          <div id="film-modal-poster-fallback" class="modal-poster-fallback hidden">Poster non disponibile</div>
+        </div>
+        <div>
+          <h3 id="film-modal-title">Dettaglio film</h3>
+          <div class="modal-meta">
+            <p><span>Regista</span><strong id="film-modal-regista">-</strong></p>
+            <p><span>Durata</span><strong id="film-modal-durata">-</strong></p>
+            <p><span>Produzione</span><strong id="film-modal-data">-</strong></p>
+          </div>
+          <p id="film-modal-trailer-wrap" class="hidden">
+            <a id="film-modal-trailer" class="button secondary" href="#" target="_blank" rel="noopener noreferrer">Guarda trailer</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div id="footer-container"></div>
 

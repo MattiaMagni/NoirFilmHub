@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Noir Concierge - Screenings &amp; Cinemas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#091328",
+            "surface-container-lowest": "#000000",
+            "on-tertiary-fixed-variant": "#003e56",
+            "on-primary-fixed-variant": "#5f0017",
+            "primary-container": "#ff7481",
+            "on-background": "#dee5ff",
+            "secondary": "#f8a010",
+            "secondary-fixed-dim": "#ffb554",
+            "tertiary-dim": "#05a9e3",
+            "on-surface": "#dee5ff",
+            "secondary-dim": "#e79400",
+            "on-tertiary-container": "#003044",
+            "tertiary": "#47c4ff",
+            "error": "#ff716c",
+            "surface-container-high": "#141f38",
+            "on-tertiary": "#003b52",
+            "tertiary-fixed": "#37bcf7",
+            "secondary-fixed": "#ffc885",
+            "tertiary-fixed-dim": "#1bafe9",
+            "primary-dim": "#e21e49",
+            "on-tertiary-fixed": "#001a27",
+            "outline-variant": "#40485d",
+            "on-primary-container": "#4e0011",
+            "surface-variant": "#192540",
+            "primary-fixed-dim": "#ff586c",
+            "surface-bright": "#1f2b49",
+            "surface-tint": "#ff8c94",
+            "primary": "#ff8c94",
+            "error-dim": "#d7383b",
+            "on-surface-variant": "#a3aac4",
+            "surface-container-highest": "#192540",
+            "on-secondary-container": "#fff6f0",
+            "primary-fixed": "#ff7481",
+            "on-error-container": "#ffa8a3",
+            "inverse-surface": "#faf8ff",
+            "on-primary": "#640018",
+            "background": "#060e20",
+            "tertiary-container": "#2db7f2",
+            "outline": "#6d758c",
+            "surface": "#060e20",
+            "secondary-container": "#855300",
+            "on-secondary": "#4a2c00",
+            "on-secondary-fixed": "#4c2e00",
+            "surface-container": "#0f1930",
+            "inverse-primary": "#bf0037",
+            "error-container": "#9f0519",
+            "on-primary-fixed": "#000000",
+            "inverse-on-surface": "#4d556b",
+            "on-error": "#490006",
+            "surface-dim": "#060e20",
+            "on-secondary-fixed-variant": "#724700"
+          },
+          fontFamily: {
+            "headline": ["Manrope"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- SideNavBar Implementation -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-[#091328] flex flex-col py-8 px-4 z-50">
+<div class="mb-10 px-4">
+<h1 class="text-xl font-bold tracking-tighter text-[#dee5ff]">The Noir Manager</h1>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">Premium Cinema Group</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#a3aac4] hover:text-[#dee5ff] hover:bg-[#141f38] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#a3aac4] hover:text-[#dee5ff] hover:bg-[#141f38] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="movie">movie</span>
+<span class="font-label text-sm">Movies</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#a3aac4] hover:text-[#dee5ff] hover:bg-[#141f38] transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="person_4">person_4</span>
+<span class="font-label text-sm">Directors</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ff8c94] font-bold border-r-2 border-[#ff8c94] bg-gradient-to-r from-[#ff8c94]/10 to-transparent scale-[0.99] transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="theater_comedy">theater_comedy</span>
+<span class="font-label text-sm">Cinemas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ff8c94] font-bold border-r-2 border-[#ff8c94] bg-gradient-to-r from-[#ff8c94]/10 to-transparent scale-[0.99] transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label text-sm">Screenings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-2 pt-6 border-t border-outline-variant/10">
+<button class="w-full bg-primary text-on-primary font-bold py-3 rounded-md mb-6 hover:opacity-90 transition-opacity">
+        New Production
+      </button>
+<a class="flex items-center gap-3 px-4 py-2 text-[#a3aac4] hover:text-[#dee5ff] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label text-xs uppercase tracking-widest">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-[#a3aac4] hover:text-[#dee5ff] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label text-xs uppercase tracking-widest">Support</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Implementation -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-20 bg-[#060e20]/80 backdrop-blur-xl flex justify-between items-center px-10 z-40 shadow-2xl shadow-black/40">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-[#dee5ff] tracking-tight">Noir Concierge</span>
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container-lowest border-none rounded-full py-2 pl-10 pr-4 text-sm w-64 focus:ring-1 focus:ring-[#ff8c94]/30 outline-none text-on-surface" placeholder="Search film or venue..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-[#a3aac4] hover:text-[#ff8c94] cursor-pointer transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-[#a3aac4] hover:text-[#ff8c94] cursor-pointer transition-colors" data-icon="dark_mode">dark_mode</span>
+</div>
+<button class="bg-surface-container-highest border border-primary/30 px-4 py-2 rounded text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/10 transition-all">
+        Admin Console
+      </button>
+<div class="w-10 h-10 rounded-full bg-surface-bright flex items-center justify-center border border-outline-variant/20 overflow-hidden">
+<img alt="Cinema Manager Profile" class="w-full h-full object-cover" data-alt="Close up portrait of a professional cinema manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTE2Olu-wzV6vN23azUiCw4asR8-XvFtHNN5-00WLC7wbnGWGE4fgvGl2tpU-T_yXRoPWVEjzF24ffh431GO6b6jJ9T538xsz75jjtWDuZvt32t44n-OjJK8eI6585QXuysKgjLr6_v4rNrk-BR09FfaOo1OrwRVn2kG1_PtVUulhaoJS1pdV-x_6u4EEoYTlnl35qbvFu-xE4rYV0izqXi8kABwigonsRrA4nFhc3O5kNKqH1A_uwtpUqkdAKchjedqZGPZOHb8Y"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-20 p-10">
+<!-- Hero Header -->
+<section class="mb-12">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-5xl font-extrabold text-on-surface tracking-tight mb-2">Theater Operations</h2>
+<p class="text-secondary font-label uppercase tracking-[0.2em] text-sm">Managing the Cinematic Experience</p>
+</div>
+<div class="flex gap-4">
+<button class="flex items-center gap-2 bg-surface-container-high px-6 py-3 rounded-lg border border-outline-variant/10 hover:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-primary" data-icon="add_circle">add_circle</span>
+<span class="font-bold text-sm">Add Cinema</span>
+</button>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-lg font-bold hover:shadow-[0_0_20px_rgba(255,140,148,0.3)] transition-all">
+<span class="material-symbols-outlined" data-icon="calendar_add_on">calendar_add_on</span>
+<span class="text-sm">Schedule Screening</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Tabbed Navigation Content -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Navigation Tabs & Quick Stats -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<div class="bg-surface-container-low p-2 rounded-xl border border-outline-variant/5">
+<button class="w-full flex justify-between items-center p-4 rounded-lg bg-surface-container-high text-on-surface shadow-xl">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="theater_comedy">theater_comedy</span>
+<span class="font-bold">Cinemas</span>
+</div>
+<span class="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded">08</span>
+</button>
+<button class="w-full flex justify-between items-center p-4 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors mt-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-bold">Screenings</span>
+</div>
+<span class="text-xs bg-surface-variant text-on-surface-variant px-2 py-1 rounded">124</span>
+</button>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/5">
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant mb-4">Venue Capacity</p>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span class="text-on-surface">The Grand Hall</span>
+<span class="text-secondary">88%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[88%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span class="text-on-surface">Noir Boutique</span>
+<span class="text-secondary">62%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[62%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Data Tables / Management -->
+<div class="col-span-12 lg:col-span-9">
+<!-- Active View: Cinemas (Bento Style Grid) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Cinema Card 1 -->
+<div class="bg-surface-container-high rounded-2xl overflow-hidden group hover:bg-surface-bright transition-all duration-500 border border-outline-variant/10">
+<div class="h-40 relative">
+<img alt="Cinema Interior" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" data-alt="Classic red velvet cinema seating in a darkened theater" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4Eiy18hJ2Z7aUNM1_y5Coluw1cTjODfmAcr_T30kTD7IYBf-qu7ivbtP2WotF7H6_sQ2gvWXAOIlhZiTHACm6INIgBI_7hH5bd6M4J1fBAbeSswp9JeumMpHQOvpQlzO_7jDJBKLpGDWayGFoOdS_m-0ftDpHVoaOj-GobsFcSayLfDzkdlPhMaM0KlryTOYd8wOHJ2zhb671E98NnAvBicE2ATJT8UDrrGSljhzcuQqEe9X2qeFiRf8GRT7P8Be3Cl01hce_tdc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-transparent"></div>
+<div class="absolute top-4 left-4 bg-secondary text-on-secondary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Premium VIP</div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-2xl font-bold text-on-surface">The Grand Hall</h3>
+<p class="text-on-surface-variant text-sm">ID: CIN-001 • Downtown District</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer" data-icon="edit">edit</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-on-surface-variant mb-6">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+<span>124 Cinema Blvd, Los Angeles, CA</span>
+</div>
+<div class="flex justify-between border-t border-outline-variant/10 pt-4">
+<div class="text-center">
+<p class="text-[10px] uppercase text-on-surface-variant">Screens</p>
+<p class="text-lg font-bold text-on-surface">12</p>
+</div>
+<div class="text-center border-x border-outline-variant/10 px-6">
+<p class="text-[10px] uppercase text-on-surface-variant">Capacity</p>
+<p class="text-lg font-bold text-on-surface">1,200</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] uppercase text-on-surface-variant">Daily Gross</p>
+<p class="text-lg font-bold text-tertiary">$12.4k</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Cinema Card 2 -->
+<div class="bg-surface-container-high rounded-2xl overflow-hidden group hover:bg-surface-bright transition-all duration-500 border border-outline-variant/10">
+<div class="h-40 relative">
+<img alt="Boutique Cinema" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" data-alt="Intimate boutique cinema with small screen and comfortable chairs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOYaWO3k_ztYJikGd706OVKSBNIcx-YHYINGR5huDAVy0F_CeYiqKoaKuiV0wvuemA0kUIt3Om8agMhMMMk4QN1gC0guwPSL1BEZFFsYzAg_L0OJgpTF8UqEo69IqGcgnOU1Wwy5y5RihuS5XAnQT7xBP4UDS9rcBBpEU-gF4xEB6M_XPzdjFDolamZ_By5JLuBcb-zA628f0tP_Z6w_1RMnMiyJy71Bt5TXFeyixippmfYEb3GmOtzjDMtD0QyKEIHESCGd4fZOs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-transparent"></div>
+<div class="absolute top-4 left-4 bg-tertiary text-on-tertiary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Boutique</div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-2xl font-bold text-on-surface">Noir Boutique</h3>
+<p class="text-on-surface-variant text-sm">ID: CIN-002 • Arts District</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer" data-icon="edit">edit</span>
+</div>
+<div class="flex items-center gap-2 text-sm text-on-surface-variant mb-6">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+<span>45 Neon Way, San Francisco, CA</span>
+</div>
+<div class="flex justify-between border-t border-outline-variant/10 pt-4">
+<div class="text-center">
+<p class="text-[10px] uppercase text-on-surface-variant">Screens</p>
+<p class="text-lg font-bold text-on-surface">4</p>
+</div>
+<div class="text-center border-x border-outline-variant/10 px-6">
+<p class="text-[10px] uppercase text-on-surface-variant">Capacity</p>
+<p class="text-lg font-bold text-on-surface">180</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] uppercase text-on-surface-variant">Daily Gross</p>
+<p class="text-lg font-bold text-tertiary">$4.8k</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Screenings Management (Integrated Table) -->
+<div class="col-span-1 md:col-span-2 mt-4 bg-surface-container-low rounded-2xl border border-outline-variant/10 overflow-hidden">
+<div class="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-high/50">
+<h3 class="text-lg font-bold text-on-surface">Upcoming Screenings</h3>
+<div class="flex gap-2">
+<button class="text-xs bg-surface-container-highest px-3 py-1.5 rounded border border-outline-variant/20 text-on-surface-variant hover:text-on-surface transition-colors">Export Schedule</button>
+<button class="text-xs bg-surface-container-highest px-3 py-1.5 rounded border border-outline-variant/20 text-on-surface-variant hover:text-on-surface transition-colors">Filters</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-[10px] uppercase tracking-widest text-on-surface-variant bg-surface-container-high/30">
+<th class="px-6 py-4 font-semibold">ID</th>
+<th class="px-6 py-4 font-semibold">Cinema</th>
+<th class="px-6 py-4 font-semibold">Movie Title</th>
+<th class="px-6 py-4 font-semibold">Date</th>
+<th class="px-6 py-4 font-semibold text-right">Time</th>
+<th class="px-6 py-4 font-semibold text-center">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<tr class="hover:bg-surface-bright/20 transition-colors">
+<td class="px-6 py-5 text-sm text-on-surface-variant">#SCR-2901</td>
+<td class="px-6 py-5 text-sm font-bold text-on-surface">The Grand Hall</td>
+<td class="px-6 py-5 text-sm">
+<div class="flex items-center gap-3">
+<div class="w-8 h-10 bg-surface-variant rounded flex-shrink-0">
+<img alt="Movie Poster" class="w-full h-full object-cover rounded" data-alt="Cinematic movie poster with moody blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTyh716uXTiqK9g-SPjEp8BrMCz44FyL0ThOFkwCnqrVl8FUxkPngbPF3J7ef9iGqxy6M8I1aVByNvli6EFXvVTW4OvmWvAbFfROpIlbgN-No26KG_mUKwtcyfKU187dn9BW1psEW-glwcc9TnZ7xgkwpSrEInGMPDsRK_U6xt5MrTR0ch5BeTVA3oB5c-xzrtVu4vyG1eYjnZfAlZEYI2Y85W8MqWt-t8IatBwBMdFtbbqc0KQIY73PV7oMFCzSoAt_IIt9RWvmk"/>
+</div>
+<span class="font-bold text-on-surface">Oppenheimer</span>
+</div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface">Oct 24, 2023</td>
+<td class="px-6 py-5 text-sm font-mono text-secondary text-right">20:30</td>
+<td class="px-6 py-5 text-center">
+<span class="px-2 py-1 rounded bg-secondary/10 text-secondary text-[10px] font-bold uppercase">Selling Out</span>
+</td>
+</tr>
+<tr class="bg-surface-container-high/20 hover:bg-surface-bright/20 transition-colors">
+<td class="px-6 py-5 text-sm text-on-surface-variant">#SCR-2902</td>
+<td class="px-6 py-5 text-sm font-bold text-on-surface">Noir Boutique</td>
+<td class="px-6 py-5 text-sm">
+<div class="flex items-center gap-3">
+<div class="w-8 h-10 bg-surface-variant rounded flex-shrink-0">
+<img alt="Movie Poster" class="w-full h-full object-cover rounded" data-alt="Minimalist movie poster with film grain texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNSl2NhtOH6vfptG-PKgb-Wkwj5SwiA7SbiE00gfU6q-MZkCEPikgZnbBpGKAHGmjwNyNBom0mggddm3gzvZzTSXA6UuV5vZuN0JLlBGverv-DcrKnj1YEVWcmnDoXulxjaEm7Hk9dqJk6RQbiYZU8HNxAVLjvSM8wmy8HSBRu5Yi6yiKBxDIg5yxvvO5ESWxoQaO6ykEIeGXifDlDKWadvXpl1x_nNQAzLG1X-JKFGaS7bM9EjM_KwZxpO1S8YN0Q5A6ToVQz62o"/>
+</div>
+<span class="font-bold text-on-surface">The Great Gatsby</span>
+</div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface">Oct 24, 2023</td>
+<td class="px-6 py-5 text-sm font-mono text-secondary text-right">21:00</td>
+<td class="px-6 py-5 text-center">
+<span class="px-2 py-1 rounded bg-tertiary/10 text-tertiary text-[10px] font-bold uppercase">Scheduled</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-bright/20 transition-colors">
+<td class="px-6 py-5 text-sm text-on-surface-variant">#SCR-2903</td>
+<td class="px-6 py-5 text-sm font-bold text-on-surface">The Grand Hall</td>
+<td class="px-6 py-5 text-sm">
+<div class="flex items-center gap-3">
+<div class="w-8 h-10 bg-surface-variant rounded flex-shrink-0">
+<img alt="Movie Poster" class="w-full h-full object-cover rounded" data-alt="Sci-fi movie poster featuring cosmic nebulae" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJn8wxKxFM8J5sKLwDIQIrQjstyZ789VsRZ55w7JK3euac1SNiMjJrksoGaDepCKogtnj03IATgpQ7_sxHx4O26kQ4xlhVX2tpk2-gzuUcxw3eIJynJRBLq5VwIrOPl7ACLXvK9lOEh1XvFugsuB9bVKkJADWUnJFFsz9ybmHbFo0IA_BpAxiZQ7W6py9ZYMDNeAixQtNtmyFjCrjIIzpDQdTSRtlvk2Vel1N4IVIUJH3l564zygxcuDxL_4_l1SWsvpvLr-byK6U"/>
+</div>
+<span class="font-bold text-on-surface">Interstellar</span>
+</div>
+</td>
+<td class="px-6 py-5 text-sm text-on-surface">Oct 25, 2023</td>
+<td class="px-6 py-5 text-sm font-mono text-secondary text-right">18:15</td>
+<td class="px-6 py-5 text-center">
+<span class="px-2 py-1 rounded bg-tertiary/10 text-tertiary text-[10px] font-bold uppercase">Scheduled</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-highest/20 text-center">
+<button class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors uppercase tracking-widest">Load More Screenings</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Overlay Modal for Quick Action (Hidden State Simulation) -->
+<div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6 hidden">
+<div class="bg-surface-container-high w-full max-w-lg rounded-2xl border border-outline-variant/20 shadow-2xl p-8">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h2 class="text-3xl font-black text-on-surface">Schedule Screening</h2>
+<p class="text-on-surface-variant text-sm mt-1">Add a new showtime to the marquee.</p>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface">close</button>
+</div>
+<form class="space-y-6">
+<div>
+<label class="block text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Select Cinema</label>
+<select class="w-full bg-surface-container-lowest border-none rounded-lg p-3 text-on-surface focus:ring-1 focus:ring-primary/40 outline-none">
+<option>The Grand Hall</option>
+<option>Noir Boutique</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Date</label>
+<input class="w-full bg-surface-container-lowest border-none rounded-lg p-3 text-on-surface focus:ring-1 focus:ring-primary/40 outline-none" type="date"/>
+</div>
+<div>
+<label class="block text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Time</label>
+<input class="w-full bg-surface-container-lowest border-none rounded-lg p-3 text-on-surface focus:ring-1 focus:ring-primary/40 outline-none" type="time"/>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-lg font-bold text-sm tracking-widest uppercase hover:shadow-[0_0_30px_rgba(255,140,148,0.2)] transition-all" type="submit">
+          Confirm Screening
+        </button>
+</form>
+</div>
+</div>
+</body></html>

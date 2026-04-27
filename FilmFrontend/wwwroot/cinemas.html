@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Cinema</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -12,22 +12,22 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/cinemas.js" defer></script>
+  <script src="/js/cinemas.js?v=20260415-10" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
 
-  <main class="container page-shell">
-    <section class="hero">
-      <div class="hero-panel">
-        <p class="eyebrow">Theaters</p>
-        <h1>Gestione cinema</h1>
-        <p>Configura sale e capienza per mantenere un'anagrafica pulita e allineata con la programmazione e le prenotazioni.</p>
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Rete cinema</p>
+        <h1 class="ops-title">Gestione cinema</h1>
+        <p class="ops-subtitle">Configura sale e capienza per mantenere un'anagrafica pulita e allineata con la programmazione e le prenotazioni.</p>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Crea / Modifica cinema</h2>
+      <h2>Nuovo cinema o modifica</h2>
       <form id="cinema-form">
         <div class="form-grid">
           <div>
@@ -46,13 +46,32 @@
             <label for="capienza">Capienza posti</label>
             <input id="capienza" name="capienza" type="number" min="20" max="500" step="1" value="120" required>
           </div>
+          <div>
+            <label for="codiceLocale">Codice locale</label>
+            <input id="codiceLocale" name="codiceLocale" type="text" placeholder="0131220507688" required>
+          </div>
+          <div>
+            <label for="latitudine">Latitudine</label>
+            <input id="latitudine" name="latitudine" type="number" step="0.000001">
+          </div>
+          <div>
+            <label for="longitudine">Longitudine</label>
+            <input id="longitudine" name="longitudine" type="number" step="0.000001">
+          </div>
+          <div>
+            <label for="attivo">Stato</label>
+            <select id="attivo" name="attivo">
+              <option value="true">Attivo</option>
+              <option value="false">Non attivo</option>
+            </select>
+          </div>
         </div>
         <div class="actions">
           <button id="cinema-submit" class="primary" type="submit">Crea cinema</button>
           <button id="cinema-cancel" class="secondary hidden" type="button">Annulla modifica</button>
         </div>
       </form>
-      <div id="cinemas-status" class="status info">In attesa operazioni...</div>
+      <div id="cinemas-status" class="status info">Seleziona un'operazione.</div>
     </section>
 
     <section class="panel">
@@ -66,6 +85,9 @@
               <th>Indirizzo</th>
               <th>Citta</th>
               <th>Capienza</th>
+              <th>Codice locale</th>
+              <th>Posizione</th>
+              <th>Stato</th>
               <th>Azioni</th>
             </tr>
           </thead>

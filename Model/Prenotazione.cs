@@ -9,5 +9,14 @@ public class Prenotazione
     public Proiezione Proiezione { get; set; } = null!;
     public DateTime DataPrenotazione { get; set; } = DateTime.UtcNow;
     public int NumeroPosti { get; set; }
+    public string PostiSelezionati { get; set; } = string.Empty;
+    public decimal TotalePrezzo { get; set; }
+    public decimal ImportoCartaUsato { get; set; }
+    public string? StripeSessionId { get; set; }
+    public string CodiceAcquisto { get; set; } = string.Empty;
+    public bool Validato { get; set; }
+    public DateTime? ValidatoAtUtc { get; set; }
+    public int? ValidatoDaUtenteId { get; set; }
+    public int? CinemaValidazioneId { get; set; }
     public string Stato { get; set; } = "Confermata";
 }

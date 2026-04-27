@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Sale</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/sale.js?v=20260426-1" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Configurazione sale</p>
+        <h1 class="ops-title">Gestione sale</h1>
+        <p class="ops-subtitle">Configura sale per cinema, tipologia e piantina posti per l'acquisto utenti.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="ops-section-head">Nuova sala o modifica</h2>
+      <form id="sala-form">
+        <div class="form-grid">
+          <div>
+            <label for="sala-cinema-id">Cinema</label>
+            <select id="sala-cinema-id" name="cinemaId" required></select>
+          </div>
+          <div>
+            <label for="sala-numero-progressivo">Numero progressivo</label>
+            <input id="sala-numero-progressivo" name="numeroProgressivo" type="number" min="1" required>
+          </div>
+          <div>
+            <label for="sala-tipologia">Tipologia</label>
+            <select id="sala-tipologia" name="tipologia" required>
+              <option value="ISENSE">ISENSE</option>
+              <option value="XL">XL</option>
+              <option value="3D">3D</option>
+              <option value="2D">2D</option>
+            </select>
+          </div>
+          <div>
+            <label for="sala-nome">Nome sala</label>
+            <input id="sala-nome" name="nome" type="text">
+          </div>
+          <div>
+            <label for="sala-numero-file">Numero file</label>
+            <input id="sala-numero-file" name="numeroFile" type="number" min="1" max="50" value="10" required>
+          </div>
+          <div>
+            <label for="sala-posti-per-fila">Posti per fila</label>
+            <input id="sala-posti-per-fila" name="postiPerFila" type="number" min="1" max="50" value="12" required>
+          </div>
+          <div>
+            <label for="sala-attiva">Stato</label>
+            <select id="sala-attiva" name="attiva">
+              <option value="true">Attiva</option>
+              <option value="false">Non attiva</option>
+            </select>
+          </div>
+          <div class="full-row">
+            <label for="sala-mappa">Mappa posti (JSON opzionale)</label>
+            <textarea id="sala-mappa" name="mappaPostiJson" rows="4" placeholder='{"rows":10,"cols":12,"blocked":["A1"]}'></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="sala-submit" class="primary" type="submit">Crea sala</button>
+          <button id="sala-cancel" class="secondary hidden" type="button">Annulla modifica</button>
+        </div>
+      </form>
+      <div id="sale-status" class="status info">Seleziona un'operazione.</div>
+    </section>
+
+    <section class="panel">
+      <h2 class="ops-section-head">Elenco sale</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cinema</th>
+              <th>N.</th>
+              <th>Tipologia</th>
+              <th>Nome</th>
+              <th>Mappa</th>
+              <th>Stato</th>
+              <th>Piantina</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="sale-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireRole(["admin", "power_user"], window.location.pathname + window.location.search)) {
+        return;
+      }
+      await window.bootstrapLayout();
+      await window.initSalePage();
+    });
+  </script>
+</body>
+</html>

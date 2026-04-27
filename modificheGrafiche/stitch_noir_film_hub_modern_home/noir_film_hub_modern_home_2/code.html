@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Noir Film Hub - Home</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration for custom colors -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'noir-dark': '#0a0a0a',
+            'noir-card': '#1a1a1a',
+            'noir-red': '#E50914',
+            'noir-red-hover': '#b80710',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-typography">
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0a0a0a;
+      color: #ffffff;
+    }
+  </style><style data-purpose="card-styling">
+    .glass-card {
+      background: linear-gradient(135deg, rgba(45,45,45,0.8) 0%, rgba(20,20,20,0.9) 100%);
+      border: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+    }
+    .poster-glow:hover {
+      box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
+      transform: scale(1.02);
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+<!-- BEGIN: MainHeader -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-noir-dark/80 backdrop-blur-md border-b border-white/5">
+<nav class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+<div class="flex items-center" data-purpose="logo">
+<span class="text-xl font-bold tracking-tight">Noir Film Hub</span>
+</div>
+<div class="flex items-center space-x-8 text-sm font-medium" data-purpose="navigation-links">
+<a class="bg-noir-red/20 text-white px-4 py-1.5 rounded-md transition-colors hover:bg-noir-red/30" href="#">Home</a>
+<a class="text-gray-400 hover:text-white transition-colors" href="#">Proiezioni</a>
+<a class="text-gray-400 hover:text-white transition-colors" href="#">Login</a>
+<a class="text-gray-400 hover:text-white transition-colors" href="#">Registrazione</a>
+</div>
+</nav>
+</header>
+<!-- END: MainHeader -->
+<main class="pt-16">
+<!-- BEGIN: HeroSection -->
+<section class="relative h-[650px] w-full overflow-hidden flex items-center" data-purpose="hero-banner">
+<!-- Background Image with Gradient Overlay -->
+<div class="absolute inset-0 z-0">
+<img alt="Hero Background" class="w-full h-full object-cover object-right" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASqnxbBsPI-3nQBwVkHdw76CwENGhcR9AA8hjAILukenzEqxzA8UKmhEItmDmIhgg90FZIjIEaErQYMbKtIg18UB5ADXerNH_82fptqQKq5XVKFTSdhlhZRtbUjo0Si6iAUGMUDImN4aXqREo8zJQSwGDNBa6gKtMQiT30zipxuN9nS-cV482UzpmInEVAFoSZg6W7F3l3FotWvovY40mIee7tmvkygp9gFaGrovd8A5RaF3PvEpdI_dNX7rXpXIsbpWx_Z22wMy-V"/>
+<div class="absolute inset-0 bg-gradient-to-r from-noir-dark via-noir-dark/90 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-noir-dark via-transparent to-transparent"></div>
+</div>
+<div class="relative z-10 max-w-7xl mx-auto px-4 w-full">
+<div class="max-w-2xl">
+<h1 class="text-5xl md:text-6xl font-bold mb-6">Benvenuto su Noir Film Hub</h1>
+<p class="text-gray-300 text-lg mb-10 leading-relaxed max-w-lg">
+            Gestisci proiezioni e prenotazioni con un'esperienza più pulita, affidabile e orientata all'operatività.
+          </p>
+<div class="flex flex-wrap gap-4"><button class="bg-noir-red hover:bg-noir-red-hover text-white px-8 py-3 rounded-full font-semibold transition-all">
+              Vai alle proiezioni
+            </button>
+<button class="border border-noir-red text-gray-300 hover:bg-noir-red/10 px-8 py-3 rounded-full font-semibold transition-all">
+              Area riservata
+            </button></div>
+</div>
+</div>
+</section>
+<!-- END: HeroSection -->
+<!-- BEGIN: FilmInProgrammazione -->
+<section class="max-w-7xl mx-auto px-4 py-16" data-purpose="movie-carousel">
+<div class="mb-8">
+<h2 class="text-3xl font-bold inline-block relative">
+          Film in Programmazione
+          <span class="absolute -bottom-2 left-0 w-full h-1 bg-noir-red rounded-full"></span>
+</h2>
+</div>
+<!-- Horizontal scrolling container for posters -->
+<div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 overflow-x-auto pb-4 scrollbar-hide">
+<!-- Poster 1: Inception -->
+<div class="flex-shrink-0">
+<img alt="Inception" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDoyUjNvN6D7XnaRjJgpTVQ2Jyx6NLlVxq3NtZgxWkV41RTEXsW2JJZkh9tByHIIjE5w5uyQKl2rQZEDOeuXFrCayLkAnw0tkrM_QVctRltlAEeN47seZfSK-MKPZLJTxFELvbgPbwUzYzOwrFxZZ8X2mqD3Br1kwTCSUFSVqmjtLaux-xqfc6WAdCXuV2VASbp4sufY34cYGFBmJFnEXCUGgqqrtiI1u0gy1NwyW48AlKSrk08ws1R-zCq5944Q9oR4aEJxyJQeWN"/>
+</div>
+<!-- Poster 2: Interstellar -->
+<div class="flex-shrink-0">
+<img alt="Interstellar" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcWnsTBZaPKfzh7kWtfVleWjeJtAvr3LCRjL7E4Xr2ksUYpsHhBGNOph8AnAocWvm3QqmRXMIakptYO9lXWooUBnbgFRixb2lhd6tU3-3ajWZ523OEUuizHhKdR1tx4oGKMtnSZcLage35qI7xM53595ma1bvYnqfASsB4qcLLmr_n8edoCaJhd6jfXXLrc2UiGzPT-Lo3y88p_lhVRspKsAHfTN9CMaN3AvgcT7TTe1raP52pjugVGBxN2UoPsb4y3WoUd3bRRQh3"/>
+</div>
+<!-- Poster 3: Dune -->
+<div class="flex-shrink-0">
+<img alt="Dune" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3n8F2peeo3j1OLcRVEh3xslI1Fdi-FieOmKlrMw37xkQ8CtAgzEod0IyeaTapkTTQegabrmADkPe4vRF_BFru0HKDt6zcKEi6unbkOkWCboBULYGxvdwaMlHLqODFGWfGpUZzToHbUujkSUukMSqAgndZPOc-8Y08wR-1tGnvRj7brJkh8lzUKFTEuAdwZf3Xcvrwhva2-rCEw2iECuSlKL4oSjzkpx19vU5zZUd3UAjV51ttfRoO0VVSbFZbg-scO8racY4RdNP_"/>
+</div>
+<!-- Poster 4: Arrival -->
+<div class="flex-shrink-0">
+<img alt="Arrival" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_I5RqiK2XVkWHzqykQ0B8muv_hMNyfYHvF7BuAJ1Jk-oSgFV_ECIayx32rROqUaB2_h0wulaUncbowoDChATgLgQ2QRHBney4vngl9ke1kh_YXYhAaKJ3otGRwL-6gn_peAZWcZ637Ut8_U4AINo7Q3IrSIg53vJtWnrhAsh08M2MHVUbcMuvNwj8V72L5YVKppXcbANywNQqayxJCSmiO4QsKoBwN4xU8CkoDXEve10RQtvyg3b4M60GfQyjO-LbQKZ04QfLGdmZ"/>
+</div>
+<!-- Poster 5: Barbie -->
+<div class="flex-shrink-0">
+<img alt="Barbie" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPqwTU6vD9q9FdMK9eSoe4UaDdZXnSjj8rnAXd92Ps48vogIm8HG2ieke0Y-KeYr9Aizbe4DMhPflkg9RHtgTdLaAKcmZhPrGzb1m8gDVoR2tnruMStPhCca3jfoObOeH-q4Eaqrz1euJ2pdw3wmb6agkEKWZn6GdJtDuhiowjfFFbNg1uc9lDZELDlIeiVX2_ragbUMTRq1joMrANPdUaCFSh1Y6nmHcL8j8KmxLsRc_KR8gJmUgEsOsvi_X_2tFtGSrAACiocGpu"/>
+</div>
+<!-- Poster 6: Lady Bird -->
+<div class="flex-shrink-0">
+<img alt="Lady Bird" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNee4rxfi5DP3kZgCM5LxIomb8uGUC_c3hD56KU11adf_sGSrM1kYPdbCLcYUHDAFeybx2ntUHipzYP-2iBk-xUmJTtglyd0uqfWv47K3rN1p1_DmAnLsaGfyYm-98aXk0ZVvj3hbXkniGp8dliVpQi_HNA9nXzRb5EPckRMo8cpShWcBgcL49JQ-RAMooxJeznFAXXZoQwvXKB7LOfOV8EYwxzjHtlxfbxPgWfUTw5-TERgNljSCQZMWPJhayaSAT952x_MGTi6mN"/>
+</div>
+<!-- Poster 7: La grande bellezza -->
+<div class="flex-shrink-0">
+<img alt="La grande bellezza" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFI3sakAJFAH6yKsByLeTmP9CHH0ak_rn1fmQwlGwUhJZPJbn-d0LXH_taX0k8l_LELLfVYyOsk7mrP2XIaf0GEmEUyzd0yidwmKsuq1LaGYlNC0Nkak4hmc9FOBbISDY1O0Tvg6OSNE_U0PvnlbKf-Xzs45PumSIhMpdTU5plbXfuO7dmLPrbOX9mtsl2WJcgm8mdRwlO4Vt0lKLD6ZERYpCkD5k0zUbhuPjCxFmAc0nkvqc0cbl_9LJg1JCsNAUYZb7b2T8EBPrB"/>
+</div>
+<!-- Poster 8: E' stata la mano di Dio -->
+<div class="flex-shrink-0">
+<img alt="E' stata la mano di Dio" class="rounded-lg w-full h-auto aspect-[2/3] object-cover poster-glow cursor-pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDj-qqWFcDYAgpsTLnMAVapVGGNUr2weX0PmKhNgwE0-5-xzCCMgSTDt2KHOF_nBHNGrUSueZnQsAKprQqalQEvwSW_tPhYJi3erd3O4qz5xYkRuC1-yQylv7V3ogtyn0MItMHHunR_n30CA_6pJaFTRHPWdWo1VST4mcd7B2HejZmRgUgJxbI-_hpzAg9i8jOumM25kLOOrmyhzhasyv1F0DOcWCD9Oxk2owNKsCIogOHuMzaz4v7elIjd5NBeTYceBmMnXHEQ6yhO"/>
+</div>
+</div>
+</section>
+<!-- END: FilmInProgrammazione -->
+<!-- BEGIN: AccessoRapido -->
+<section class="max-w-7xl mx-auto px-4 py-16" data-purpose="quick-access">
+<h2 class="text-3xl font-bold mb-10 text-center md:text-left">Accesso Rapido</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Card 1: Catalogo -->
+<div class="glass-card p-8 rounded-2xl flex flex-col justify-between h-64 hover:bg-white/10 transition-all cursor-pointer group" data-purpose="card-catalogo">
+<div>
+<h3 class="text-2xl font-bold mb-3">Catalogo</h3>
+<p class="text-gray-400 text-sm leading-relaxed">
+              Scopri le proiezioni e i contenuti che contengono il catalogo completo del Noir Film Hub.
+            </p>
+</div>
+<button class="w-fit bg-white/10 group-hover:bg-noir-red transition-colors text-white text-xs px-4 py-2 rounded-lg font-medium">
+            Scopri le proiezioni
+          </button>
+</div>
+<!-- Card 2: Anagrafica -->
+<div class="glass-card p-8 rounded-2xl flex flex-col justify-between h-64 hover:bg-white/10 transition-all cursor-pointer group" data-purpose="card-anagrafica">
+<div>
+<h3 class="text-2xl font-bold mb-3">Anagrafica</h3>
+<p class="text-gray-400 text-sm leading-relaxed">
+              Registrati al catalogo, anagrafica e altro ancora per gestire il tuo profilo personale.
+            </p>
+</div>
+<button class="w-fit bg-white/10 group-hover:bg-noir-red transition-colors text-white text-xs px-4 py-2 rounded-lg font-medium">
+            Registrati
+          </button>
+</div>
+<!-- Card 3: Programmazione -->
+<div class="glass-card p-8 rounded-2xl flex flex-col justify-between h-64 hover:bg-white/10 transition-all cursor-pointer group" data-purpose="card-programmazione">
+<div>
+<h3 class="text-2xl font-bold mb-3">Programmazione</h3>
+<p class="text-gray-400 text-sm leading-relaxed">
+              Apri profilo utente compare e gestisci la tua programmazione personalizzata delle proiezioni.
+            </p>
+</div>
+<button class="w-fit bg-white/10 group-hover:bg-noir-red transition-colors text-white text-xs px-4 py-2 rounded-lg font-medium">
+            Apri profilo
+          </button>
+</div>
+</div>
+</section>
+<!-- END: AccessoRapido -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-black/40 border-t border-white/5 py-12 mt-12">
+<div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+<p>© 2023 Noir Film Hub. Tutti i diritti riservati.</p>
+</div>
+</footer>
+<!-- END: Footer -->
+</body></html>

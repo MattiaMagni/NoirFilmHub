@@ -7,6 +7,7 @@
   const cancelBtn = document.getElementById("proiezione-cancel");
   const cinemaSelect = document.getElementById("cinemaId");
   const filmSelect = document.getElementById("filmId");
+  const salaSelect = document.getElementById("salaId");
 
   function setStatus(message, kind) {
     statusEl.className = "status " + kind;
@@ -31,7 +32,15 @@
     if (!value) {
       return "";
     }
+    const raw = String(value);
+    const hhmm = raw.length >= 16 ? raw.slice(11, 16) : raw.slice(0, 5);
+    if (/^\d{2}:\d{2}$/.test(hhmm)) {
+      return hhmm;
+    }
     const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
     const hh = String(date.getHours()).padStart(2, "0");
     const mm = String(date.getMinutes()).padStart(2, "0");
     return `${hh}:${mm}`;
@@ -46,7 +55,7 @@
 
   function renderRows(items) {
     if (!items.length) {
-      tableBody.innerHTML = "<tr><td colspan='6' class='subtle'>Nessuna proiezione trovata.</td></tr>";
+      tableBody.innerHTML = "<tr><td colspan='8' class='subtle'>Nessuna proiezione trovata.</td></tr>";
       return;
     }
 
@@ -56,9 +65,11 @@
       <tr>
         <td>${p.id}</td>
         <td>${p.cinemaId}</td>
+        <td>${p.salaId || "-"} ${p.tipologiaSala ? `(${p.tipologiaSala})` : ""}</td>
         <td>${p.filmId}</td>
         <td>${formatDate(p.data)}</td>
         <td>${formatTimeForInput(p.ora)}</td>
+        <td>${Number(p.prezzoBase || 0).toFixed(2)} EUR</td>
         <td>
           <div class="actions">
             <button class="btn-small secondary" data-action="edit" data-id="${p.id}">Modifica</button>
@@ -93,8 +104,31 @@
         option.textContent = `${f.id} - ${f.titolo}`;
         filmSelect.appendChild(option);
       });
+      salaSelect.innerHTML = "<option value=''>Seleziona sala</option>";
+      await loadSaleByCinema();
     } catch (error) {
       setStatus(`Errore caricamento riferimenti: ${error.message}`, "error");
+    }
+  }
+
+  async function loadSaleByCinema() {
+    const cinemaId = Number(cinemaSelect.value);
+    salaSelect.innerHTML = "<option value=''>Seleziona sala</option>";
+    if (!cinemaId) {
+      return;
+    }
+
+    try {
+      const sale = await window.ApiClient.get(`/sale?cinemaId=${cinemaId}`);
+      (Array.isArray(sale) ? sale : []).forEach((s) => {
+        const option = document.createElement("option");
+        option.value = String(s.id);
+        const numero = s.numeroProgressivo ? `S${s.numeroProgressivo}` : `S${s.id}`;
+        option.textContent = `${numero} - ${s.tipologia || "2D"}${s.nome ? ` (${s.nome})` : ""}`;
+        salaSelect.appendChild(option);
+      });
+    } catch (error) {
+      setStatus(`Errore caricamento sale: ${error.message}`, "error");
     }
   }
 
@@ -115,19 +149,28 @@
 
     const cinemaId = Number(form.cinemaId.value);
     const filmId = Number(form.filmId.value);
+    const salaId = Number(form.salaId.value);
     const data = form.data.value;
     const ora = form.ora.value;
+    const prezzoBase = Number(form.prezzoBase.value);
 
-    if (!cinemaId || !filmId || !data || !ora) {
+    if (!cinemaId || !filmId || !salaId || !data || !ora) {
       setStatus("Compila tutti i campi obbligatori.", "error");
+      return;
+    }
+
+    if (!prezzoBase || prezzoBase <= 0) {
+      setStatus("Prezzo base non valido.", "error");
       return;
     }
 
     const payload = {
       cinemaId,
       filmId,
+      salaId,
       data,
-      ora: toTimeIso(ora)
+      ora: toTimeIso(ora),
+      prezzoBase
     };
 
     try {
@@ -163,9 +206,12 @@
           const p = await window.ApiClient.get(`/proiezioni/${id}`);
           editingId = p.id;
           form.cinemaId.value = String(p.cinemaId || "");
+          await loadSaleByCinema();
+          form.salaId.value = String(p.salaId || "");
           form.filmId.value = String(p.filmId || "");
           form.data.value = formatDate(p.data);
           form.ora.value = formatTimeForInput(p.ora);
+          form.prezzoBase.value = p.prezzoBase || "8.90";
           submitBtn.textContent = "Salva modifiche";
           cancelBtn.classList.remove("hidden");
           setStatus(`Modifica proiezione #${id}`, "info");
@@ -197,6 +243,7 @@
       return;
     }
     form.addEventListener("submit", submitForm);
+    cinemaSelect.addEventListener("change", loadSaleByCinema);
     tableBody.addEventListener("click", handleTableClick);
     cancelBtn.addEventListener("click", resetForm);
 

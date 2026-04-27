@@ -14,6 +14,25 @@
     return value.startsWith("/") ? value : `/${value}`;
   }
 
+  function buildLoginUrl(destinationPath) {
+    const destination = normalizePath(destinationPath || window.location.pathname + window.location.search + window.location.hash);
+    const encoded = encodeURIComponent(destination);
+    return `/login.html?callback=${encoded}`;
+  }
+
+  function getCallbackFromLocation() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("callback");
+      if (!raw) {
+        return null;
+      }
+      return normalizePath(decodeURIComponent(raw));
+    } catch {
+      return null;
+    }
+  }
+
   function parseJwt(token) {
     try {
       const payload = token.split(".")[1];
@@ -176,6 +195,8 @@
     isAuthenticated,
     hasRole,
     clearSession,
+    buildLoginUrl,
+    getCallbackFromLocation,
     saveRedirect(path) {
       sessionStorage.setItem("auth_redirect_after_login", normalizePath(path || window.location.pathname));
     },

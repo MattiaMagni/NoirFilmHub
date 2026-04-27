@@ -21,8 +21,9 @@
     try {
       await window.AuthService.login(email, password);
       setStatus("Login effettuato.", "success");
-      const redirectPath = window.AuthService.consumeRedirect() || "/index.html";
-      window.location.replace(redirectPath);
+      const callback = window.AuthService.getCallbackFromLocation ? window.AuthService.getCallbackFromLocation() : null;
+      const saved = callback || window.AuthService.consumeRedirect();
+      window.location.replace(saved || "/index.html");
     } catch (error) {
       setStatus(error && error.status === 401 ? "Credenziali non valide." : `Errore: ${error.message}`, "error");
     }

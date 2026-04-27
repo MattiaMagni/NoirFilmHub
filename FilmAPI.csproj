@@ -18,6 +18,11 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.11" />
     <PackageReference Include="MySqlConnector" Version="2.5.0" />
     <PackageReference Include="DotNetEnv" Version="3.0.0" />
+    <PackageReference Include="QuestPDF" Version="2024.7.1" />
+    <PackageReference Include="SkiaSharp" Version="3.116.1" />
+    <PackageReference Include="Stripe.net" Version="49.0.0" />
+    <PackageReference Include="ZXing.Net" Version="0.16.10" />
+    <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.20" />
   </ItemGroup>
 
   <ItemGroup>

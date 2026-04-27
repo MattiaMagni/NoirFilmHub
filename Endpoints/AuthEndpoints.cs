@@ -105,6 +105,72 @@ public static class AuthEndpoints
             return Results.Ok(AuthService.ToUtenteDto(utente));
         }).RequireAuthorization();
 
+        group.MapGet("/me/cinema-preferito", async (ClaimsPrincipal user, FilmDbContext db) =>
+        {
+            if (!TryGetUserId(user, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            var utente = await db.Utenti.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (utente is null)
+            {
+                return Results.NotFound();
+            }
+
+            if (!utente.CinemaPreferitoId.HasValue)
+            {
+                return Results.Ok(new { cinemaPreferitoId = (int?)null });
+            }
+
+            var cinema = await db.Cinemas.AsNoTracking().FirstOrDefaultAsync(c => c.Id == utente.CinemaPreferitoId.Value);
+            if (cinema is null)
+            {
+                return Results.Ok(new { cinemaPreferitoId = (int?)null });
+            }
+
+            return Results.Ok(new
+            {
+                cinemaPreferitoId = cinema.Id,
+                cinema.Nome,
+                cinema.Citta,
+                cinema.Indirizzo,
+                cinema.CodiceLocale
+            });
+        }).RequireAuthorization();
+
+        group.MapPut("/me/cinema-preferito", async (ClaimsPrincipal user, CinemaPreferitoUpdateDTO dto, FilmDbContext db) =>
+        {
+            if (!TryGetUserId(user, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            var cinema = await db.Cinemas.AsNoTracking().FirstOrDefaultAsync(c => c.Id == dto.CinemaId);
+            if (cinema is null)
+            {
+                return Results.BadRequest(new { error = "Cinema non trovato" });
+            }
+
+            var utente = await db.Utenti.FirstOrDefaultAsync(u => u.Id == userId);
+            if (utente is null)
+            {
+                return Results.NotFound();
+            }
+
+            utente.CinemaPreferitoId = cinema.Id;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                cinemaPreferitoId = cinema.Id,
+                cinema.Nome,
+                cinema.Citta,
+                cinema.Indirizzo,
+                cinema.CodiceLocale
+            });
+        }).RequireAuthorization();
+
         group.MapGet("/utenti", async (FilmDbContext db) =>
         {
             var utenti = await db.Utenti

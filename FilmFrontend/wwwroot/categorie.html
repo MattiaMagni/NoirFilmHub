@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Categorie</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -12,22 +12,22 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/categorie.js" defer></script>
+  <script src="/js/categorie.js?v=20260415-10" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
 
-  <main class="container page-shell">
-    <section class="hero">
-      <div class="hero-panel">
-        <p class="eyebrow">Taxonomy</p>
-        <h1>Gestione categorie</h1>
-        <p>Organizza i generi del catalogo per migliorare la ricerca dei titoli e la qualita complessiva della programmazione.</p>
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Classificazione catalogo</p>
+        <h1 class="ops-title">Gestione categorie</h1>
+        <p class="ops-subtitle">Organizza i generi del catalogo per migliorare la ricerca dei titoli e la qualita complessiva della programmazione.</p>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Crea / Modifica categoria</h2>
+      <h2>Nuova categoria o modifica</h2>
       <form id="categoria-form">
         <div class="form-grid">
           <div>
@@ -44,7 +44,7 @@
           <button id="categoria-cancel" class="secondary hidden" type="button">Annulla modifica</button>
         </div>
       </form>
-      <div id="categorie-status" class="status info">In attesa operazioni...</div>
+      <div id="categorie-status" class="status info">Seleziona un'operazione.</div>
     </section>
 
     <section class="panel">

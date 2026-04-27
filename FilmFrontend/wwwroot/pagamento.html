@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Pagamento</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/pagamento.js?v=20260427-3" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Pagamento</p>
+        <h1 class="ops-title">Pagamento biglietti</h1>
+        <p class="ops-subtitle">Pagamento sicuro su Stripe: verrai reindirizzato alla pagina ufficiale Stripe.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div id="pagamento-status" class="status info">Caricamento...</div>
+      <article id="pagamento-summary" class="panel"></article>
+
+      <article class="panel">
+        <h3>Metodo di pagamento</h3>
+        <p class="subtle">Il pagamento viene gestito direttamente da Stripe. Nessun dato carta viene inserito in questa applicazione.</p>
+        <div class="actions">
+          <button id="pagamento-confirm" class="primary" type="button">Procedi su Stripe</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireAuth(window.location.pathname + window.location.search)) {
+        return;
+      }
+      await window.bootstrapLayout();
+      await window.initPagamentoPage();
+    });
+  </script>
+</body>
+</html>

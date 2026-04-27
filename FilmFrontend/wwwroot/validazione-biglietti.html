@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Validazione biglietti</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/validazione-biglietti.js?v=20260426-1" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Controllo accessi</p>
+        <h1 class="ops-title">Validazione biglietti</h1>
+        <p class="ops-subtitle">Convalida i biglietti elettronici inserendo il codice manuale o aprendo l'URL dal QR code.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div id="validazione-status" class="status info">Seleziona un'operazione.</div>
+      <div class="form-grid">
+        <div>
+          <label for="ticket-code">Codice acquisto</label>
+          <input id="ticket-code" type="text" placeholder="NFH-YYYYMMDD...">
+        </div>
+      </div>
+      <div class="actions">
+        <button id="ticket-lookup" class="secondary" type="button">Cerca biglietto</button>
+        <button id="ticket-validate" class="primary" type="button">Conferma validazione</button>
+      </div>
+      <div id="ticket-details" class="panel">
+        <p class="subtle">Nessun biglietto caricato.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireRole(["admin", "power_user"], window.location.pathname + window.location.search)) {
+        return;
+      }
+      await window.bootstrapLayout();
+      await window.initValidazioneBigliettiPage();
+    });
+  </script>
+</body>
+</html>

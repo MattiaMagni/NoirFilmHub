@@ -1,9 +1,19 @@
 (function () {
   const guestPages = ["/login.html", "/register.html"];
 
-  function redirectToLogin() {
+  function currentDestination() {
+    return `${window.location.pathname || "/index.html"}${window.location.search || ""}${window.location.hash || ""}`;
+  }
+
+  function redirectToLogin(destinationUrl) {
+    if (window.AuthService && typeof window.AuthService.buildLoginUrl === "function") {
+      const loginUrl = window.AuthService.buildLoginUrl(destinationUrl || currentDestination());
+      window.location.replace(loginUrl);
+      return;
+    }
+
     if (window.AuthService) {
-      window.AuthService.saveRedirect(window.location.pathname);
+      window.AuthService.saveRedirect(destinationUrl || currentDestination());
     }
     window.location.replace("/login.html");
   }
@@ -12,16 +22,16 @@
     window.location.replace("/index.html");
   }
 
-  function requireAuth() {
+  function requireAuth(destinationUrl) {
     if (!window.AuthService || !window.AuthService.isAuthenticated()) {
-      redirectToLogin();
+      redirectToLogin(destinationUrl);
       return false;
     }
     return true;
   }
 
-  function requireRole(allowedRoles) {
-    if (!requireAuth()) {
+  function requireRole(allowedRoles, destinationUrl) {
+    if (!requireAuth(destinationUrl)) {
       return false;
     }
 
@@ -48,7 +58,8 @@
     }
 
     const fallback = targetPath || "/profile.html";
-    const saved = window.AuthService.consumeRedirect();
+    const callback = window.AuthService.getCallbackFromLocation ? window.AuthService.getCallbackFromLocation() : null;
+    const saved = callback || window.AuthService.consumeRedirect();
     const lowerSaved = (saved || "").toLowerCase();
     const destination = saved && !guestPages.includes(lowerSaved)
       ? saved

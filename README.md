@@ -65,3 +65,34 @@ What was done
 
 Files of interest
 - `Program.cs`, `Data/FilmDbContext.cs`, `Migrations/`, `Endpoints/`, `.env`, `.env.example`.
+
+## Frontend (Iterazione 2)
+
+E' stato aggiunto un progetto separato `FilmFrontend` per servire pagine statiche HTML/CSS/JS.
+
+Percorsi principali:
+- `FilmFrontend/Program.cs`
+- `FilmFrontend/wwwroot/index.html`
+- `FilmFrontend/wwwroot/registi.html`
+- `FilmFrontend/wwwroot/films.html`
+- `FilmFrontend/wwwroot/cinemas.html`
+- `FilmFrontend/wwwroot/proiezioni.html`
+
+### Avvio locale backend + frontend
+1. Avvia backend (porta tipica: 5000):
+```bash
+dotnet run
+```
+
+2. Avvia frontend (da cartella `FilmFrontend`, porta tipica: 5001):
+```bash
+dotnet run
+```
+
+3. Apri:
+- Frontend: `http://localhost:5001`
+- API backend: `http://localhost:5000/swagger`
+
+Note:
+- Il frontend usa `Fetch API` verso `http://localhost:5000` (configurabile in `FilmFrontend/wwwroot/js/api-config.js`).
+- CORS e' configurato nel backend (`Program.cs`) per permettere chiamate dal frontend locale.

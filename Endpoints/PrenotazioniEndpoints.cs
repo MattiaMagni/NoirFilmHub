@@ -67,6 +67,11 @@ public static class PrenotazioniEndpoints
                 return Results.BadRequest(new { error = "Numero posti deve essere > 0" });
             }
 
+            if (dto.NumeroPosti > 10)
+            {
+                return Results.BadRequest(new { error = "Numero posti massimo acquistabile: 10" });
+            }
+
             var proiezione = await db.Proiezioni
                 .AsNoTracking()
                 .Include(p => p.Cinema)
@@ -94,6 +99,10 @@ public static class PrenotazioniEndpoints
                 UtenteId = userId,
                 ProiezioneId = dto.ProiezioneId,
                 NumeroPosti = dto.NumeroPosti,
+                PostiSelezionati = dto.PostiSelezionati?.Trim() ?? string.Empty,
+                TotalePrezzo = decimal.Round(dto.NumeroPosti * proiezione.PrezzoBase, 2),
+                ImportoCartaUsato = decimal.Round(dto.NumeroPosti * proiezione.PrezzoBase, 2),
+                CodiceAcquisto = $"NFH-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
                 DataPrenotazione = DateTime.UtcNow,
                 Stato = "Confermata"
             };
@@ -146,6 +155,8 @@ public static class PrenotazioniEndpoints
             .ThenInclude(pr => pr.Film)
             .Include(p => p.Proiezione)
             .ThenInclude(pr => pr.Cinema)
+            .Include(p => p.Proiezione)
+            .ThenInclude(pr => pr.Sala)
             .Select(p => new PrenotazioneDTO
             {
                 Id = p.Id,
@@ -154,9 +165,22 @@ public static class PrenotazioniEndpoints
                 TitoloFilm = p.Proiezione.Film.Titolo,
                 CinemaId = p.Proiezione.CinemaId,
                 NomeCinema = p.Proiezione.Cinema.Nome,
+                SalaId = p.Proiezione.SalaId ?? 0,
+                NomeSala = p.Proiezione.Sala != null
+                    ? (string.IsNullOrWhiteSpace(p.Proiezione.Sala.Nome)
+                        ? $"SALA {p.Proiezione.Sala.NumeroProgressivo}"
+                        : p.Proiezione.Sala.Nome)
+                    : "SALA",
+                TipologiaSala = p.Proiezione.Sala != null ? p.Proiezione.Sala.Tipologia : "2D",
                 Data = p.Proiezione.Data,
                 Ora = p.Proiezione.Ora,
                 NumeroPosti = p.NumeroPosti,
+                PostiSelezionati = p.PostiSelezionati,
+                TotalePrezzo = p.TotalePrezzo,
+                ImportoCartaUsato = p.ImportoCartaUsato,
+                CodiceAcquisto = p.CodiceAcquisto,
+                Validato = p.Validato,
+                ValidatoAtUtc = p.ValidatoAtUtc,
                 Stato = p.Stato,
                 DataPrenotazione = p.DataPrenotazione,
                 UtenteId = p.UtenteId

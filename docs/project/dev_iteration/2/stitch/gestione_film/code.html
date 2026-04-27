@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-low": "#091328",
+              "surface-container-lowest": "#000000",
+              "on-tertiary-fixed-variant": "#003e56",
+              "on-primary-fixed-variant": "#5f0017",
+              "primary-container": "#ff7481",
+              "on-background": "#dee5ff",
+              "secondary": "#f8a010",
+              "secondary-fixed-dim": "#ffb554",
+              "tertiary-dim": "#05a9e3",
+              "on-surface": "#dee5ff",
+              "secondary-dim": "#e79400",
+              "on-tertiary-container": "#003044",
+              "tertiary": "#47c4ff",
+              "error": "#ff716c",
+              "surface-container-high": "#141f38",
+              "on-tertiary": "#003b52",
+              "tertiary-fixed": "#37bcf7",
+              "secondary-fixed": "#ffc885",
+              "tertiary-fixed-dim": "#1bafe9",
+              "primary-dim": "#e21e49",
+              "on-tertiary-fixed": "#001a27",
+              "outline-variant": "#40485d",
+              "on-primary-container": "#4e0011",
+              "surface-variant": "#192540",
+              "primary-fixed-dim": "#ff586c",
+              "surface-bright": "#1f2b49",
+              "surface-tint": "#ff8c94",
+              "primary": "#ff8c94",
+              "error-dim": "#d7383b",
+              "on-surface-variant": "#a3aac4",
+              "surface-container-highest": "#192540",
+              "on-secondary-container": "#fff6f0",
+              "primary-fixed": "#ff7481",
+              "on-error-container": "#ffa8a3",
+              "inverse-surface": "#faf8ff",
+              "on-primary": "#640018",
+              "background": "#060e20",
+              "tertiary-container": "#2db7f2",
+              "outline": "#6d758c",
+              "surface": "#060e20",
+              "secondary-container": "#855300",
+              "on-secondary": "#4a2c00",
+              "on-secondary-fixed": "#4c2e00",
+              "surface-container": "#0f1930",
+              "inverse-primary": "#bf0037",
+              "error-container": "#9f0519",
+              "on-primary-fixed": "#000000",
+              "inverse-on-surface": "#4d556b",
+              "on-error": "#490006",
+              "surface-dim": "#060e20",
+              "on-secondary-fixed-variant": "#724700"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #060e20;
+            color: #dee5ff;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen overflow-x-hidden">
+<!-- SideNavBar -->
+<aside class="bg-[#091328] dark:bg-[#091328] h-screen w-64 fixed left-0 top-0 border-r-0 flex flex-col h-full py-8 px-4 z-50">
+<div class="mb-10 px-2">
+<h1 class="text-xl font-bold tracking-tighter text-[#dee5ff] font-headline">The Noir Manager</h1>
+<p class="text-[10px] text-on-surface-variant font-label tracking-[0.2em] uppercase mt-1">Premium Cinema Group</p>
+</div>
+<button class="mb-8 w-full py-3 px-4 bg-primary text-on-primary rounded-md font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+            New Production
+        </button>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-[#a3aac4] hover:text-[#dee5ff] transition-colors hover:bg-[#141f38] font-label text-sm" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-[#ff8c94] font-bold border-r-2 border-[#ff8c94] bg-gradient-to-r from-[#ff8c94]/10 to-transparent font-label text-sm scale-[0.99] transition-transform" href="#">
+<span class="material-symbols-outlined">movie</span>
+                Movies
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-[#a3aac4] hover:text-[#dee5ff] transition-colors hover:bg-[#141f38] font-label text-sm" href="#">
+<span class="material-symbols-outlined">person_4</span>
+                Directors
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-[#a3aac4] hover:text-[#dee5ff] transition-colors hover:bg-[#141f38] font-label text-sm" href="#">
+<span class="material-symbols-outlined">theater_comedy</span>
+                Cinemas
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-[#a3aac4] hover:text-[#dee5ff] transition-colors hover:bg-[#141f38] font-label text-sm" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+                Screenings
+            </a>
+</nav>
+<div class="pt-6 border-t border-outline-variant/10 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-[#a3aac4] hover:text-[#dee5ff] transition-colors hover:bg-[#141f38] font-label text-sm" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-md text-[#a3aac4] hover:text-[#dee5ff] transition-colors hover:bg-[#141f38] font-label text-sm" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-20 px-10 flex justify-between items-center bg-[#060e20]/80 backdrop-blur-xl shadow-2xl shadow-black/40 z-40">
+<div class="flex items-center gap-6 flex-1">
+<div class="text-2xl font-black text-[#dee5ff] tracking-tight font-headline mr-8">Noir Concierge</div>
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+<input class="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/20 focus:ring-primary/30 rounded-full py-2.5 pl-12 pr-4 text-sm font-label transition-all outline-none" placeholder="Search productions, reels, or archives..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-r border-outline-variant/20 pr-6">
+<button class="text-[#a3aac4] hover:text-[#ff8c94] transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-[#a3aac4] hover:text-[#ff8c94] transition-colors">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+</div>
+<button class="font-label text-xs font-bold uppercase tracking-widest text-[#dee5ff] hover:text-[#ff8c94] transition-colors px-4 py-2 border border-outline-variant/20 rounded-md">
+                    Admin Console
+                </button>
+<div class="h-10 w-10 rounded-full bg-surface-variant overflow-hidden ring-2 ring-primary/20">
+<img alt="Cinema Manager Profile" class="w-full h-full object-cover" data-alt="Close up of a professional cinema manager portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQt18vcHwKegYQZaAy7v6vjPG8GH2y7IacouVpg8SnUkb_oEqppYFDFNayIlxgf8gE0h8oPlHDXfL-pqWdOvraDx8ujmbWqeEKJUyefifzB7zoKze09sUuqJkilNwNaDVJjRUuMkvlvGwN-95QqxwxmHMjlrao033HU9hBstg8mq2HjDHLpHXrYJkKIQBXxecv6xoyARKUB5Za48DRt5OIR8oUWuqLvJu46oVP8_U0o3ZhYWYvCo5Pduv--i-3IpfoWwixAiZBG9g"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<section class="pt-32 px-10 pb-20">
+<div class="flex flex-col gap-10">
+<!-- Hero Header Section -->
+<div class="flex justify-between items-end">
+<div class="max-w-2xl">
+<span class="text-secondary font-label font-medium text-sm tracking-widest uppercase mb-2 block">Catalog Management</span>
+<h2 class="text-5xl font-extrabold font-headline text-on-surface tracking-tight">The Movie Vault</h2>
+<p class="mt-4 text-on-surface-variant font-body leading-relaxed">Curate your cinematic library. Manage metadata, production dates, and director credits for all active and archived screenings.</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-highest text-on-surface px-6 py-3 rounded-md font-semibold text-sm border border-primary/20 hover:bg-surface-bright transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">filter_list</span>
+                            Advanced Filter
+                        </button>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-md font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                            Add Movie
+                        </button>
+</div>
+</div>
+<!-- Stats/Bento Teaser Row -->
+<div class="grid grid-cols-4 gap-6">
+<div class="bg-surface-container-low p-6 rounded-xl border-l-4 border-primary">
+<div class="text-on-surface-variant text-xs font-label uppercase tracking-tighter mb-1">Total Library</div>
+<div class="text-3xl font-headline font-bold text-on-surface">1,284</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border-l-4 border-secondary">
+<div class="text-on-surface-variant text-xs font-label uppercase tracking-tighter mb-1">Active Screenings</div>
+<div class="text-3xl font-headline font-bold text-on-surface">42</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border-l-4 border-tertiary">
+<div class="text-on-surface-variant text-xs font-label uppercase tracking-tighter mb-1">Monthly Premiers</div>
+<div class="text-3xl font-headline font-bold text-on-surface">12</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border-l-4 border-outline">
+<div class="text-on-surface-variant text-xs font-label uppercase tracking-tighter mb-1">Total Directors</div>
+<div class="text-3xl font-headline font-bold text-on-surface">856</div>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="bg-surface-container-low rounded-2xl overflow-hidden ring-1 ring-outline-variant/10">
+<div class="bg-surface-container-highest px-8 py-5 flex items-center justify-between border-b border-outline-variant/5">
+<h3 class="font-headline font-bold text-lg">Production Registry</h3>
+<div class="flex gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">download</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</div>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50">
+<th class="px-8 py-4 font-label text-[10px] uppercase tracking-widest text-secondary font-bold">ID</th>
+<th class="px-8 py-4 font-label text-[10px] uppercase tracking-widest text-secondary font-bold">Title</th>
+<th class="px-8 py-4 font-label text-[10px] uppercase tracking-widest text-secondary font-bold">Release Date</th>
+<th class="px-8 py-4 font-label text-[10px] uppercase tracking-widest text-secondary font-bold">Director (FK)</th>
+<th class="px-8 py-4 font-label text-[10px] uppercase tracking-widest text-secondary font-bold">Duration</th>
+<th class="px-8 py-4 font-label text-[10px] uppercase tracking-widest text-secondary font-bold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-5 font-body text-sm text-on-surface-variant">MV-8902</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-14 bg-surface-variant rounded overflow-hidden flex-shrink-0">
+<img alt="Movie Poster" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="Minimalist noir film poster with red accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWgR4NGeix-Nx8NHupmhuZblkythRDfgJeTIrr0DGM7a1awsyvJhf1vgvr8gickxhXccY1siljXGUDunXqQpWhXusHRn9itZVy9Mcov2J7KMczy2fRxY1P7P3qsOk8FN11VLQ83O_6FkEY08Q3l1Ecrdb-W8RA_otqHqfgNI7D0hIUoBADE8rjT4wHYnByaVG4gFqbmHvkSTqVWuOOWlvrjGcQuj-nzOfzsagsr5Q3miSbWWA-HHYR5Qh_QSgSZluqnGtJj6IEyy4"/>
+</div>
+<div>
+<div class="font-body font-semibold text-on-surface">The Midnight Cipher</div>
+<div class="text-[10px] text-tertiary font-label uppercase">In Production</div>
+</div>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">Oct 14, 2024</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-variant overflow-hidden">
+<img alt="Director Avatar" class="w-full h-full object-cover" data-alt="Iconic director silhouette portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnDLzo2KlM7QDUR_x_6L4_LuDUDmgrOfoF6xdf41DYiaMGoqbGamLzSzJN3FSpWzbCNFiaUrdmF5vQyF-_J6g-iK-STLRYVGOLl8jl4OpA_nhSJb6zgHapQj6b-p2QctO68fDXfRYUjvhsC5uy1iiYyFCFzbBbUKpvnSUcMkUCcpsHef8vX5oxzGKOjQbL_ZigVWcaNF_U0RgrYcS_4ILcuIdpc7cmJQNRAg9-_lSdrVI0Gg2EPYoDRPXu4zlfqBJRmqEi_a0T3LU"/>
+</div>
+<span class="font-body text-sm">Julian Vane (D-102)</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">142 min</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 hover:bg-primary/10 rounded-full text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container-low/50 hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-5 font-body text-sm text-on-surface-variant">MV-4512</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-14 bg-surface-variant rounded overflow-hidden flex-shrink-0">
+<img alt="Movie Poster" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="Classic film reel artwork in gold tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuE_n44hgblYyxA6hyxd6xpe4hh0LXPLVkd00PQwMzsBiUHl8-uGoFSUxrdXdOMS5qLEEMRBB2XRCSqrTDox_bRYNsldzfCc7ve67uHpxXhp7vnmHUXHLG2IrgZlUksgVLGOS_nTnGZ5DC2D8tAPLxGk_gHkJ_QVo-IBUD_rcQPIstTpHTcLqjH7QMgH3cQ9ESMGIgrsESpBP7iO_H9WiY4gMJNDsjHgMilioMZJwhtby8TaXCCSFKbWU0q7exSE42kiD3HrTrW24"/>
+</div>
+<div>
+<div class="font-body font-semibold text-on-surface">Velvet Echoes</div>
+<div class="text-[10px] text-on-surface-variant font-label uppercase">Released</div>
+</div>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">May 22, 2023</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-variant overflow-hidden">
+<img alt="Director Avatar" class="w-full h-full object-cover" data-alt="Elegant female director portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDV-VoX0Tje3fXPIhkRqn5bnCm8MlPRbGC2WSa-rKm-CAI62axkPMQVN7aTGKqOE95eKxkRWBHfoPEDHzoPU_Otk898-HhhV5csqT3DO5xRA8Pv1BtnFaMgSfy2oVknfZJ2EpneF7wmGMWVDDEUK7RMMeqBJuoNIqkCQ8J0izTanPkqQa_QlyauHF8_-xzk7nSsHRLHjwPQSnxYuKYfFSs3IYnGdT5CEXHif8QAcG9IUKf4zwpZ6VTi_-FYI5SOfHk4aqj9i-LX8T4"/>
+</div>
+<span class="font-body text-sm">Elena Roux (D-045)</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">118 min</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 hover:bg-primary/10 rounded-full text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-5 font-body text-sm text-on-surface-variant">MV-2098</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-14 bg-surface-variant rounded overflow-hidden flex-shrink-0">
+<img alt="Movie Poster" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" data-alt="Dramatic high-contrast cinema photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlF0X_JNtgZ2g7v2lm7OhDu74kHTDwqP0_O1UUBVb1saAfTWDGpjyAX0FeTPKd69aXiJ1oQcm6WpPA-_f2rWr6596KwAAB8Nu3Tc243yuqOctoIV3Mmoe4Nu3FhQc9wzoXdlK_kueWk0w6dwhYu_vElLtE-gvzS28o0w0bDsG3SjKhZQRGMm3XFckbnfqDqR8d1R1rT9QCph_67Mvg0GHjkp2Ib-52U6nsi6xVrF7g1_zUnJ9mgS2VZRvVQJJdMUGAd50Fhp8liDI"/>
+</div>
+<div>
+<div class="font-body font-semibold text-on-surface">Neon Shadows</div>
+<div class="text-[10px] text-secondary font-label uppercase">Selling Out</div>
+</div>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">Feb 10, 2024</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-variant overflow-hidden">
+<img alt="Director Avatar" class="w-full h-full object-cover" data-alt="Director with sunglasses portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtlqE35xHtFiEMfus0hdfx6NiZe6xFGYbU_97GkZ3_rpHkxFGUC6G_cVLWewNYe68EvRLI6Y57urMIrJrLMrviS0QQ0qssydhXtXLwZodnezWsEW4pXfLM7OY_uFvO1yXwqhQ4USLhsCvw1a0dYp-AR2rBxXRoT1q9lvUjKs2B5WALbFJkuLwBE9yOdqXtcIIgJlFUFjs0dEwDa3KX9Yqme4ZlnBO7nmO-eydAgNDu-SERHhWOd4Q017APNLy2vEmHs-IVe-CQRuU"/>
+</div>
+<span class="font-body text-sm">S. Kurosawa (D-012)</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">165 min</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 hover:bg-primary/10 rounded-full text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Table Footer / Pagination -->
+<div class="px-8 py-6 bg-surface-container-high/30 border-t border-outline-variant/5 flex items-center justify-between">
+<div class="text-xs text-on-surface-variant font-label">
+                            Showing <span class="text-on-surface">1-3</span> of 1,284 productions
+                        </div>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-variant text-on-surface hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-bold text-xs">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-variant text-on-surface hover:bg-primary/20 transition-colors font-bold text-xs">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-variant text-on-surface hover:bg-primary/20 transition-colors font-bold text-xs">3</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-variant text-on-surface hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

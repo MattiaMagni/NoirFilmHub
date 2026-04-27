@@ -19,15 +19,6 @@ async function setupNavbar() {
       });
     }
 
-    if (nav && document.body.classList.contains("home-cinematic")) {
-      nav.classList.add("home-transparent");
-      const onScroll = () => {
-        nav.classList.toggle("scrolled", window.scrollY > 36);
-      };
-      onScroll();
-      window.addEventListener("scroll", onScroll, { passive: true });
-    }
-
     const manageToggle = document.getElementById("nav-manage-toggle");
     const manageMenu = document.getElementById("nav-manage-menu");
     const closeManageMenu = () => {
@@ -111,7 +102,7 @@ async function setupNavbar() {
       });
     }
 
-    const activeInManage = ["/dashboard.html", "/films.html", "/registi.html", "/proiezioni.html", "/cinemas.html", "/categorie.html", "/utenti.html"].includes(pathname);
+    const activeInManage = ["/dashboard.html", "/films.html", "/registi.html", "/proiezioni.html", "/cinemas.html", "/categorie.html", "/utenti.html", "/sale.html", "/validazione-biglietti.html"].includes(pathname);
     if (manageToggle) {
       manageToggle.classList.toggle("active", activeInManage);
     }

@@ -3,6 +3,11 @@
   const statusEl = document.getElementById("home-status");
   const kpiVisibleEl = document.getElementById("home-kpi-visible");
   const kpiTotalEl = document.getElementById("home-kpi-total");
+  const heroEl = document.getElementById("home-hero");
+  const heroPrevBtn = document.getElementById("hero-nav-prev");
+  const heroNextBtn = document.getElementById("hero-nav-next");
+  const heroTitleEl = document.getElementById("hero-feature-title");
+  const heroSubtitleEl = document.getElementById("hero-feature-subtitle");
   const modalEl = document.getElementById("film-modal");
   const modalCloseEl = document.getElementById("film-modal-close");
   const modalTitleEl = document.getElementById("film-modal-title");
@@ -17,6 +22,9 @@
   let cachedFilms = [];
   let registiById = new Map();
   let lastFocusedEl = null;
+  let heroRotationFilms = [];
+  let heroRotationIndex = 0;
+  let heroRotationTimer = null;
 
   function setStatus(message, kind) {
     if (!statusEl) {
@@ -30,12 +38,18 @@
     const cover = film.copertinaPath
       ? `<img src="${film.copertinaPath}" alt="Copertina ${film.titolo}">`
       : "<span>Copertina non disponibile</span>";
+    const regista = registiById.get(Number(film.registaId)) || "Regia non disponibile";
+    const year = film.dataProduzione ? String(film.dataProduzione).slice(0, 4) : "-";
 
     return `
       <article class="home-poster-card" role="button" tabindex="0" data-film-id="${film.id}">
         <div class="card-media">${cover}</div>
         <div class="home-poster-overlay">
           <h3 class="home-poster-title">${film.titolo || "Senza titolo"}</h3>
+        </div>
+        <div class="home-poster-caption">
+          <h4>${film.titolo || "Senza titolo"}</h4>
+          <p>${regista} / ${year}</p>
         </div>
       </article>
     `;
@@ -46,6 +60,94 @@
       return "-";
     }
     return String(value).slice(0, 10);
+  }
+
+  function normalizeTmdbImage(url, preferredSize) {
+    const raw = String(url || "").trim();
+    if (!raw || !raw.includes("image.tmdb.org/t/p/")) {
+      return raw;
+    }
+    const sizes = ["original", "w1280", "w780", "w500"];
+    const target = sizes.includes(preferredSize) ? preferredSize : "w1280";
+    return raw.replace(/\/t\/p\/(original|w\d+)\//, `/t/p/${target}/`);
+  }
+
+  function updateHeroFeature(film) {
+    if (!film) {
+      return;
+    }
+
+    if (heroTitleEl) {
+      heroTitleEl.textContent = film.titolo || "Noir Film Hub";
+    }
+
+    if (heroSubtitleEl) {
+      const durataLabel = film.durata ? `${film.durata} min` : "durata non disponibile";
+      heroSubtitleEl.textContent = `${film.titolo || "Titolo non disponibile"} - ${durataLabel}.`;
+    }
+
+    const image = normalizeTmdbImage(film.backdropPath || "", "w1280")
+      || normalizeTmdbImage(film.copertinaPath || "", "w780")
+      || film.copertinaPath
+      || film.filmatoPath;
+    if (heroEl && image) {
+      heroEl.style.setProperty("--hero-feature-image", `url("${image}")`);
+    }
+  }
+
+  function stopHeroRotation() {
+    if (heroRotationTimer) {
+      clearInterval(heroRotationTimer);
+      heroRotationTimer = null;
+    }
+  }
+
+  function startHeroRotation() {
+    stopHeroRotation();
+    if (!Array.isArray(heroRotationFilms) || heroRotationFilms.length <= 1) {
+      return;
+    }
+
+    heroRotationTimer = setInterval(() => {
+      heroRotationIndex = (heroRotationIndex + 1) % heroRotationFilms.length;
+      updateHeroFeature(heroRotationFilms[heroRotationIndex]);
+    }, 6000);
+  }
+
+  function showPreviousHeroFilm() {
+    if (!Array.isArray(heroRotationFilms) || heroRotationFilms.length === 0) {
+      return;
+    }
+    heroRotationIndex = (heroRotationIndex - 1 + heroRotationFilms.length) % heroRotationFilms.length;
+    updateHeroFeature(heroRotationFilms[heroRotationIndex]);
+    startHeroRotation();
+  }
+
+  function showNextHeroFilm() {
+    if (!Array.isArray(heroRotationFilms) || heroRotationFilms.length === 0) {
+      return;
+    }
+    heroRotationIndex = (heroRotationIndex + 1) % heroRotationFilms.length;
+    updateHeroFeature(heroRotationFilms[heroRotationIndex]);
+    startHeroRotation();
+  }
+
+  function bindHeroRotationEvents() {
+    if (!heroEl) {
+      return;
+    }
+
+    heroEl.addEventListener("mouseenter", stopHeroRotation);
+    heroEl.addEventListener("mouseleave", startHeroRotation);
+    heroEl.addEventListener("focusin", stopHeroRotation);
+    heroEl.addEventListener("focusout", startHeroRotation);
+
+    if (heroPrevBtn) {
+      heroPrevBtn.addEventListener("click", showPreviousHeroFilm);
+    }
+    if (heroNextBtn) {
+      heroNextBtn.addEventListener("click", showNextHeroFilm);
+    }
   }
 
   async function ensureRegistiMap() {
@@ -202,6 +304,22 @@
 
       const visible = films.slice(0, 12);
       cachedFilms = visible;
+      try {
+        await ensureRegistiMap();
+      } catch {
+        registiById = new Map();
+      }
+      heroRotationFilms = films
+        .slice()
+        .sort((a, b) => {
+          const aDate = Date.parse(a.dataUscita || a.dataProduzione || 0) || 0;
+          const bDate = Date.parse(b.dataUscita || b.dataProduzione || 0) || 0;
+          return bDate - aDate || Number(b.id || 0) - Number(a.id || 0);
+        })
+        .slice(0, 3);
+      heroRotationIndex = 0;
+      updateHeroFeature(heroRotationFilms[0]);
+      startHeroRotation();
       listEl.innerHTML = visible.map(renderFilmCard).join("");
       if (kpiVisibleEl) {
         kpiVisibleEl.textContent = String(visible.length);
@@ -223,5 +341,6 @@
   }
 
   bindModalEvents();
+  bindHeroRotationEvents();
   window.loadHomeFilms = loadHomeFilms;
 })();

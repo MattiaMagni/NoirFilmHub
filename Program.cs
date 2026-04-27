@@ -11,12 +11,15 @@ using FilmAPI.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using QuestPDF.Infrastructure;
 
 // load .env
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddCors(options =>
 {
@@ -49,6 +52,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<TmdbService>();
+builder.Services.AddScoped<TicketPdfService>();
+builder.Services.AddScoped<TicketEmailService>();
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<TmdbSyncHostedService>();
 
 var authEnabled = (Environment.GetEnvironmentVariable("AUTH_ENABLED") ?? "true")
     .Equals("true", StringComparison.OrdinalIgnoreCase);
@@ -91,6 +99,7 @@ builder.Services.AddAuthorizationBuilder()
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
@@ -166,6 +175,163 @@ using (var scope = app.Services.CreateScope())
             });
             await db.SaveChangesAsync();
         }
+
+        if (!await db.Registi.AnyAsync())
+        {
+            db.Registi.AddRange(
+                new Regista { Nome = "Denis", Cognome = "Villeneuve", Nazionalita = "CA" },
+                new Regista { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "UK" },
+                new Regista { Nome = "Greta", Cognome = "Gerwig", Nazionalita = "US" }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.Cinemas.AnyAsync())
+        {
+            db.Cinemas.AddRange(
+                new Cinema
+                {
+                    Nome = "Noir Cinemas Milano",
+                    Citta = "Milano",
+                    Indirizzo = "Via Torino 10",
+                    Capienza = 260,
+                    CodiceLocale = "0131220507688",
+                    Latitudine = 45.4642,
+                    Longitudine = 9.1900,
+                    Attivo = true
+                },
+                new Cinema
+                {
+                    Nome = "Noir Cinemas Lissone",
+                    Citta = "Lissone",
+                    Indirizzo = "Viale Martiri 20",
+                    Capienza = 220,
+                    CodiceLocale = "0131220507689",
+                    Latitudine = 45.6160,
+                    Longitudine = 9.2400,
+                    Attivo = true
+                }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.Sale.AnyAsync())
+        {
+            var cinemas = await db.Cinemas.OrderBy(c => c.Id).ToListAsync();
+            foreach (var cinema in cinemas)
+            {
+                db.Sale.AddRange(
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 1, Tipologia = "ISENSE", Nome = "SALA 1", NumeroFile = 10, PostiPerFila = 12, Attiva = true },
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 2, Tipologia = "XL", Nome = "SALA 2", NumeroFile = 12, PostiPerFila = 14, Attiva = true },
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 3, Tipologia = "3D", Nome = "SALA 3", NumeroFile = 9, PostiPerFila = 12, Attiva = true },
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 4, Tipologia = "2D", Nome = "SALA 4", NumeroFile = 10, PostiPerFila = 12, Attiva = true }
+                );
+            }
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.Films.AnyAsync())
+        {
+            var registi = await db.Registi.OrderBy(r => r.Id).ToListAsync();
+            var categories = await db.Categorie.AsNoTracking().ToListAsync();
+            var filmList = new List<Film>
+            {
+                new Film
+                {
+                    Titolo = "Dune: Parte Due",
+                    TitoloOriginale = "Dune: Part Two",
+                    DataProduzione = new DateTime(2024, 1, 1),
+                    DataUscita = new DateTime(2024, 2, 28),
+                    RegistaId = registi[0].Id,
+                    Durata = 166,
+                    DescrizioneLunga = "Paul Atreides affronta la guerra su Arrakis mentre il suo destino si compie.",
+                    CastPrincipale = "Timothee Chalamet, Zendaya, Rebecca Ferguson",
+                    CopertinaPath = "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
+                    FilmatoPath = "https://www.youtube.com/watch?v=Way9Dexny3w",
+                    TmdbSyncStato = "Seeded"
+                },
+                new Film
+                {
+                    Titolo = "Oppenheimer",
+                    TitoloOriginale = "Oppenheimer",
+                    DataProduzione = new DateTime(2023, 1, 1),
+                    DataUscita = new DateTime(2023, 8, 23),
+                    RegistaId = registi[1].Id,
+                    Durata = 180,
+                    DescrizioneLunga = "La storia dello scienziato che ha guidato il progetto Manhattan.",
+                    CastPrincipale = "Cillian Murphy, Emily Blunt, Robert Downey Jr.",
+                    CopertinaPath = "https://image.tmdb.org/t/p/w500/ptpr0kGAckfQkJeJIt8st5dglvd.jpg",
+                    FilmatoPath = "https://www.youtube.com/watch?v=uYPbbksJxIg",
+                    TmdbSyncStato = "Seeded"
+                },
+                new Film
+                {
+                    Titolo = "Barbie",
+                    TitoloOriginale = "Barbie",
+                    DataProduzione = new DateTime(2023, 1, 1),
+                    DataUscita = new DateTime(2023, 7, 20),
+                    RegistaId = registi[2].Id,
+                    Durata = 114,
+                    DescrizioneLunga = "Barbie entra nel mondo reale e scopre se stessa.",
+                    CastPrincipale = "Margot Robbie, Ryan Gosling",
+                    CopertinaPath = "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
+                    FilmatoPath = "https://www.youtube.com/watch?v=pBk4NYhWNMM",
+                    TmdbSyncStato = "Seeded"
+                }
+            };
+
+            db.Films.AddRange(filmList);
+            await db.SaveChangesAsync();
+
+            if (categories.Count > 0)
+            {
+                foreach (var film in filmList)
+                {
+                    var categoriaId = film.Titolo.Contains("Barbie", StringComparison.OrdinalIgnoreCase)
+                        ? categories.FirstOrDefault(x => x.Nome == "Commedia")?.Id
+                        : categories.FirstOrDefault(x => x.Nome == "Azione")?.Id;
+
+                    if (categoriaId.HasValue)
+                    {
+                        db.FilmCategorie.Add(new FilmCategoria { FilmId = film.Id, CategoriaId = categoriaId.Value });
+                    }
+                }
+
+                await db.SaveChangesAsync();
+            }
+        }
+
+        if (!await db.Proiezioni.AnyAsync())
+        {
+            var films = await db.Films.AsNoTracking().ToListAsync();
+            var sale = await db.Sale.AsNoTracking().ToListAsync();
+            var today = DateTime.Today;
+            var random = new Random(42);
+
+            foreach (var s in sale)
+            {
+                for (var d = 0; d < 7; d++)
+                {
+                    var date = today.AddDays(d);
+                    var film = films[(s.Id + d) % films.Count];
+                    var starts = new[] { 16, 19, 21 };
+                    foreach (var startHour in starts)
+                    {
+                        db.Proiezioni.Add(new Proiezione
+                        {
+                            CinemaId = s.CinemaId,
+                            SalaId = s.Id,
+                            FilmId = film.Id,
+                            Data = date,
+                            Ora = new DateTime(date.Year, date.Month, date.Day, startHour, random.Next(0, 2) * 30, 0),
+                            PrezzoBase = s.Tipologia == "ISENSE" ? 12.90m : s.Tipologia == "XL" ? 11.90m : s.Tipologia == "3D" ? 10.90m : 8.90m
+                        });
+                    }
+                }
+            }
+
+            await db.SaveChangesAsync();
+        }
         logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)
@@ -204,6 +370,13 @@ app.MapGroup("/proiezioni").MapProiezioni();
 app.MapGroup("/auth").MapAuth();
 app.MapGroup("/categorie").MapCategorie();
 app.MapGroup("/prenotazioni").MapPrenotazioni();
+app.MapGroup("/sale").MapSale();
+app.MapGroup("/programmazione").MapProgrammazione();
+app.MapGroup("/my-cinemas").MapMyCinemas();
+app.MapGroup("/checkout").MapCheckout();
+app.MapGroup("/pagamenti").MapPagamenti();
+app.MapGroup("/tickets").MapBiglietti();
+app.MapGroup("/tmdb").MapTmdb();
 
 app.Run();
 

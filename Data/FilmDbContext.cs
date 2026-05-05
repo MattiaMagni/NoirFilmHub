@@ -10,19 +10,24 @@ public class FilmDbContext : DbContext
     public DbSet<Regista> Registi => Set<Regista>();
     public DbSet<Film> Films => Set<Film>();
     public DbSet<Cinema> Cinemas => Set<Cinema>();
+    public DbSet<Sala> Sale => Set<Sala>();
     public DbSet<Proiezione> Proiezioni => Set<Proiezione>();
     public DbSet<Utente> Utenti => Set<Utente>();
     public DbSet<Categoria> Categorie => Set<Categoria>();
     public DbSet<FilmCategoria> FilmCategorie => Set<FilmCategoria>();
     public DbSet<Prenotazione> Prenotazioni => Set<Prenotazione>();
+    public DbSet<SeatLock> SeatLocks => Set<SeatLock>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Proiezione>()
-            .HasIndex(p => new { p.CinemaId, p.FilmId, p.Data, p.Ora })
+            .HasIndex(p => new { p.SalaId, p.Data, p.Ora })
             .IsUnique();
+
+        modelBuilder.Entity<Proiezione>()
+            .HasIndex(p => new { p.CinemaId, p.FilmId, p.Data, p.Ora });
 
         modelBuilder.Entity<Film>()
             .HasOne(f => f.Regista)
@@ -34,6 +39,22 @@ public class FilmDbContext : DbContext
             .HasOne(p => p.Cinema)
             .WithMany(c => c.Proiezioni)
             .HasForeignKey(p => p.CinemaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Sala>()
+            .HasOne(s => s.Cinema)
+            .WithMany(c => c.Sale)
+            .HasForeignKey(s => s.CinemaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Sala>()
+            .HasIndex(s => new { s.CinemaId, s.NumeroProgressivo })
+            .IsUnique();
+
+        modelBuilder.Entity<Proiezione>()
+            .HasOne(p => p.Sala)
+            .WithMany(s => s.Proiezioni)
+            .HasForeignKey(p => p.SalaId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Proiezione>()
@@ -49,6 +70,29 @@ public class FilmDbContext : DbContext
         modelBuilder.Entity<Utente>()
             .Property(u => u.Ruolo)
             .HasMaxLength(32);
+
+        modelBuilder.Entity<Prenotazione>()
+            .Property(p => p.TotalePrezzo)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<Prenotazione>()
+            .Property(p => p.ImportoCartaUsato)
+            .HasPrecision(10, 2);
+
+        modelBuilder.Entity<Prenotazione>()
+            .HasIndex(p => p.CodiceAcquisto)
+            .IsUnique();
+
+        modelBuilder.Entity<Prenotazione>()
+            .HasIndex(p => p.StripeSessionId)
+            .IsUnique();
+
+        modelBuilder.Entity<Film>()
+            .HasIndex(f => f.TmdbMovieId);
+
+        modelBuilder.Entity<Cinema>()
+            .HasIndex(c => c.CodiceLocale)
+            .IsUnique();
 
         modelBuilder.Entity<Categoria>()
             .HasIndex(c => c.Nome)
@@ -80,6 +124,22 @@ public class FilmDbContext : DbContext
             .WithMany(pr => pr.Prenotazioni)
             .HasForeignKey(p => p.ProiezioneId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SeatLock>()
+            .HasOne(s => s.Proiezione)
+            .WithMany()
+            .HasForeignKey(s => s.ProiezioneId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SeatLock>()
+            .HasOne(s => s.Utente)
+            .WithMany()
+            .HasForeignKey(s => s.UtenteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<SeatLock>()
+            .HasIndex(s => new { s.ProiezioneId, s.PostoCodice })
+            .IsUnique();
 
         modelBuilder.Entity<Categoria>().HasData(
             new Categoria { Id = 1, Nome = "Fantasy", Descrizione = "Film fantasy" },

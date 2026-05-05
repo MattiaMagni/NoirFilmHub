@@ -8,4 +8,5 @@ public class UtenteDTO
     public string Cognome { get; set; } = null!;
     public string Telefono { get; set; } = "";
     public string Ruolo { get; set; } = null!;
+    public int? CinemaPreferitoId { get; set; }
 }

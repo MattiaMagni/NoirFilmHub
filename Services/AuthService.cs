@@ -126,7 +126,8 @@ public class AuthService
             Nome = utente.Nome,
             Cognome = utente.Cognome,
             Telefono = utente.Telefono,
-            Ruolo = utente.Ruolo
+            Ruolo = utente.Ruolo,
+            CinemaPreferitoId = utente.CinemaPreferitoId
         };
     }
 }

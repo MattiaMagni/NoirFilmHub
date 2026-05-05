@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Registi</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -12,22 +12,22 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/registi.js" defer></script>
+  <script src="/js/registi.js?v=20260415-10" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
 
-  <main class="container page-shell">
-    <section class="hero">
-      <div class="hero-panel">
-        <p class="eyebrow">Directors</p>
-        <h1>Gestione registi</h1>
-        <p>Gestisci le anagrafiche dei registi e visualizza rapidamente i film collegati per mantenere il catalogo editoriale coerente.</p>
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Anagrafica registi</p>
+        <h1 class="ops-title">Gestione registi</h1>
+        <p class="ops-subtitle">Gestisci le anagrafiche dei registi e visualizza rapidamente i film collegati per mantenere il catalogo editoriale coerente.</p>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Crea / Modifica regista</h2>
+      <h2>Nuovo regista o modifica</h2>
       <form id="regista-form">
         <div class="form-grid">
           <div>
@@ -48,7 +48,7 @@
           <button id="regista-cancel" class="secondary hidden" type="button">Annulla modifica</button>
         </div>
       </form>
-      <div id="registi-status" class="status info">In attesa operazioni...</div>
+      <div id="registi-status" class="status info">Seleziona un'operazione.</div>
     </section>
 
     <section class="panel">

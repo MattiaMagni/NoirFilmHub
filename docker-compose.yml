@@ -18,5 +18,14 @@ services:
       timeout: 5s
       retries: 5
 
+  stripe-listener:
+    image: stripe/stripe-cli:latest
+    container_name: stripe-listener
+    profiles: ["stripe"]
+    env_file:
+      - .env
+    command: listen --api-key ${STRIPE_SECRET_KEY} --forward-to http://host.docker.internal:5000/pagamenti/stripe/webhook
+    restart: unless-stopped
+
 volumes:
   mariadb_data:

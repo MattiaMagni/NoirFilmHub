@@ -20,7 +20,7 @@
 
   function renderRows(items) {
     if (!items.length) {
-      tableBody.innerHTML = "<tr><td colspan='6' class='subtle'>Nessun cinema trovato.</td></tr>";
+      tableBody.innerHTML = "<tr><td colspan='9' class='subtle'>Nessun cinema trovato.</td></tr>";
       return;
     }
 
@@ -33,6 +33,9 @@
         <td>${c.indirizzo || ""}</td>
         <td>${c.citta || ""}</td>
         <td>${Number(c.capienza) || 0}</td>
+        <td>${c.codiceLocale || "-"}</td>
+        <td>${c.latitudine != null && c.longitudine != null ? `${Number(c.latitudine).toFixed(5)}, ${Number(c.longitudine).toFixed(5)}` : "-"}</td>
+        <td>${c.attivo === false ? "Non attivo" : "Attivo"}</td>
         <td>
           <div class="actions">
             <button class="btn-small secondary" data-action="edit" data-id="${c.id}">Modifica</button>
@@ -64,10 +67,14 @@
       nome: form.nome.value.trim(),
       indirizzo: form.indirizzo.value.trim(),
       citta: form.citta.value.trim(),
-      capienza: Number(form.capienza.value)
+      capienza: Number(form.capienza.value),
+      codiceLocale: form.codiceLocale.value.trim(),
+      latitudine: form.latitudine.value ? Number(form.latitudine.value) : null,
+      longitudine: form.longitudine.value ? Number(form.longitudine.value) : null,
+      attivo: String(form.attivo.value) !== "false"
     };
 
-    if (!payload.nome || !payload.indirizzo || !payload.citta) {
+    if (!payload.nome || !payload.indirizzo || !payload.citta || !payload.codiceLocale) {
       setStatus("Compila tutti i campi obbligatori.", "error");
       return;
     }
@@ -109,6 +116,10 @@
           form.indirizzo.value = cinema.indirizzo || "";
           form.citta.value = cinema.citta || "";
           form.capienza.value = Number(cinema.capienza) || 120;
+          form.codiceLocale.value = cinema.codiceLocale || "";
+          form.latitudine.value = cinema.latitudine ?? "";
+          form.longitudine.value = cinema.longitudine ?? "";
+          form.attivo.value = String(cinema.attivo !== false);
           submitBtn.textContent = "Salva modifiche";
           cancelBtn.classList.remove("hidden");
           setStatus(`Modifica cinema #${id}`, "info");

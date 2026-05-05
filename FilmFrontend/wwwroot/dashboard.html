@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Dashboard Admin</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -12,22 +12,22 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/dashboard.js" defer></script>
+  <script src="/js/dashboard.js?v=20260415-10" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
 
-  <main class="container page-shell">
-    <section class="hero">
-      <div class="hero-panel">
-        <p class="eyebrow">Control room</p>
-        <h1>Dashboard amministrativa</h1>
-        <p>Panoramica operativa per admin e power user con indicatori, monitoraggio delle attivita e stato delle prossime proiezioni.</p>
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Controllo operativo</p>
+        <h1 class="ops-title">Dashboard amministrativa</h1>
+        <p class="ops-subtitle">Panoramica operativa per admin e power user con indicatori, monitoraggio delle attivita e stato delle prossime proiezioni.</p>
       </div>
     </section>
 
     <section class="dashboard-top">
-      <h2 class="home-section-title">Metriche principali</h2>
+      <h2 class="home-section-title section-title-underline">Metriche principali</h2>
       <div class="kpi-grid">
         <article class="kpi-card">
           <span class="kpi-label">Film</span>
@@ -68,11 +68,11 @@
       </article>
       <div>
         <article class="panel">
-          <h2>Ultimi film inseriti</h2>
+          <h2 class="ops-section-head">Ultimi film inseriti</h2>
           <ul id="latest-films" class="dashboard-mini-list"></ul>
         </article>
         <article class="panel">
-          <h2>Distribuzione per citta</h2>
+          <h2 class="ops-section-head">Distribuzione per citta</h2>
           <ul id="city-load" class="dashboard-mini-list"></ul>
         </article>
       </div>

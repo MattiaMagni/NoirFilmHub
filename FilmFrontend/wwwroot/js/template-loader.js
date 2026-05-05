@@ -35,6 +35,27 @@ async function bootstrapLayout() {
     } catch {
     }
   }
+
+  setupFooterAdminSection();
+}
+
+function setupFooterAdminSection() {
+  if (!window.AuthService) return;
+
+  const isAdmin = window.AuthService.hasRole && window.AuthService.hasRole(['admin', 'administrator', 'amministratore']);
+
+  if (!isAdmin) {
+    const footer = document.querySelector('.site-footer');
+    if (footer) {
+      const adminSection = footer.querySelector('h4');
+      if (adminSection && adminSection.textContent.toLowerCase().includes('admin')) {
+        const adminDiv = adminSection.closest('div');
+        if (adminDiv) {
+          adminDiv.style.display = 'none';
+        }
+      }
+    }
+  }
 }
 
 window.bootstrapLayout = bootstrapLayout;

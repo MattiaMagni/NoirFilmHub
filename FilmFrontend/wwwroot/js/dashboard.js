@@ -68,9 +68,9 @@
         <article class="card">
           <div class="card-media">
             ${f.copertinaPath
-              ? `<img src="${f.copertinaPath}" alt="Copertina ${f.titolo}" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">`
+              ? `<img src="${f.copertinaPath}" alt="Copertina ${f.titolo}" onerror="this.style.display='none';this.nextElementSibling.classList.add('show');">`
               : ""}
-            <span style="display:${f.copertinaPath ? "none" : "grid"};">Copertina non disponibile</span>
+            <span class="media-fallback${f.copertinaPath ? "" : " show"}">Copertina non disponibile</span>
           </div>
           <div class="card-body">
             <h3>${f.titolo}</h3>

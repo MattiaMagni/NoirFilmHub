@@ -52,11 +52,17 @@ public static class FilmEndpoints
             var film = new Film
             {
                 Titolo = dto.Titolo,
+                TitoloOriginale = dto.TitoloOriginale?.Trim() ?? string.Empty,
                 DataProduzione = dto.DataProduzione,
+                DataUscita = dto.DataUscita,
                 RegistaId = dto.RegistaId,
                 Durata = dto.Durata,
                 CopertinaPath = string.IsNullOrWhiteSpace(dto.CopertinaPath) ? DefaultCoverImagePath : dto.CopertinaPath,
-                FilmatoPath = dto.FilmatoPath
+                BackdropPath = dto.BackdropPath,
+                FilmatoPath = dto.FilmatoPath,
+                DescrizioneLunga = dto.DescrizioneLunga?.Trim() ?? string.Empty,
+                CastPrincipale = dto.CastPrincipale?.Trim() ?? string.Empty,
+                TmdbMovieId = dto.TmdbMovieId
             };
 
             db.Films.Add(film);
@@ -85,11 +91,17 @@ public static class FilmEndpoints
             var categoriaIds = DistinctCategoriaIds(dto.CategorieIds);
 
             film.Titolo = dto.Titolo;
+            film.TitoloOriginale = dto.TitoloOriginale?.Trim() ?? string.Empty;
             film.DataProduzione = dto.DataProduzione;
+            film.DataUscita = dto.DataUscita;
             film.RegistaId = dto.RegistaId;
             film.Durata = dto.Durata;
             film.CopertinaPath = string.IsNullOrWhiteSpace(dto.CopertinaPath) ? DefaultCoverImagePath : dto.CopertinaPath;
+            film.BackdropPath = dto.BackdropPath;
             film.FilmatoPath = dto.FilmatoPath;
+            film.DescrizioneLunga = dto.DescrizioneLunga?.Trim() ?? string.Empty;
+            film.CastPrincipale = dto.CastPrincipale?.Trim() ?? string.Empty;
+            film.TmdbMovieId = dto.TmdbMovieId;
 
             db.FilmCategorie.RemoveRange(film.FilmCategorie);
             AddFilmCategorie(db, film.Id, categoriaIds);
@@ -167,11 +179,19 @@ public static class FilmEndpoints
         {
             film.Id,
             film.Titolo,
+            film.TitoloOriginale,
             film.DataProduzione,
+            film.DataUscita,
             film.RegistaId,
             film.Durata,
             film.CopertinaPath,
+            film.BackdropPath,
             film.FilmatoPath,
+            film.DescrizioneLunga,
+            film.CastPrincipale,
+            film.TmdbMovieId,
+            film.UltimaSyncTmdbUtc,
+            film.TmdbSyncStato,
             CategorieIds = film.FilmCategorie.Select(fc => fc.CategoriaId).ToList(),
             Categorie = film.FilmCategorie.Select(fc => fc.Categoria.Nome).ToList()
         };

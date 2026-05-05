@@ -26,6 +26,39 @@
     return `${hh}:${mm}`;
   }
 
+  async function downloadTicketPdf(codiceAcquisto) {
+    const code = String(codiceAcquisto || "").trim();
+    if (!code) {
+      setStatus("Codice acquisto non valido per il download PDF.", "error");
+      return;
+    }
+
+    try {
+      const token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await fetch(`${window.AppConfig.API_BASE_URL}/tickets/${encodeURIComponent(code)}/pdf`, {
+        method: "GET",
+        headers
+      });
+
+      if (!response.ok) {
+        throw new Error("Download PDF non riuscito");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ticket-${code}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setStatus(`Errore download PDF: ${error.message}`, "error");
+    }
+  }
+
   function renderPrenotazioni(rows) {
     if (!Array.isArray(rows) || rows.length === 0) {
       prenotazioniBody.innerHTML = "<tr><td colspan='8' class='subtle'>Nessuna programmazione salvata.</td></tr>";
@@ -43,7 +76,10 @@
           <td>${p.numeroPosti}</td>
           <td>${p.stato}</td>
           <td>
-            ${p.stato === "Confermata" ? `<button class="btn-small danger" data-action="cancel" data-id="${p.id}">Annulla</button>` : "-"}
+            <div class="actions">
+              ${p.stato === "Confermata" ? `<button class="btn-small" data-action="download" data-code="${p.codiceAcquisto || ""}">PDF</button>` : ""}
+              ${p.stato === "Confermata" ? `<button class="btn-small danger" data-action="cancel" data-id="${p.id}">Annulla</button>` : "-"}
+            </div>
           </td>
         </tr>
       `)
@@ -94,6 +130,17 @@
   }
 
   async function handlePrenotazioniClick(event) {
+    const actionButton = event.target.closest("button[data-action]");
+    if (!actionButton) {
+      return;
+    }
+
+    const action = actionButton.dataset.action;
+    if (action === "download") {
+      await downloadTicketPdf(actionButton.dataset.code);
+      return;
+    }
+
     const button = event.target.closest("button[data-action='cancel']");
     if (!button) {
       return;

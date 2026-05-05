@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Directors Management - Noir Concierge</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-low": "#091328",
+              "surface-container-lowest": "#000000",
+              "on-tertiary-fixed-variant": "#003e56",
+              "on-primary-fixed-variant": "#5f0017",
+              "primary-container": "#ff7481",
+              "on-background": "#dee5ff",
+              "secondary": "#f8a010",
+              "secondary-fixed-dim": "#ffb554",
+              "tertiary-dim": "#05a9e3",
+              "on-surface": "#dee5ff",
+              "secondary-dim": "#e79400",
+              "on-tertiary-container": "#003044",
+              "tertiary": "#47c4ff",
+              "error": "#ff716c",
+              "surface-container-high": "#141f38",
+              "on-tertiary": "#003b52",
+              "tertiary-fixed": "#37bcf7",
+              "secondary-fixed": "#ffc885",
+              "tertiary-fixed-dim": "#1bafe9",
+              "primary-dim": "#e21e49",
+              "on-tertiary-fixed": "#001a27",
+              "outline-variant": "#40485d",
+              "on-primary-container": "#4e0011",
+              "surface-variant": "#192540",
+              "primary-fixed-dim": "#ff586c",
+              "surface-bright": "#1f2b49",
+              "surface-tint": "#ff8c94",
+              "primary": "#ff8c94",
+              "error-dim": "#d7383b",
+              "on-surface-variant": "#a3aac4",
+              "surface-container-highest": "#192540",
+              "on-secondary-container": "#fff6f0",
+              "primary-fixed": "#ff7481",
+              "on-error-container": "#ffa8a3",
+              "inverse-surface": "#faf8ff",
+              "on-primary": "#640018",
+              "background": "#060e20",
+              "tertiary-container": "#2db7f2",
+              "outline": "#6d758c",
+              "surface": "#060e20",
+              "secondary-container": "#855300",
+              "on-secondary": "#4a2c00",
+              "on-secondary-fixed": "#4c2e00",
+              "surface-container": "#0f1930",
+              "inverse-primary": "#bf0037",
+              "error-container": "#9f0519",
+              "on-primary-fixed": "#000000",
+              "inverse-on-surface": "#4d556b",
+              "on-error": "#490006",
+              "surface-dim": "#060e20",
+              "on-secondary-fixed-variant": "#724700"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #060e20;
+            color: #dee5ff;
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-primary/30">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r-0 bg-[#091328] dark:bg-[#091328] flex flex-col py-8 px-4 z-50">
+<div class="mb-10 px-2">
+<h1 class="text-xl font-bold tracking-tighter text-[#dee5ff] font-headline">The Noir Manager</h1>
+<p class="text-xs text-on-surface-variant font-medium">Premium Cinema Group</p>
+</div>
+<button class="mb-8 w-full py-3 bg-primary text-on-primary font-bold rounded-md flex items-center justify-center gap-2 transition-transform active:scale-[0.99]">
+<span class="material-symbols-outlined text-sm">add</span>
+            New Production
+        </button>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-[#a3aac4] hover:text-[#dee5ff] transition-all duration-300 hover:bg-[#141f38] rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+<span class="font-label text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#a3aac4] hover:text-[#dee5ff] transition-all duration-300 hover:bg-[#141f38] rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">movie</span>
+<span class="font-label text-sm">Movies</span>
+</a>
+<!-- Active State: Directors -->
+<a class="flex items-center gap-3 px-4 py-3 text-[#ff8c94] font-bold border-r-2 border-[#ff8c94] bg-gradient-to-r from-[#ff8c94]/10 to-transparent transition-all duration-300 rounded-l-lg scale-[0.99]" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_4</span>
+<span class="font-label text-sm">Directors</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#a3aac4] hover:text-[#dee5ff] transition-all duration-300 hover:bg-[#141f38] rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">theater_comedy</span>
+<span class="font-label text-sm">Cinemas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#a3aac4] hover:text-[#dee5ff] transition-all duration-300 hover:bg-[#141f38] rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">calendar_today</span>
+<span class="font-label text-sm">Screenings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1 border-t border-outline-variant/10 pt-4">
+<a class="flex items-center gap-3 px-4 py-3 text-[#a3aac4] hover:text-[#dee5ff] transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-sm">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#a3aac4] hover:text-[#dee5ff] transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label text-sm">Support</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-20 px-10 flex justify-between items-center bg-[#060e20]/80 backdrop-blur-xl z-40 shadow-2xl shadow-black/40">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-[#dee5ff] tracking-tight font-headline">Noir Concierge</span>
+<div class="relative flex items-center group">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant">search</span>
+<input class="bg-surface-container-lowest border-none focus:ring-1 focus:ring-[#ff8c94]/30 rounded-full py-2 pl-10 pr-4 text-sm w-64 transition-all" placeholder="Search directors, films..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-r border-outline-variant/20 pr-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+</div>
+<button class="font-label text-xs uppercase tracking-widest text-primary font-bold hover:underline">Admin Console</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="Profile photo of the cinema manager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAQL8oDUiMgh78PqqcafvjFmQqsaa1biwNgH6TD41QnWDqDL7HSDN_5r-V-Y9aSAfl0ICmwqeJju-vSaSj2P29twquMw-wK38eTZu2m9IAqUPn6TQvDhlZ6bD_UIO_IT41L5Nd6G03eTpHtnm4MqiWRYV8xE7oGGC0pU4o-T0TK4npg1LZcmRofdD40-cRcoqmnx9VOKFH3cj0cSwN2bhL3zxRAGzST6fuwmv3iTKPhYbPsJ8dvqRQ9918Cnms28qujlOHGB-6dk8"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 pt-32 pb-12 px-10 min-h-screen bg-surface">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-12">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-secondary font-label text-sm uppercase tracking-widest font-bold">Talent Roster</span>
+<span class="w-12 h-[1px] bg-secondary/30"></span>
+</div>
+<h2 class="text-5xl font-extrabold font-headline tracking-tight text-on-surface">Directors</h2>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-md font-bold flex items-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">person_add</span>
+                Add Director
+            </button>
+</div>
+<!-- Bento Stats (Optional flair) -->
+<div class="grid grid-cols-4 gap-6 mb-12">
+<div class="col-span-1 bg-surface-container-high p-6 rounded-xl border-l-4 border-primary">
+<p class="text-on-surface-variant text-xs uppercase tracking-widest mb-2">Total Directors</p>
+<p class="text-4xl font-headline font-bold">142</p>
+</div>
+<div class="col-span-1 bg-surface-container-high p-6 rounded-xl">
+<p class="text-on-surface-variant text-xs uppercase tracking-widest mb-2">Top Origin</p>
+<p class="text-4xl font-headline font-bold">France</p>
+</div>
+<div class="col-span-2 bg-gradient-to-br from-surface-container-high to-surface-container-low p-6 rounded-xl relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-on-surface-variant text-xs uppercase tracking-widest mb-2">Active Shoots</p>
+<p class="text-4xl font-headline font-bold text-secondary">18 Productions</p>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-8xl text-surface-container-highest opacity-20 group-hover:rotate-12 transition-transform">movie_filter</span>
+</div>
+</div>
+<!-- Directors Table Container -->
+<div class="bg-surface-container-low rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/10">
+<div class="p-6 bg-surface-container-highest flex justify-between items-center">
+<h3 class="font-headline font-bold text-lg">Master Directory</h3>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-surface-bright rounded transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">filter_list</span>
+</button>
+<button class="p-2 hover:bg-surface-bright rounded transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">download</span>
+</button>
+</div>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-highest/50">
+<th class="px-8 py-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">ID</th>
+<th class="px-8 py-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">Name</th>
+<th class="px-8 py-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">Last Name</th>
+<th class="px-8 py-4 font-label text-xs uppercase tracking-widest text-on-surface-variant">Nationality</th>
+<th class="px-8 py-4 font-label text-xs uppercase tracking-widest text-on-surface-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-6 text-primary font-mono text-sm">#DIR-001</td>
+<td class="px-8 py-6 font-semibold">Christopher</td>
+<td class="px-8 py-6 font-semibold">Nolan</td>
+<td class="px-8 py-6">
+<span class="bg-surface-bright px-3 py-1 rounded-full text-xs text-tertiary border border-tertiary/20">British-American</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-2"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error-dim transition-colors px-2"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container-low/30 hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-6 text-primary font-mono text-sm">#DIR-002</td>
+<td class="px-8 py-6 font-semibold">Greta</td>
+<td class="px-8 py-6 font-semibold">Gerwig</td>
+<td class="px-8 py-6">
+<span class="bg-surface-bright px-3 py-1 rounded-full text-xs text-tertiary border border-tertiary/20">American</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-2"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error-dim transition-colors px-2"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-6 text-primary font-mono text-sm">#DIR-003</td>
+<td class="px-8 py-6 font-semibold">Denis</td>
+<td class="px-8 py-6 font-semibold">Villeneuve</td>
+<td class="px-8 py-6">
+<span class="bg-surface-bright px-3 py-1 rounded-full text-xs text-tertiary border border-tertiary/20">Canadian</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-2"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error-dim transition-colors px-2"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="bg-surface-container-low/30 hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-6 text-primary font-mono text-sm">#DIR-004</td>
+<td class="px-8 py-6 font-semibold">Sofia</td>
+<td class="px-8 py-6 font-semibold">Coppola</td>
+<td class="px-8 py-6">
+<span class="bg-surface-bright px-3 py-1 rounded-full text-xs text-tertiary border border-tertiary/20">American</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-2"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error-dim transition-colors px-2"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-8 py-6 text-primary font-mono text-sm">#DIR-005</td>
+<td class="px-8 py-6 font-semibold">Bong</td>
+<td class="px-8 py-6 font-semibold">Joon-ho</td>
+<td class="px-8 py-6">
+<span class="bg-surface-bright px-3 py-1 rounded-full text-xs text-tertiary border border-tertiary/20">South Korean</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors px-2"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-on-surface-variant hover:text-error-dim transition-colors px-2"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination -->
+<div class="px-8 py-4 bg-surface-container-highest/20 flex justify-between items-center">
+<p class="text-xs text-on-surface-variant">Showing 5 of 142 directors</p>
+<div class="flex gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-bright transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-bold text-xs">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-bright transition-colors text-xs">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-bright transition-colors text-xs">3</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-bright transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

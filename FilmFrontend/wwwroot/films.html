@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Film</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -12,22 +12,22 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/films.js" defer></script>
+  <script src="/js/films.js?v=20260427-7" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
 
-  <main class="container page-shell">
-    <section class="hero">
-      <div class="hero-panel">
-        <p class="eyebrow">Catalog management</p>
-        <h1>Gestione film</h1>
-        <p>Crea e aggiorna il catalogo film, associa i registi e mantieni la programmazione sempre coerente con i contenuti disponibili.</p>
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Catalogo film</p>
+        <h1 class="ops-title">Gestione film</h1>
+        <p class="ops-subtitle">Gestisci il catalogo, importa rapidamente nuove uscite da TMDB e prepara i titoli per la programmazione in sala.</p>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Crea / Modifica film</h2>
+      <h2 class="ops-section-head">Nuovo film o modifica</h2>
       <form id="film-form">
         <div class="form-grid">
           <div>
@@ -47,28 +47,54 @@
             <input id="durata" name="durata" type="number" min="1" required>
           </div>
           <div>
+            <label for="dataUscita">Data uscita</label>
+            <input id="dataUscita" name="dataUscita" type="date">
+          </div>
+          <div>
+            <label for="titoloOriginale">Titolo originale</label>
+            <input id="titoloOriginale" name="titoloOriginale" type="text">
+          </div>
+          <div>
+            <label for="tmdbMovieId">TMDB Movie ID</label>
+            <input id="tmdbMovieId" name="tmdbMovieId" type="number" min="1">
+          </div>
+          <div>
             <label for="copertinaPath">CopertinaPath</label>
             <input id="copertinaPath" name="copertinaPath" type="text">
+          </div>
+          <div>
+            <label for="backdropPath">BackdropPath</label>
+            <input id="backdropPath" name="backdropPath" type="text">
           </div>
           <div>
             <label for="filmatoPath">FilmatoPath</label>
             <input id="filmatoPath" name="filmatoPath" type="text">
           </div>
-          <div style="grid-column: 1 / -1;">
+          <div class="full-row">
+            <label for="descrizioneLunga">Descrizione lunga</label>
+            <textarea id="descrizioneLunga" name="descrizioneLunga" rows="4" maxlength="2000"></textarea>
+          </div>
+          <div class="full-row">
+            <label for="castPrincipale">Cast principale</label>
+            <input id="castPrincipale" name="castPrincipale" type="text" placeholder="Nome Cognome, Nome Cognome...">
+          </div>
+          <div class="full-row">
             <label>Categorie</label>
             <div id="film-categorie-options" class="actions"></div>
           </div>
         </div>
         <div class="actions">
           <button id="film-submit" class="primary" type="submit">Crea film</button>
+          <button id="film-quick-add" class="secondary" type="button">Aggiunta rapida</button>
+          <button id="film-tmdb-sync" class="secondary" type="button">Sync TMDB</button>
           <button id="film-cancel" class="secondary hidden" type="button">Annulla modifica</button>
         </div>
       </form>
-      <div id="films-status" class="status info">In attesa operazioni...</div>
+      <div id="films-status" class="status info">Seleziona un'operazione.</div>
     </section>
 
     <section class="panel">
-      <h2>Elenco film</h2>
+      <h2 class="ops-section-head">Elenco film</h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -77,10 +103,12 @@
               <th>Poster</th>
               <th>Titolo</th>
               <th>Data</th>
+              <th>Uscita</th>
               <th>RegistaId</th>
               <th>Durata</th>
+              <th>TMDB</th>
+              <th>Trailer</th>
               <th>CopertinaPath</th>
-              <th>FilmatoPath</th>
               <th>Categorie</th>
               <th>Azioni</th>
             </tr>
@@ -89,6 +117,21 @@
         </table>
       </div>
     </section>
+
+    <div id="film-quick-add-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="film-quick-add-title">
+      <div class="modal-panel quick-add-modal-panel">
+        <div class="actions" style="justify-content: space-between; align-items: center;">
+          <h3 id="film-quick-add-title">Aggiunta rapida da TMDB</h3>
+          <button id="film-quick-add-close" class="btn-small secondary" type="button">Chiudi</button>
+        </div>
+        <p class="subtle">Ultime uscite disponibili su TMDB (20 film). Seleziona uno o piu titoli e aggiungili al catalogo.</p>
+        <div id="film-quick-add-status" class="status info">Caricamento elenco TMDB...</div>
+        <div id="film-quick-add-list" class="grid-cards quick-add-grid"></div>
+        <div class="actions" style="justify-content: flex-end;">
+          <button id="film-quick-add-submit" class="primary" type="button">Aggiungi selezionati</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <div id="footer-container"></div>

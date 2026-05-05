@@ -7,7 +7,6 @@
   const cinemaBadgeEl = document.getElementById("cinema-selezionato-badge");
   const chooseCinemaSelect = document.getElementById("choose-cinema-select");
 
-  let selectedTab = "featured";
   let selectedCinemaId = null;
   let geoPosition = null;
 
@@ -57,7 +56,6 @@
 
   function queryString() {
     const params = new URLSearchParams();
-    params.set("tab", selectedTab);
 
     const search = (searchEl.value || "").trim();
     if (search) {
@@ -109,13 +107,22 @@
   }
 
   async function loadFilms() {
+    if (!selectedCinemaId) {
+      cardsEl.innerHTML = "<div class='status info'>Seleziona un cinema per vedere i film effettivamente in programmazione nei prossimi 30 giorni.</div>";
+      setStatus("Seleziona un cinema per caricare la programmazione.", "info");
+      return;
+    }
+
     setStatus("Caricamento programmazione...", "info");
     try {
       const query = queryString();
       const list = await window.ApiClient.get(`/programmazione/films?${query}`);
-      const items = Array.isArray(list) ? list : [];
+      const items = (Array.isArray(list) ? list : []).filter((item) => {
+        const showCount = Number(item && item.showCount);
+        return item && item.presenteNelCinemaSelezionato === true && showCount > 0;
+      });
       if (!items.length) {
-        cardsEl.innerHTML = "<div class='status info'>Nessun film trovato con i filtri selezionati.</div>";
+        cardsEl.innerHTML = "<div class='status info'>Nessun film in programmazione nei prossimi 30 giorni per il cinema selezionato.</div>";
         setStatus("Nessun risultato.", "info");
         return;
       }
@@ -196,19 +203,6 @@
   }
 
   function bindEvents() {
-    tabsEl.addEventListener("click", async (event) => {
-      const button = event.target.closest("button[data-tab]");
-      if (!button) {
-        return;
-      }
-
-      selectedTab = button.dataset.tab;
-      tabsEl.querySelectorAll("button[data-tab]").forEach((b) => {
-        b.classList.toggle("active", b === button);
-      });
-      await loadFilms();
-    });
-
     searchEl.addEventListener("input", debounce(loadFilms, 280));
     categoryEl.addEventListener("change", loadFilms);
 
@@ -271,8 +265,12 @@
   }
 
   async function initProgrammazionePage() {
-    if (!cardsEl || !tabsEl || !searchEl || !categoryEl) {
+    if (!cardsEl || !searchEl || !categoryEl) {
       return;
+    }
+
+    if (tabsEl) {
+      tabsEl.style.display = "none";
     }
 
     geoPosition = await requestGeolocation();

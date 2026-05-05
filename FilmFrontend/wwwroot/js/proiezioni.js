@@ -53,6 +53,37 @@
     return new Date(Date.UTC(1, 0, 1, hh, mm, 0)).toISOString();
   }
 
+  function parseShowDateTime(dataValue, oraValue) {
+    if (window.ShowUtils && typeof window.ShowUtils.parseShowDate === "function") {
+      return window.ShowUtils.parseShowDate(dataValue, oraValue);
+    }
+
+    const date = String(dataValue || "").slice(0, 10);
+    const time = String(oraValue || "");
+    let hhmm = "";
+
+    if (/^\d{2}:\d{2}/.test(time)) {
+      hhmm = time.slice(0, 5);
+    } else if (time.length >= 16) {
+      hhmm = time.slice(11, 16);
+    }
+
+    if (!date || !/^\d{2}:\d{2}$/.test(hhmm)) {
+      return null;
+    }
+
+    const value = new Date(`${date}T${hhmm}:00`);
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  function isFutureOrCurrentShow(show) {
+    const showDate = parseShowDateTime(show && show.data, show && show.ora);
+    if (!showDate) {
+      return false;
+    }
+    return showDate.getTime() >= Date.now();
+  }
+
   function renderRows(items) {
     if (!items.length) {
       tableBody.innerHTML = "<tr><td colspan='8' class='subtle'>Nessuna proiezione trovata.</td></tr>";
@@ -136,8 +167,10 @@
     setStatus("Caricamento proiezioni...", "info");
     try {
       const items = await window.ApiClient.get("/proiezioni");
-      renderRows(Array.isArray(items) ? items : []);
-      setStatus("Proiezioni caricate.", "success");
+      const list = Array.isArray(items) ? items : [];
+      const activeShows = list.filter(isFutureOrCurrentShow);
+      renderRows(activeShows);
+      setStatus("Proiezioni future caricate.", "success");
     } catch (error) {
       tableBody.innerHTML = "";
       setStatus(`Errore: ${error.message}`, "error");

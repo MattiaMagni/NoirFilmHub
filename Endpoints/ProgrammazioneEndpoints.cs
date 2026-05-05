@@ -61,11 +61,10 @@ public static class ProgrammazioneEndpoints
             });
         }).AllowAnonymous();
 
-        group.MapGet("/films", async (FilmDbContext db, string? tab, string? search, int? categoria, int? cinemaId) =>
+        group.MapGet("/films", async (FilmDbContext db, string? search, int? categoria, int cinemaId) =>
         {
             var now = DateTime.Today;
-            var nextWeek = now.AddDays(7);
-            var nextTwoWeeks = now.AddDays(14);
+            var nextThirtyDays = now.AddDays(30);
 
             var filmsQuery = db.Films
                 .AsNoTracking()
@@ -85,55 +84,24 @@ public static class ProgrammazioneEndpoints
                 filmsQuery = filmsQuery.Where(f => f.FilmCategorie.Any(fc => fc.CategoriaId == categoria.Value));
             }
 
-            var films = await filmsQuery.ToListAsync();
-
             var showsQuery = db.Proiezioni
                 .AsNoTracking()
                 .Include(p => p.Sala)
-                .Where(p => p.Data >= now && p.Data <= nextTwoWeeks);
+                .Where(p => p.Data >= now && p.Data <= nextThirtyDays);
 
-            if (cinemaId.HasValue)
-            {
-                showsQuery = showsQuery.Where(p => p.CinemaId == cinemaId.Value);
-            }
+            showsQuery = showsQuery.Where(p => p.CinemaId == cinemaId);
 
             var shows = await showsQuery.ToListAsync();
+            var activeFilmIds = shows.Select(s => s.FilmId).Distinct().ToHashSet();
+
+            filmsQuery = filmsQuery.Where(f => activeFilmIds.Contains(f.Id));
+            var films = await filmsQuery.ToListAsync();
 
             var showCountByFilm = shows
                 .GroupBy(s => s.FilmId)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            var featuredFilmIds = shows
-                .Where(s => s.Data <= nextWeek)
-                .GroupBy(s => s.FilmId)
-                .OrderByDescending(g => g.Count())
-                .Take(12)
-                .Select(g => g.Key)
-                .ToHashSet();
-
-            var comingFilmIds = films
-                .Where(f => f.DataUscita.HasValue && f.DataUscita.Value.Date > now && f.DataUscita.Value.Date <= nextTwoWeeks)
-                .Select(f => f.Id)
-                .ToHashSet();
-
-            var normalizedTab = (tab ?? "all").Trim().ToLowerInvariant();
-
-            var filtered = films.Where(f =>
-            {
-                if (normalizedTab == "featured")
-                {
-                    return featuredFilmIds.Contains(f.Id);
-                }
-
-                if (normalizedTab == "coming")
-                {
-                    return comingFilmIds.Contains(f.Id);
-                }
-
-                return true;
-            });
-
-            var list = filtered
+            var list = films
                 .OrderBy(f => f.Titolo)
                 .Select(f => new
                 {
@@ -151,21 +119,9 @@ public static class ProgrammazioneEndpoints
                     f.FilmatoPath,
                     Categorie = f.FilmCategorie.Select(fc => fc.Categoria.Nome).ToList(),
                     ShowCount = showCountByFilm.TryGetValue(f.Id, out var count) ? count : 0,
-                    IsFeatured = featuredFilmIds.Contains(f.Id),
-                    IsComing = comingFilmIds.Contains(f.Id),
-                    PresenteNelCinemaSelezionato = cinemaId.HasValue && shows.Any(s => s.FilmId == f.Id && s.CinemaId == cinemaId.Value)
+                    PresenteNelCinemaSelezionato = shows.Any(s => s.FilmId == f.Id && s.CinemaId == cinemaId)
                 })
                 .ToList();
-
-            if (normalizedTab == "coming")
-            {
-                list = list.Where(x => x.IsComing).ToList();
-            }
-
-            if (normalizedTab == "featured")
-            {
-                list = list.Where(x => x.IsFeatured).ToList();
-            }
 
             return Results.Ok(list);
         }).AllowAnonymous();
@@ -185,7 +141,7 @@ public static class ProgrammazioneEndpoints
             }
 
             var today = DateTime.Today;
-            var endDate = today.AddDays(14);
+            var endDate = today.AddDays(30);
 
             var selectedCinema = cinemaId.HasValue
                 ? await db.Cinemas.AsNoTracking().FirstOrDefaultAsync(c => c.Id == cinemaId.Value)

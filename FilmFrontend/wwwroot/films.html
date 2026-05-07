@@ -12,7 +12,7 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/films.js?v=20260427-7" defer></script>
+  <script src="/js/films.js?v=20260507-6" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
@@ -125,10 +125,29 @@
           <button id="film-quick-add-close" class="btn-small secondary" type="button">Chiudi</button>
         </div>
         <p class="subtle">Ultime uscite disponibili su TMDB (20 film). Seleziona uno o piu titoli e aggiungili al catalogo.</p>
+        <div id="film-quick-add-search-form" class="actions" style="align-items: flex-end; gap: 10px; margin-bottom: 10px;">
+          <div style="flex: 1 1 300px;">
+            <label for="film-quick-add-search-title">Cerca titolo</label>
+            <input id="film-quick-add-search-title" type="text" placeholder="Es. Dune">
+          </div>
+          <button id="film-quick-add-search-submit" class="secondary" type="button">Cerca</button>
+        </div>
         <div id="film-quick-add-status" class="status info">Caricamento elenco TMDB...</div>
         <div id="film-quick-add-list" class="grid-cards quick-add-grid"></div>
         <div class="actions" style="justify-content: flex-end;">
           <button id="film-quick-add-submit" class="primary" type="button">Aggiungi selezionati</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="film-quick-add-confirm-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="film-quick-add-confirm-title">
+      <div class="modal-panel quick-add-confirm-panel">
+        <h3 id="film-quick-add-confirm-title">Conferma aggiunta film</h3>
+        <p id="film-quick-add-confirm-count" class="subtle">Stai per aggiungere 0 film al catalogo:</p>
+        <div id="film-quick-add-confirm-list" class="quick-add-confirm-list"></div>
+        <div class="actions" style="justify-content: flex-end;">
+          <button id="film-quick-add-confirm-cancel" class="secondary" type="button">Annulla</button>
+          <button id="film-quick-add-confirm-submit" class="primary" type="button">Conferma aggiunta</button>
         </div>
       </div>
     </div>

@@ -109,6 +109,75 @@ public class TmdbService
         return list;
     }
 
+    public async Task<List<TmdbLatestItemDTO>> SearchMoviesByTitleAsync(string title, int limit, int page)
+    {
+        if (!IsConfigured())
+        {
+            return [];
+        }
+
+        var query = (title ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return [];
+        }
+
+        var safeLimit = Math.Clamp(limit <= 0 ? 20 : limit, 1, 50);
+        var safePage = Math.Clamp(page <= 0 ? 1 : page, 1, 50);
+        var url =
+            $"{_baseUrl}/search/movie?include_adult=false&language={Uri.EscapeDataString(_language)}&page={safePage}&query={Uri.EscapeDataString(query)}";
+
+        var doc = await GetJsonAsync(url);
+        if (doc is null || !doc.RootElement.TryGetProperty("results", out var results) || results.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var existingTmdbIds = await _db.Films
+            .AsNoTracking()
+            .Where(f => f.TmdbMovieId.HasValue)
+            .Select(f => f.TmdbMovieId!.Value)
+            .ToListAsync();
+        var existingSet = existingTmdbIds.ToHashSet();
+
+        var list = new List<TmdbLatestItemDTO>();
+        foreach (var item in results.EnumerateArray())
+        {
+            var id = ReadInt(item, "id");
+            if (!id.HasValue || id.Value <= 0)
+            {
+                continue;
+            }
+
+            var releaseDateRaw = ReadString(item, "release_date");
+            DateTime? releaseDate = null;
+            if (DateTime.TryParse(releaseDateRaw, out var parsedDate))
+            {
+                releaseDate = parsedDate;
+            }
+
+            list.Add(new TmdbLatestItemDTO
+            {
+                TmdbMovieId = id.Value,
+                Titolo = ReadString(item, "title") ?? string.Empty,
+                TitoloOriginale = ReadString(item, "original_title") ?? string.Empty,
+                DataUscita = releaseDate,
+                PosterPath = BuildImagePath(ReadString(item, "poster_path"), "w500"),
+                BackdropPath = BuildImagePath(ReadString(item, "backdrop_path"), "w1280"),
+                Overview = ReadString(item, "overview") ?? string.Empty,
+                VoteAverage = ReadDouble(item, "vote_average"),
+                AlreadyInCatalog = existingSet.Contains(id.Value)
+            });
+
+            if (list.Count >= safeLimit)
+            {
+                break;
+            }
+        }
+
+        return list;
+    }
+
     public async Task<(int Created, int SkippedExisting, int Failed, List<int> CreatedFilmIds)> ImportMoviesAsync(List<int> tmdbMovieIds)
     {
         if (!IsConfigured())

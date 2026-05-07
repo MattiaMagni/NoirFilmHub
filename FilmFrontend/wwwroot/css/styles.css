@@ -1600,6 +1600,34 @@ body.modal-open {
   margin: 10px 0 4px;
 }
 
+.quick-add-confirm-panel {
+  width: min(100%, 640px);
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick-add-confirm-list {
+  max-height: 42vh;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--surface-high);
+}
+
+.quick-add-confirm-item {
+  margin: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.quick-add-confirm-item:last-child {
+  border-bottom: 0;
+}
+
 .modal-close {
   margin-left: auto;
   display: block;

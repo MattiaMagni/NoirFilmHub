@@ -61,6 +61,30 @@ public static class TmdbEndpoints
             });
         }).RequireAuthorization("AdminOrPowerUser");
 
+        group.MapGet("/search", async (TmdbService service, string? title, int? limit, int? page) =>
+        {
+            if (!service.IsConfigured())
+            {
+                return Results.BadRequest(new { error = "TMDB non configurato" });
+            }
+
+            var query = (title ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Results.BadRequest(new { error = "Titolo di ricerca obbligatorio" });
+            }
+
+            var items = await service.SearchMoviesByTitleAsync(query, limit ?? 20, page ?? 1);
+            return Results.Ok(new
+            {
+                title = query,
+                limit = Math.Clamp(limit ?? 20, 1, 50),
+                page = Math.Max(1, page ?? 1),
+                count = items.Count,
+                items
+            });
+        }).RequireAuthorization("AdminOrPowerUser");
+
         group.MapPost("/import-latest", async (TmdbImportRequestDTO dto, TmdbService service) =>
         {
             if (!service.IsConfigured())

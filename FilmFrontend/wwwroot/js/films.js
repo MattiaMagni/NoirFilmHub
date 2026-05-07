@@ -3,6 +3,8 @@
   let categorie = [];
   let prefillRegistaId = null;
   let quickAddItems = [];
+  let currentQuickAddQuery = "";
+  let confirmQuickAddResolver = null;
 
   const tableBody = document.getElementById("films-table-body");
   const form = document.getElementById("film-form");
@@ -16,6 +18,14 @@
   const quickAddStatusEl = document.getElementById("film-quick-add-status");
   const quickAddListEl = document.getElementById("film-quick-add-list");
   const quickAddSubmitBtn = document.getElementById("film-quick-add-submit");
+  const quickAddSearchForm = document.getElementById("film-quick-add-search-form");
+  const quickAddSearchTitleInput = document.getElementById("film-quick-add-search-title");
+  const quickAddSearchSubmitBtn = document.getElementById("film-quick-add-search-submit");
+  const quickAddConfirmModal = document.getElementById("film-quick-add-confirm-modal");
+  const quickAddConfirmCount = document.getElementById("film-quick-add-confirm-count");
+  const quickAddConfirmList = document.getElementById("film-quick-add-confirm-list");
+  const quickAddConfirmCancelBtn = document.getElementById("film-quick-add-confirm-cancel");
+  const quickAddConfirmSubmitBtn = document.getElementById("film-quick-add-confirm-submit");
   const quickSelection = new Set();
 
   function normalizeTmdbImage(url, preferredSize) {
@@ -272,6 +282,61 @@
     quickSelection.clear();
   }
 
+  function renderQuickAddConfirmationList(selectedIds) {
+    if (!quickAddConfirmList) {
+      return;
+    }
+
+    if (quickAddConfirmCount) {
+      const total = selectedIds.length;
+      quickAddConfirmCount.textContent = `Stai per aggiungere ${total} ${total === 1 ? "film" : "film"} al catalogo:`;
+    }
+
+    quickAddConfirmList.innerHTML = selectedIds
+      .map((id) => {
+        const item = quickAddItems.find((x) => Number(x.tmdbMovieId) === Number(id));
+        const title = item && item.titolo ? item.titolo : `TMDB #${id}`;
+        return `<p class="quick-add-confirm-item">${title}</p>`;
+      })
+      .join("");
+  }
+
+  function openQuickAddConfirmModal(selectedIds) {
+    if (!quickAddConfirmModal) {
+      return;
+    }
+    renderQuickAddConfirmationList(selectedIds);
+    quickAddConfirmModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  }
+
+  function closeQuickAddConfirmModal() {
+    if (!quickAddConfirmModal) {
+      return;
+    }
+    quickAddConfirmModal.classList.add("hidden");
+    if (!quickAddModal || quickAddModal.classList.contains("hidden")) {
+      document.body.classList.remove("modal-open");
+    }
+  }
+
+  async function confirmQuickAddSelection(selectedIds) {
+    if (!quickAddConfirmModal || !quickAddConfirmSubmitBtn || !quickAddConfirmCancelBtn) {
+      const selectedTitles = selectedIds
+        .map((id) => {
+          const item = quickAddItems.find((x) => Number(x.tmdbMovieId) === id);
+          return item && item.titolo ? item.titolo : `TMDB #${id}`;
+        });
+      const preview = selectedTitles.map((title) => `- ${title}`).join("\n");
+      return window.confirm(`Confermi l'aggiunta di ${selectedIds.length} film?\n\n${preview}`);
+    }
+
+    openQuickAddConfirmModal(selectedIds);
+    return await new Promise((resolve) => {
+      confirmQuickAddResolver = resolve;
+    });
+  }
+
   function toggleQuickSelection(tmdbId, disabled) {
     if (!tmdbId || disabled) {
       return;
@@ -320,15 +385,79 @@
     }).join("");
   }
 
-  async function loadQuickAddItems() {
-    setQuickAddStatus("Caricamento ultime uscite TMDB...", "info");
+  function normalizeSearchText(value) {
+    const raw = String(value || "").toLowerCase().trim();
+    if (!raw) {
+      return "";
+    }
+    if (typeof raw.normalize !== "function") {
+      return raw;
+    }
+    return raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  async function fallbackSearchQuickAddItems(query) {
+    const pages = [1, 2, 3];
+    const responses = await Promise.allSettled(
+      pages.map((page) => window.ApiClient.get(`/tmdb/latest?limit=50&page=${page}`))
+    );
+
+    const byId = new Map();
+    responses.forEach((res) => {
+      if (res.status !== "fulfilled") {
+        return;
+      }
+      const items = Array.isArray(res.value && res.value.items) ? res.value.items : [];
+      items.forEach((item) => {
+        const id = Number(item && item.tmdbMovieId);
+        if (!id || byId.has(id)) {
+          return;
+        }
+        byId.set(id, item);
+      });
+    });
+
+    const normalizedQuery = normalizeSearchText(query);
+    return Array.from(byId.values())
+      .filter((item) => {
+        const title = normalizeSearchText(item && item.titolo);
+        const originalTitle = normalizeSearchText(item && item.titoloOriginale);
+        return title.includes(normalizedQuery) || originalTitle.includes(normalizedQuery);
+      })
+      .slice(0, 20);
+  }
+
+  async function loadQuickAddItems(titleQuery) {
+    const query = String(titleQuery || "").trim();
+    currentQuickAddQuery = query;
+    const isSearch = query.length > 0;
+    setQuickAddStatus(isSearch ? "Ricerca film su TMDB in corso..." : "Caricamento ultime uscite TMDB...", "info");
     try {
-      const response = await window.ApiClient.get("/tmdb/latest?limit=20&page=1");
+      const endpoint = isSearch
+        ? `/tmdb/search?title=${encodeURIComponent(query)}&limit=20&page=1`
+        : "/tmdb/latest?limit=20&page=1";
+      const response = await window.ApiClient.get(endpoint);
       quickAddItems = Array.isArray(response.items) ? response.items : [];
       quickSelection.clear();
       renderQuickAddItems(quickAddItems);
-      setQuickAddStatus(`Caricati ${quickAddItems.length} titoli da TMDB.`, "success");
+      if (isSearch) {
+        setQuickAddStatus(`Ricerca completata: ${quickAddItems.length} risultati per \"${query}\".`, "success");
+      } else {
+        setQuickAddStatus(`Caricati ${quickAddItems.length} titoli da TMDB.`, "success");
+      }
     } catch (error) {
+      if (isSearch) {
+        try {
+          const fallbackItems = await fallbackSearchQuickAddItems(query);
+          quickAddItems = fallbackItems;
+          quickSelection.clear();
+          renderQuickAddItems(quickAddItems);
+          setQuickAddStatus(`Ricerca completata: ${quickAddItems.length} risultati affini per \"${query}\".`, "info");
+          return;
+        } catch {
+        }
+      }
+
       quickAddItems = [];
       renderQuickAddItems([]);
       setQuickAddStatus(`Errore TMDB: ${error.message}`, "error");
@@ -349,6 +478,12 @@
       return;
     }
 
+    const confirmed = await confirmQuickAddSelection(selectedIds);
+    if (!confirmed) {
+      setQuickAddStatus("Aggiunta annullata.", "info");
+      return;
+    }
+
     setQuickAddStatus("Importazione in corso...", "info");
     try {
       const result = await window.ApiClient.post("/tmdb/import-latest", { tmdbMovieIds: selectedIds });
@@ -358,7 +493,7 @@
       setQuickAddStatus(`Import completato: aggiunti ${created}, gia presenti ${skipped}, errori ${failed}.`, "success");
       setStatus(`Aggiunta rapida completata: ${created} nuovi film in catalogo.`, "success");
       await loadFilms();
-      await loadQuickAddItems();
+      closeQuickAddModal();
     } catch (error) {
       setQuickAddStatus(`Errore import: ${error.message}`, "error");
     }
@@ -368,6 +503,10 @@
     if (quickAddBtn) {
       quickAddBtn.addEventListener("click", async () => {
         openQuickAddModal();
+        currentQuickAddQuery = "";
+        if (quickAddSearchTitleInput) {
+          quickAddSearchTitleInput.value = "";
+        }
         await loadQuickAddItems();
       });
     }
@@ -398,6 +537,72 @@
 
     if (quickAddSubmitBtn) {
       quickAddSubmitBtn.addEventListener("click", submitQuickAdd);
+    }
+
+    if (quickAddConfirmSubmitBtn) {
+      quickAddConfirmSubmitBtn.addEventListener("click", () => {
+        closeQuickAddConfirmModal();
+        if (confirmQuickAddResolver) {
+          confirmQuickAddResolver(true);
+          confirmQuickAddResolver = null;
+        }
+      });
+    }
+
+    if (quickAddConfirmCancelBtn) {
+      quickAddConfirmCancelBtn.addEventListener("click", () => {
+        closeQuickAddConfirmModal();
+        if (confirmQuickAddResolver) {
+          confirmQuickAddResolver(false);
+          confirmQuickAddResolver = null;
+        }
+      });
+    }
+
+    if (quickAddConfirmModal) {
+      quickAddConfirmModal.addEventListener("click", (event) => {
+        if (event.target !== quickAddConfirmModal) {
+          return;
+        }
+        closeQuickAddConfirmModal();
+        if (confirmQuickAddResolver) {
+          confirmQuickAddResolver(false);
+          confirmQuickAddResolver = null;
+        }
+      });
+    }
+
+    const runQuickSearch = async () => {
+      const title = quickAddSearchTitleInput ? quickAddSearchTitleInput.value : "";
+      if (!String(title || "").trim()) {
+        await loadQuickAddItems();
+        return;
+      }
+      await loadQuickAddItems(title);
+    };
+
+    if (quickAddSearchSubmitBtn) {
+      quickAddSearchSubmitBtn.addEventListener("click", async (event) => {
+        event.preventDefault();
+        await runQuickSearch();
+      });
+    }
+
+    if (quickAddSearchTitleInput) {
+      quickAddSearchTitleInput.addEventListener("keydown", async (event) => {
+        if (event.key !== "Enter") {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        await runQuickSearch();
+      });
+    }
+
+    if (quickAddSearchForm) {
+      quickAddSearchForm.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
     }
   }
 

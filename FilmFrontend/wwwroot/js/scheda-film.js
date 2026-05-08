@@ -4,12 +4,17 @@
   const dateStripEl = document.getElementById("show-date-strip");
   const showBodyEl = document.getElementById("show-body");
   const goToShowsBtn = document.getElementById("goto-shows-btn");
+  const bookingFilmEl = document.getElementById("booking-summary-film");
+  const bookingDateEl = document.getElementById("booking-summary-date");
+  const bookingTimeEl = document.getElementById("booking-summary-time");
+  const bookingCtaBtn = document.getElementById("booking-cta-btn");
 
   let filmId = null;
   let selectedCinemaId = null;
   let selectedDate = null;
   let cachedCalendar = [];
   let selectedCinema = null;
+  let selectedShow = null;
 
   function setStatus(message, kind) {
     statusEl.className = `status ${kind}`;
@@ -53,8 +58,10 @@
 
   function buildFilmDetails(film) {
     const categories = Array.isArray(film.categorie) && film.categorie.length
-      ? film.categorie.map((c) => `<span class="tag info">${c}</span>`).join(" ")
-      : "<span class='tag info'>Senza categoria</span>";
+      ? film.categorie.join(" / ")
+      : "Categoria non disponibile";
+
+    const shortDescription = String(film.descrizioneLunga || "Descrizione non disponibile.").slice(0, 220);
 
     detailsEl.innerHTML = `
       <article class="panel film-sheet">
@@ -64,13 +71,8 @@
           </div>
           <div>
             <h2>${film.titolo}</h2>
-            <p class="subtle">${film.descrizioneLunga || "Descrizione non disponibile."}</p>
-            <div class="actions">${categories}</div>
-            <p class="subtle"><strong>Durata:</strong> ${film.durata || "-"} min</p>
-            <p class="subtle"><strong>Data rilascio:</strong> ${formatDate(film.dataUscita || film.dataProduzione)}</p>
-            <p class="subtle"><strong>Regista:</strong> ${film.regista || "N/D"}</p>
-            <p class="subtle"><strong>Cast:</strong> ${film.castPrincipale || "N/D"}</p>
-            ${film.filmatoPath ? `<p><a class="button secondary" href="${film.filmatoPath}" target="_blank" rel="noopener noreferrer">Guarda trailer</a></p>` : ""}
+            <p class="subtle">${categories}</p>
+            <p class="subtle">${shortDescription}</p>
           </div>
         </div>
       </article>
@@ -78,31 +80,71 @@
   }
 
   function renderDateStrip() {
-    const days = window.DateUtils.nextDays(14);
+    const days = (Array.isArray(cachedCalendar) ? cachedCalendar : [])
+      .map((entry) => entry && entry.data)
+      .filter(Boolean)
+      .map((iso) => ({ iso, label: window.DateUtils.formatDatePill(iso) }));
+
+    if (!days.length) {
+      dateStripEl.innerHTML = "";
+      selectedDate = null;
+      return;
+    }
+
+    if (!selectedDate || !days.some((item) => item.iso === selectedDate)) {
+      selectedDate = days[0].iso;
+    }
+
     dateStripEl.innerHTML = days
-      .map((item, index) => {
-        const active = (selectedDate && selectedDate === item.iso) || (!selectedDate && index === 0);
+      .map((item) => {
+        const active = selectedDate === item.iso;
         return `<button class="btn-small secondary ${active ? "active" : ""}" data-date="${item.iso}">${item.label}</button>`;
       })
       .join("");
-    if (!selectedDate && days[0]) {
-      selectedDate = days[0].iso;
-    }
   }
 
   function bookingUrl(item) {
     return `/acquista.html?idCinema=${item.cinemaId}&idFilm=${filmId}&idSala=${item.salaId}&idShow=${item.proiezioneId}`;
   }
 
+  function updateBookingSummary() {
+    if (!bookingFilmEl || !bookingDateEl || !bookingTimeEl || !bookingCtaBtn) {
+      return;
+    }
+
+    const filmTitle = detailsEl.querySelector("h2")?.textContent?.trim() || "-";
+    bookingFilmEl.textContent = filmTitle;
+
+    if (!selectedDate) {
+      bookingDateEl.textContent = "-";
+    } else {
+      bookingDateEl.textContent = window.DateUtils.formatDatePill(selectedDate);
+    }
+
+    if (!selectedShow) {
+      bookingTimeEl.textContent = "-";
+      bookingCtaBtn.disabled = true;
+      bookingCtaBtn.removeAttribute("data-url");
+      return;
+    }
+
+    bookingTimeEl.textContent = selectedShow.ora || "-";
+    bookingCtaBtn.disabled = false;
+    bookingCtaBtn.setAttribute("data-url", selectedShow.url || "");
+  }
+
   function renderShowByDate() {
     const selected = cachedCalendar.find((x) => x.data === selectedDate);
+    selectedShow = null;
     if (!selected) {
       showBodyEl.innerHTML = "<p class='subtle'>Nessuno show per la data selezionata.</p>";
+      updateBookingSummary();
       return;
     }
 
     if (!selectedCinemaId) {
       showBodyEl.innerHTML = "<p class='subtle'>Seleziona prima un cinema dalla pagina Programmazione per visualizzare gli show.</p>";
+      updateBookingSummary();
       return;
     }
 
@@ -131,6 +173,7 @@
       .join("");
 
     showBodyEl.innerHTML = `${cinemaInfo}${tipologie}`;
+    updateBookingSummary();
   }
 
   function bindShowActions() {
@@ -143,6 +186,11 @@
       if (!url) {
         return;
       }
+
+      const timeLabel = button.textContent ? button.textContent.trim() : "";
+      selectedShow = { ora: timeLabel, url };
+      showBodyEl.querySelectorAll(".showtime-btn").forEach((btn) => btn.classList.toggle("active", btn === button));
+      updateBookingSummary();
 
       if (!window.AuthService || !window.AuthService.isAuthenticated()) {
         if (window.ProgrammazioneShared) {
@@ -166,6 +214,25 @@
       dateStripEl.querySelectorAll("button[data-date]").forEach((b) => b.classList.toggle("active", b === button));
       renderShowByDate();
     });
+
+    if (bookingCtaBtn) {
+      bookingCtaBtn.addEventListener("click", () => {
+        const url = bookingCtaBtn.getAttribute("data-url");
+        if (!url) {
+          return;
+        }
+        if (!window.AuthService || !window.AuthService.isAuthenticated()) {
+          if (window.ProgrammazioneShared) {
+            window.ProgrammazioneShared.redirectToLoginForDestination(url);
+          } else {
+            const callback = encodeURIComponent(url);
+            window.location.replace(`/login.html?callback=${callback}`);
+          }
+          return;
+        }
+        window.location.href = url;
+      });
+    }
   }
 
   async function loadFilm() {
@@ -194,6 +261,7 @@
       }
       renderDateStrip();
       renderShowByDate();
+      updateBookingSummary();
       setStatus("Dettaglio film caricato.", "success");
     } catch (error) {
       setStatus(`Errore caricamento: ${error.message}`, "error");

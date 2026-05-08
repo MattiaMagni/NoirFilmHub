@@ -19,6 +19,7 @@ async function setupNavbar() {
       });
     }
 
+
     const manageToggle = document.getElementById("nav-manage-toggle");
     const manageMenu = document.getElementById("nav-manage-menu");
     const closeManageMenu = () => {

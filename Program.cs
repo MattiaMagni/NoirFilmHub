@@ -221,11 +221,24 @@ using (var scope = app.Services.CreateScope())
             foreach (var cinema in cinemas)
             {
                 db.Sale.AddRange(
-                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 1, Tipologia = "ISENSE", Nome = "SALA 1", NumeroFile = 10, PostiPerFila = 12, Attiva = true },
-                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 2, Tipologia = "XL", Nome = "SALA 2", NumeroFile = 12, PostiPerFila = 14, Attiva = true },
-                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 3, Tipologia = "3D", Nome = "SALA 3", NumeroFile = 9, PostiPerFila = 12, Attiva = true },
-                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 4, Tipologia = "2D", Nome = "SALA 4", NumeroFile = 10, PostiPerFila = 12, Attiva = true }
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 1, Tipologia = "ISENSE", Nome = "SALA 1", NumeroFile = 11, PostiPerFila = 18, MappaPostiJson = BuildSeatMapJson(11, 18, 2), Attiva = true },
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 2, Tipologia = "XL", Nome = "SALA 2", NumeroFile = 12, PostiPerFila = 20, MappaPostiJson = BuildSeatMapJson(12, 20, 2), Attiva = true },
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 3, Tipologia = "3D", Nome = "SALA 3", NumeroFile = 10, PostiPerFila = 16, MappaPostiJson = BuildSeatMapJson(10, 16, 2), Attiva = true },
+                    new Sala { CinemaId = cinema.Id, NumeroProgressivo = 4, Tipologia = "2D", Nome = "SALA 4", NumeroFile = 10, PostiPerFila = 14, MappaPostiJson = BuildSeatMapJson(10, 14, 2), Attiva = true }
                 );
+            }
+            await db.SaveChangesAsync();
+        }
+
+        var existingSale = await db.Sale.ToListAsync();
+        var saleDaAggiornare = existingSale
+            .Where(s => string.IsNullOrWhiteSpace(s.MappaPostiJson))
+            .ToList();
+        if (saleDaAggiornare.Count > 0)
+        {
+            foreach (var sala in saleDaAggiornare)
+            {
+                sala.MappaPostiJson = BuildSeatMapJson(sala.NumeroFile, sala.PostiPerFila, 2);
             }
             await db.SaveChangesAsync();
         }
@@ -379,5 +392,31 @@ app.MapGroup("/tickets").MapBiglietti();
 app.MapGroup("/tmdb").MapTmdb();
 
 app.Run();
+
+static string BuildSeatMapJson(int rows, int cols, int aisleWidth)
+{
+    var safeRows = Math.Clamp(rows, 1, 26);
+    var safeCols = Math.Clamp(cols, 4, 50);
+    var safeAisle = Math.Clamp(aisleWidth, 0, 4);
+    var centerStart = safeAisle > 0 ? Math.Max(0, (safeCols / 2) - (safeAisle / 2)) : -1;
+    var centerEnd = safeAisle > 0 ? Math.Min(safeCols - 1, centerStart + safeAisle - 1) : -1;
+
+    var seats = new List<string>(safeRows * safeCols);
+    for (var r = 0; r < safeRows; r++)
+    {
+        var rowCode = ((char)('A' + r)).ToString();
+        for (var c = 0; c < safeCols; c++)
+        {
+            if (safeAisle > 0 && c >= centerStart && c <= centerEnd)
+            {
+                continue;
+            }
+
+            seats.Add($"{rowCode}{c + 1}");
+        }
+    }
+
+    return JsonSerializer.Serialize(new { rows = safeRows, cols = safeCols, seats });
+}
 
 public partial class Program;

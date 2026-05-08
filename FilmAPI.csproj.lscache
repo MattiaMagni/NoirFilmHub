@@ -130,6 +130,7 @@ Services/
  AuthService.cs
  JwtTokenService.cs
  PasswordService.cs
+ SeatPricingUtils.cs
  TestAuthHandler.cs
  TicketEmailService.cs
  TicketPdfService.cs

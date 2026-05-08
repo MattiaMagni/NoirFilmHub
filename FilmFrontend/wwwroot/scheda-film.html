@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Scheda film</title>
-  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
+  <link rel="stylesheet" href="/css/styles.css?v=20260508-global-2">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -15,34 +15,45 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/scheda-film.js?v=20260426-1" defer></script>
+  <script src="/js/scheda-film.js?v=20260507-stitch-1" defer></script>
 </head>
-<body>
+<body class="screen-programmazione-detail">
   <div id="navbar-container"></div>
 
   <main class="page-shell ops-shell">
     <section class="ops-top-hero">
       <div>
         <p class="eyebrow">Dettaglio film</p>
-        <h1 class="ops-title">Scheda film</h1>
-        <p class="ops-subtitle">Consulta informazioni complete, trailer e show disponibili nel cinema selezionato.</p>
+        <h1 class="ops-title">Programmazione film</h1>
+        <p class="ops-subtitle">Seleziona data e orario disponibili, poi conferma per scegliere i posti in sala.</p>
       </div>
       <div class="actions">
-        <button id="goto-shows-btn" class="primary" type="button">Vai agli show</button>
+        <button id="goto-shows-btn" class="secondary" type="button">Vai agli orari</button>
       </div>
     </section>
 
-    <section>
-      <div id="scheda-status" class="status info">Caricamento scheda film...</div>
-      <div id="scheda-details"></div>
-    </section>
+    <div id="scheda-status" class="status info">Caricamento scheda film...</div>
 
-    <section id="shows-section" class="panel">
-      <h2 class="ops-section-head">Show disponibili</h2>
-      <div class="date-strip-shell">
-        <div id="show-date-strip" class="date-strip"></div>
-      </div>
-      <div id="show-body" class="show-list-shell"></div>
+    <section id="shows-section" class="screening-layout">
+      <article id="scheda-details" class="screening-movie"></article>
+
+      <article class="panel screening-schedule">
+        <h2 class="ops-section-head">Orari</h2>
+        <div class="date-strip-shell">
+          <div id="show-date-strip" class="date-strip"></div>
+        </div>
+        <div id="show-body" class="show-list-shell"></div>
+      </article>
+
+      <article class="panel screening-booking">
+        <h3>Riepilogo prenotazione</h3>
+        <div class="booking-summary-lines">
+          <p><span>Film</span><strong id="booking-summary-film">-</strong></p>
+          <p><span>Data</span><strong id="booking-summary-date">-</strong></p>
+          <p><span>Ora</span><strong id="booking-summary-time">-</strong></p>
+        </div>
+        <button id="booking-cta-btn" class="primary" type="button" disabled>Scegli i posti</button>
+      </article>
     </section>
   </main>
 

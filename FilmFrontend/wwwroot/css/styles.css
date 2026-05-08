@@ -120,6 +120,7 @@
 }
 
 .seat-sample.available { background: var(--surface-high); border-color: var(--outline-ghost); }
+.seat-sample.vip { background: #3d2d17; border-color: #8b5f24; }
 .seat-sample.selected { background: var(--color-primary); border-color: var(--color-primary); }
 .seat-sample.sold { background: #4b5563; border-color: #4b5563; }
 .seat-sample.locked { background: var(--surface-low); border-color: var(--outline-ghost); opacity: 0.5; }
@@ -138,6 +139,10 @@
   font-size: 0.7rem;
   color: var(--on-surface-soft);
   flex-shrink: 0;
+}
+
+.seat-col-label.gap {
+  width: 20px;
 }
 
 .seat-row-label {
@@ -419,6 +424,22 @@ a {
   gap: 11px;
   font-family: "Inter", system-ui, sans-serif;
   font-weight: 700;
+}
+
+.seat-btn.seat-vip.secondary:not(.seat-gap) {
+  background: #342716 !important;
+  border-color: #8f632b !important;
+  color: #f9e4bd !important;
+}
+
+.brand-logo {
+  display: block;
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  image-rendering: auto;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.28));
 }
 
 .brand-mark {
@@ -1799,6 +1820,10 @@ button.theme-toggle:focus-visible::after {
 }
 
 @media (max-width: 860px) {
+  .brand-logo {
+    height: 41px;
+  }
+
   .mobile-nav-toggle {
     display: inline-block;
   }
@@ -1930,4 +1955,1031 @@ button.theme-toggle:focus-visible::after {
   .quick-add-grid {
     max-height: 58vh;
   }
+}
+
+/* Stitch project 13048687290410572275 visual refresh */
+:root {
+  --stitch-primary: #135bec;
+  --stitch-primary-dark: #0f44ae;
+  --stitch-accent: #2e86ff;
+  --stitch-paper: #eef3ff;
+}
+
+.brand {
+  gap: 12px;
+  font-family: "Poppins", system-ui, sans-serif;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, var(--stitch-primary) 0%, var(--stitch-accent) 58%, #74b3ff 100%);
+  color: #f7fbff;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  box-shadow: 0 12px 26px rgba(19, 91, 236, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.brand-mark {
+  display: none;
+}
+
+.brand-mark-n,
+.brand-mark-f {
+  display: none;
+}
+
+.brand-mark-f {
+  right: auto;
+}
+
+.brand-mark-bar {
+  display: none;
+}
+
+.brand-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.brand-text {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.brand-text {
+  display: none;
+}
+
+.brand-subtext {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--on-surface-soft);
+  font-weight: 600;
+}
+
+.site-nav.home-transparent .brand-subtext {
+  color: var(--hero-text-secondary);
+}
+
+.ops-top-hero {
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--stitch-primary) 24%, var(--color-border));
+  background:
+    radial-gradient(140% 120% at 100% 0%, rgb(19 91 236 / 0.22) 0%, transparent 55%),
+    linear-gradient(140deg, color-mix(in srgb, var(--card-start) 82%, #ffffff 18%) 0%, var(--card-end) 100%);
+  box-shadow: 0 24px 42px -28px rgba(19, 91, 236, 0.45);
+}
+
+.programmazione-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--stitch-primary) 18%, var(--color-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-high) 84%, #ffffff 16%);
+}
+
+#cinema-selezionato-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgb(19 91 236 / 0.16);
+  border: 1px solid rgb(19 91 236 / 0.32);
+  color: color-mix(in srgb, var(--stitch-primary) 75%, var(--on-surface));
+}
+
+.schedule-film-card,
+.cinema-card,
+.my-cinemas-film-row,
+.film-sheet {
+  border-radius: 16px;
+  border-color: color-mix(in srgb, var(--stitch-primary) 18%, var(--color-border));
+  box-shadow: 0 14px 28px rgba(11, 27, 61, 0.18);
+}
+
+.schedule-film-card .card-media {
+  height: 236px;
+}
+
+.date-strip-shell {
+  margin: 12px 0 14px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--stitch-primary) 16%, var(--color-border));
+  background: color-mix(in srgb, var(--surface-high) 88%, #ffffff 12%);
+}
+
+.date-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.date-strip .btn-small.active,
+.date-strip button.active {
+  background: linear-gradient(140deg, var(--stitch-primary) 0%, var(--stitch-primary-dark) 100%);
+  border-color: transparent;
+  color: #f7fbff;
+}
+
+.show-list-shell,
+.my-cinemas-day-body {
+  display: grid;
+  gap: 12px;
+}
+
+.showtime-btn,
+.cinema-showtime {
+  border-radius: 999px;
+  min-width: 74px;
+  background: linear-gradient(135deg, var(--stitch-primary) 0%, var(--stitch-primary-dark) 100%);
+  border-color: transparent;
+}
+
+.film-sheet-grid,
+.my-cinemas-film-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.film-sheet-media,
+.my-cinemas-film-media {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  min-height: 240px;
+}
+
+.film-sheet-media img,
+.my-cinemas-film-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#acquista-summary {
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--stitch-primary) 20%, var(--color-border));
+}
+
+.seat-grid {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--stitch-primary) 16%, var(--color-border));
+  background:
+    linear-gradient(180deg, rgb(19 91 236 / 0.08) 0%, transparent 22%),
+    var(--surface-low);
+}
+
+.seat-legend {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--stitch-primary) 25%, var(--color-border));
+}
+
+.seat-btn {
+  border-radius: 10px !important;
+}
+
+.seat-btn.primary {
+  background: linear-gradient(145deg, var(--stitch-primary) 0%, var(--stitch-primary-dark) 100%) !important;
+}
+
+.seat-btn.secondary:not(.seat-gap) {
+  background: color-mix(in srgb, var(--stitch-paper) 32%, var(--surface-high)) !important;
+}
+
+@media (max-width: 860px) {
+  .brand-subtext {
+    display: none;
+  }
+
+  .programmazione-toolbar {
+    align-items: stretch;
+  }
+
+  .film-sheet-grid,
+  .my-cinemas-film-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .film-sheet-media,
+  .my-cinemas-film-media {
+    min-height: 210px;
+  }
+}
+
+/* Noir graphics refresh from nuovaGrafica */
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Manrope:wght@400;600;700&display=swap");
+
+.screen-cinema-list,
+.screen-gestione-film,
+.screen-programmazione-grid,
+.screen-programmazione-detail,
+.screen-seat-selection {
+  --noir-bg: #0a0a0a;
+  --noir-surface: #141414;
+  --noir-surface-soft: #1c1c1c;
+  --noir-border: rgba(255, 255, 255, 0.12);
+  --noir-red: #e50914;
+  --noir-red-hover: #f40612;
+  --noir-text: #f5f5f5;
+  --noir-muted: #a3a3a3;
+  --noir-chip: #2f2f2f;
+  background:
+    radial-gradient(90% 70% at 100% 0%, rgba(229, 9, 20, 0.14) 0%, transparent 55%),
+    radial-gradient(90% 70% at 0% 100%, rgba(229, 9, 20, 0.1) 0%, transparent 55%),
+    var(--noir-bg);
+  color: var(--noir-text);
+  font-family: "Manrope", sans-serif;
+}
+
+.screen-cinema-list .ops-shell,
+.screen-gestione-film .ops-shell,
+.screen-programmazione-grid .ops-shell,
+.screen-programmazione-detail .ops-shell,
+.screen-seat-selection .ops-shell {
+  width: min(100% - 2.25rem, 1240px);
+}
+
+.screen-cinema-list .ops-top-hero,
+.screen-gestione-film .ops-top-hero,
+.screen-programmazione-grid .ops-top-hero,
+.screen-programmazione-detail .ops-top-hero,
+.screen-seat-selection .ops-top-hero {
+  border-radius: 20px;
+  border: 1px solid var(--noir-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  box-shadow: 0 24px 48px -30px rgba(229, 9, 20, 0.52);
+}
+
+.screen-cinema-list .eyebrow,
+.screen-gestione-film .eyebrow,
+.screen-programmazione-grid .eyebrow,
+.screen-programmazione-detail .eyebrow,
+.screen-seat-selection .eyebrow {
+  color: var(--noir-red);
+  letter-spacing: 0.12em;
+}
+
+.screen-cinema-list .ops-title,
+.screen-gestione-film .ops-title,
+.screen-programmazione-grid .ops-title,
+.screen-programmazione-detail .ops-title,
+.screen-seat-selection .ops-title,
+.screen-programmazione-detail #scheda-details h2,
+.screen-cinema-list h3,
+.screen-programmazione-grid .card h3 {
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.screen-cinema-list .panel,
+.screen-gestione-film .panel,
+.screen-programmazione-grid .panel,
+.screen-programmazione-detail .panel,
+.screen-seat-selection .panel {
+  border-radius: 16px;
+  border: 1px solid var(--noir-border);
+  background: linear-gradient(180deg, rgba(19, 19, 19, 0.9), rgba(15, 15, 15, 0.95));
+}
+
+.screen-cinema-list .status,
+.screen-gestione-film .status,
+.screen-programmazione-grid .status,
+.screen-programmazione-detail .status,
+.screen-seat-selection .status {
+  border: 1px solid var(--noir-border);
+}
+
+.screen-cinema-list .button.primary,
+.screen-cinema-list button.primary,
+.screen-gestione-film .button.primary,
+.screen-gestione-film button.primary,
+.screen-programmazione-grid .button.primary,
+.screen-programmazione-grid button.primary,
+.screen-programmazione-detail .button.primary,
+.screen-programmazione-detail button.primary,
+.screen-seat-selection .button.primary,
+.screen-seat-selection button.primary {
+  background: linear-gradient(140deg, var(--noir-red), #b9070f);
+  box-shadow: 0 10px 24px rgba(229, 9, 20, 0.34);
+}
+
+.screen-cinema-list .button.secondary,
+.screen-cinema-list button.secondary,
+.screen-gestione-film .button.secondary,
+.screen-gestione-film button.secondary,
+.screen-programmazione-grid .button.secondary,
+.screen-programmazione-grid button.secondary,
+.screen-programmazione-detail .button.secondary,
+.screen-programmazione-detail button.secondary,
+.screen-seat-selection .button.secondary,
+.screen-seat-selection button.secondary {
+  background: var(--noir-surface-soft);
+  border-color: var(--noir-border);
+  color: var(--noir-text);
+}
+
+.screen-cinema-list .cinema-card {
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid var(--noir-red);
+}
+
+.screen-cinema-list .cinema-card .subtle,
+.screen-programmazione-grid .subtle,
+.screen-programmazione-detail .subtle,
+.screen-seat-selection .subtle,
+.screen-gestione-film .subtle {
+  color: var(--noir-muted);
+}
+
+.screen-cinema-list .tag,
+.screen-programmazione-grid .tag,
+.screen-programmazione-detail .tag {
+  background: var(--noir-chip);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #d6d6d6;
+}
+
+.screen-cinema-list .tag.accent,
+.screen-programmazione-grid .tag.accent,
+.screen-programmazione-detail .tag.accent {
+  background: rgba(229, 9, 20, 0.2);
+  border-color: rgba(229, 9, 20, 0.56);
+  color: #ffd8db;
+}
+
+.screen-programmazione-grid .programmazione-toolbar {
+  border-radius: 14px;
+  border: 1px solid var(--noir-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.screen-programmazione-grid .programmazione-toolbar input,
+.screen-programmazione-grid .programmazione-toolbar select {
+  background: #121212;
+  border: 1px solid var(--noir-border);
+  color: var(--noir-text);
+}
+
+.screen-programmazione-grid #cinema-selezionato-badge {
+  background: rgba(229, 9, 20, 0.14);
+  border-color: rgba(229, 9, 20, 0.35);
+  color: #ffd9dc;
+}
+
+.screen-programmazione-grid .schedule-film-card {
+  border-radius: 20px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.screen-programmazione-grid .schedule-film-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(229, 9, 20, 0.58);
+  box-shadow: 0 20px 36px -20px rgba(229, 9, 20, 0.54);
+}
+
+.screen-programmazione-grid .schedule-film-card .card-media {
+  height: 260px;
+}
+
+.screen-programmazione-grid .schedule-film-card .card-body {
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.88), rgba(16, 16, 16, 1));
+}
+
+.screen-programmazione-detail .film-sheet,
+.screen-programmazione-detail #show-body .panel,
+.screen-seat-selection #acquista-summary,
+.screen-seat-selection #seat-grid {
+  border-radius: 16px;
+  border: 1px solid var(--noir-border);
+  background: rgba(24, 24, 24, 0.92);
+}
+
+.screen-programmazione-detail .date-strip-shell,
+.screen-cinema-list .date-strip-shell {
+  border-radius: 14px;
+  border: 1px solid var(--noir-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.screen-programmazione-detail .date-strip .active,
+.screen-cinema-list .date-strip .active {
+  background: linear-gradient(145deg, var(--noir-red), #bc0911);
+  color: #fff;
+  border-color: transparent;
+}
+
+.screen-programmazione-detail .showtime-btn,
+.screen-cinema-list .cinema-showtime {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+}
+
+.screen-programmazione-detail .showtime-btn:hover,
+.screen-cinema-list .cinema-showtime:hover {
+  border-color: var(--noir-red);
+}
+
+.screen-seat-selection #acquista-summary h3 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.screen-seat-selection #seat-grid {
+  background:
+    linear-gradient(180deg, rgba(229, 9, 20, 0.08), rgba(229, 9, 20, 0.01) 35%),
+    #101010;
+}
+
+.screen-seat-selection .seat-legend {
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.screen-seat-selection .seat-btn {
+  border-radius: 8px !important;
+}
+
+.screen-seat-selection .seat-btn.primary {
+  background: linear-gradient(145deg, var(--noir-red), #bf0811) !important;
+  border-color: transparent !important;
+}
+
+.screen-seat-selection .seat-btn.secondary:not(.seat-gap) {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.screen-seat-selection .seat-btn.danger {
+  background: #4a4a4a !important;
+  border-color: #4a4a4a !important;
+  color: #9a9a9a !important;
+}
+
+.screen-seat-selection .seat-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr minmax(250px, 310px);
+  gap: 16px;
+  align-items: start;
+}
+
+.screen-seat-selection .seat-movie-panel {
+  min-height: 520px;
+}
+
+.screen-seat-selection .seat-stage-panel {
+  min-height: 520px;
+  text-align: center;
+}
+
+.screen-seat-selection .seat-screen-wrap {
+  width: min(100%, 700px);
+  margin: 0 auto 16px;
+}
+
+.screen-seat-selection .seat-screen {
+  height: 14px;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #dce0e8 0%, #aeb4c2 100%);
+  box-shadow: 0 7px 20px rgba(255, 255, 255, 0.15);
+}
+
+.screen-seat-selection .seat-screen-label {
+  margin-top: 4px;
+  display: inline-block;
+  font-size: 0.74rem;
+  letter-spacing: 0.45em;
+  color: #8c919d;
+}
+
+.screen-seat-selection .seat-grid {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto;
+}
+
+.screen-seat-selection .seat-row {
+  justify-content: center;
+}
+
+.screen-seat-selection .seat-aisle {
+  width: 18px;
+  min-width: 18px;
+  display: inline-flex;
+}
+
+.screen-seat-selection .seat-aisle.side {
+  width: 10px;
+  min-width: 10px;
+}
+
+.screen-seat-selection .seat-btn {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  border-radius: 999px !important;
+  font-size: 0.63rem !important;
+}
+
+.screen-seat-selection .seat-btn.seat-vip.secondary:not(.seat-gap) {
+  background: #3a2a16 !important;
+  border-color: #a7742e !important;
+  color: #ffdca5 !important;
+}
+
+.screen-seat-selection .seat-col-label {
+  width: 34px;
+}
+
+.screen-seat-selection .seat-col-label.gap {
+  width: 18px;
+}
+
+.screen-seat-selection .seat-row-label.right {
+  margin-left: 4px;
+}
+
+.screen-seat-selection .seat-col-headers.bottom {
+  margin-top: 3px;
+  margin-bottom: 0;
+}
+
+.screen-seat-selection .seat-booking-panel {
+  position: sticky;
+  top: 96px;
+}
+
+.screen-seat-selection .seat-booking-panel h3 {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  color: #d7d7d7;
+}
+
+.screen-seat-selection .seat-booking-lines {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.screen-seat-selection .seat-booking-lines p {
+  margin: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.screen-seat-selection .seat-booking-lines span {
+  color: #9f9f9f;
+  font-size: 0.8rem;
+}
+
+.screen-seat-selection .seat-booking-lines strong {
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.screen-seat-selection .seat-vip-note {
+  margin: 6px 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(229, 9, 20, 0.35);
+  background: rgba(229, 9, 20, 0.08);
+  color: #ffd8db;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.screen-seat-selection #acquista-continue {
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.screen-gestione-film #film-form .form-grid {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.screen-gestione-film #film-form .full-row {
+  grid-column: 1 / -1;
+}
+
+.screen-gestione-film label {
+  color: #b5b5b5;
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+}
+
+.screen-gestione-film input,
+.screen-gestione-film select,
+.screen-gestione-film textarea {
+  background: #121212;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--noir-text);
+  border-radius: 8px;
+}
+
+.screen-gestione-film input:focus,
+.screen-gestione-film select:focus,
+.screen-gestione-film textarea:focus {
+  outline: 1px solid rgba(229, 9, 20, 0.6);
+}
+
+.screen-gestione-film #film-categorie-options {
+  gap: 14px;
+}
+
+.screen-gestione-film .category-option {
+  padding: 5px 0;
+}
+
+.screen-gestione-film #film-quick-add-modal .modal-panel,
+.screen-gestione-film #film-quick-add-confirm-modal .modal-panel {
+  background: #141414;
+  border-color: var(--noir-border);
+}
+
+@media (max-width: 860px) {
+  .screen-cinema-list .ops-shell,
+  .screen-gestione-film .ops-shell,
+  .screen-programmazione-grid .ops-shell,
+  .screen-programmazione-detail .ops-shell,
+  .screen-seat-selection .ops-shell {
+    width: min(100% - 1.2rem, 1240px);
+  }
+
+  .screen-gestione-film #film-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-programmazione-grid .schedule-film-card .card-media {
+    height: 220px;
+  }
+
+  .screen-seat-selection .seat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-seat-selection .seat-booking-panel {
+    position: static;
+  }
+}
+
+/* Stronger page refresh for requested screens */
+.screen-cinema-list .ops-top-hero,
+.screen-gestione-film .ops-top-hero,
+.screen-programmazione-grid .ops-top-hero,
+.screen-programmazione-detail .ops-top-hero,
+.screen-seat-selection .ops-top-hero {
+  padding: 42px 34px;
+}
+
+.screen-cinema-list #my-cinemas-list {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+.screen-cinema-list .cinema-card .card-body {
+  padding: 18px;
+}
+
+.screen-cinema-list .cinema-card h3 {
+  font-size: 1.55rem;
+  margin-bottom: 8px;
+}
+
+.screen-cinema-list .my-cinemas-film-row {
+  border-left: 4px solid var(--noir-red);
+}
+
+.screen-cinema-list .my-cinemas-film-grid {
+  grid-template-columns: minmax(170px, 220px) 1fr;
+  gap: 18px;
+}
+
+.screen-gestione-film .panel {
+  border-radius: 18px;
+}
+
+.screen-gestione-film .ops-section-head::after {
+  background: linear-gradient(90deg, var(--noir-red) 0%, rgba(229, 9, 20, 0.2) 65%, transparent 100%);
+}
+
+.screen-gestione-film #film-form .actions {
+  gap: 10px;
+}
+
+.screen-gestione-film .table-wrap {
+  border-radius: 14px;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.screen-gestione-film tbody td {
+  background: rgba(22, 22, 22, 0.95);
+}
+
+.screen-gestione-film tbody tr:hover td {
+  background: rgba(31, 31, 31, 0.98);
+}
+
+.screen-programmazione-grid #programmazione-cards {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.screen-programmazione-grid .schedule-film-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 7px;
+}
+
+.screen-programmazione-grid .schedule-film-card .actions {
+  margin-top: 8px;
+}
+
+.screen-programmazione-detail .film-sheet-grid {
+  grid-template-columns: minmax(220px, 260px) 1fr;
+  gap: 18px;
+}
+
+.screen-programmazione-detail .screening-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 290px) 1fr minmax(250px, 300px);
+  gap: 16px;
+  align-items: start;
+}
+
+.screen-programmazione-detail .screening-movie {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.screen-programmazione-detail .screening-movie .film-sheet {
+  margin: 0;
+  height: 100%;
+}
+
+.screen-programmazione-detail .screening-movie .film-sheet-grid {
+  grid-template-columns: 1fr;
+}
+
+.screen-programmazione-detail .screening-movie .film-sheet-media {
+  min-height: 360px;
+}
+
+.screen-programmazione-detail .screening-movie .film-sheet h2 {
+  font-size: 2.3rem;
+  line-height: 1.05;
+}
+
+.screen-programmazione-detail .screening-movie .film-sheet .subtle {
+  font-size: 0.92rem;
+}
+
+.screen-programmazione-detail .screening-schedule {
+  min-height: 520px;
+}
+
+.screen-programmazione-detail .screening-booking {
+  position: sticky;
+  top: 96px;
+}
+
+.screen-programmazione-detail .screening-booking h3 {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  color: #d7d7d7;
+}
+
+.screen-programmazione-detail .booking-summary-lines {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.screen-programmazione-detail .booking-summary-lines p {
+  margin: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.screen-programmazione-detail .booking-summary-lines span {
+  color: #9f9f9f;
+  font-size: 0.8rem;
+}
+
+.screen-programmazione-detail .booking-summary-lines strong {
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.screen-programmazione-detail #booking-cta-btn {
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.screen-programmazione-detail #booking-cta-btn:disabled {
+  opacity: 0.55;
+}
+
+.screen-programmazione-detail .showtime-btn.active {
+  border-color: transparent;
+  background: linear-gradient(145deg, var(--noir-red), #b90910);
+  color: #fff;
+}
+
+.screen-programmazione-detail #show-body {
+  display: grid;
+  gap: 12px;
+}
+
+.screen-programmazione-detail #show-body .panel h4 {
+  color: #d5d5d5;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.78rem;
+}
+
+.screen-programmazione-detail .showtime-btn,
+.screen-cinema-list .cinema-showtime {
+  font-weight: 700;
+  border-radius: 999px;
+  padding-inline: 16px;
+}
+
+.screen-seat-selection #acquista-summary {
+  border-left: 4px solid var(--noir-red);
+  padding: 18px;
+}
+
+.screen-seat-selection #seat-grid {
+  padding: 16px;
+}
+
+.screen-seat-selection .seat-col-label,
+.screen-seat-selection .seat-row-label {
+  color: #b8b8b8;
+}
+
+.screen-seat-selection #selected-seats-list {
+  color: #f2f2f2;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 860px) {
+  .screen-cinema-list .ops-top-hero,
+  .screen-gestione-film .ops-top-hero,
+  .screen-programmazione-grid .ops-top-hero,
+  .screen-programmazione-detail .ops-top-hero,
+  .screen-seat-selection .ops-top-hero {
+    padding: 30px 18px;
+  }
+
+  .screen-cinema-list .my-cinemas-film-grid,
+  .screen-programmazione-detail .film-sheet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-programmazione-detail .screening-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-programmazione-detail .screening-booking {
+    position: static;
+  }
+}
+
+/* Light theme support for stitched noir pages */
+:root[data-theme="light"] .screen-cinema-list,
+:root[data-theme="light"] .screen-gestione-film,
+:root[data-theme="light"] .screen-programmazione-grid,
+:root[data-theme="light"] .screen-programmazione-detail,
+:root[data-theme="light"] .screen-seat-selection {
+  --noir-bg: #f4f6fa;
+  --noir-surface: #ffffff;
+  --noir-surface-soft: #eef2f7;
+  --noir-border: rgba(16, 24, 40, 0.14);
+  --noir-text: #101828;
+  --noir-muted: #475467;
+  --noir-chip: #eef2f7;
+  background:
+    radial-gradient(90% 70% at 100% 0%, rgba(229, 9, 20, 0.08) 0%, transparent 55%),
+    radial-gradient(90% 70% at 0% 100%, rgba(229, 9, 20, 0.06) 0%, transparent 55%),
+    var(--noir-bg);
+  color: var(--noir-text);
+}
+
+:root[data-theme="light"] .screen-cinema-list .ops-top-hero,
+:root[data-theme="light"] .screen-gestione-film .ops-top-hero,
+:root[data-theme="light"] .screen-programmazione-grid .ops-top-hero,
+:root[data-theme="light"] .screen-programmazione-detail .ops-top-hero,
+:root[data-theme="light"] .screen-seat-selection .ops-top-hero,
+:root[data-theme="light"] .screen-cinema-list .panel,
+:root[data-theme="light"] .screen-gestione-film .panel,
+:root[data-theme="light"] .screen-programmazione-grid .panel,
+:root[data-theme="light"] .screen-programmazione-detail .panel,
+:root[data-theme="light"] .screen-seat-selection .panel {
+  background: #ffffff;
+  border-color: var(--noir-border);
+  box-shadow: 0 14px 26px -24px rgba(17, 24, 39, 0.28);
+}
+
+:root[data-theme="light"] .screen-cinema-list .subtle,
+:root[data-theme="light"] .screen-gestione-film .subtle,
+:root[data-theme="light"] .screen-programmazione-grid .subtle,
+:root[data-theme="light"] .screen-programmazione-detail .subtle,
+:root[data-theme="light"] .screen-seat-selection .subtle {
+  color: var(--noir-muted);
+}
+
+:root[data-theme="light"] .screen-programmazione-grid .programmazione-toolbar,
+:root[data-theme="light"] .screen-programmazione-grid .programmazione-toolbar input,
+:root[data-theme="light"] .screen-programmazione-grid .programmazione-toolbar select,
+:root[data-theme="light"] .screen-gestione-film input,
+:root[data-theme="light"] .screen-gestione-film select,
+:root[data-theme="light"] .screen-gestione-film textarea {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.2);
+}
+
+:root[data-theme="light"] .screen-programmazione-grid .schedule-film-card,
+:root[data-theme="light"] .screen-programmazione-detail .film-sheet,
+:root[data-theme="light"] .screen-programmazione-detail #show-body .panel,
+:root[data-theme="light"] .screen-seat-selection #acquista-summary,
+:root[data-theme="light"] .screen-seat-selection #seat-grid {
+  background: #ffffff;
+  border-color: var(--noir-border);
+}
+
+:root[data-theme="light"] .screen-programmazione-grid .schedule-film-card .card-body {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+:root[data-theme="light"] .screen-programmazione-grid .tag,
+:root[data-theme="light"] .screen-programmazione-detail .tag,
+:root[data-theme="light"] .screen-cinema-list .tag {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: rgba(51, 65, 85, 0.2);
+}
+
+:root[data-theme="light"] .screen-programmazione-detail .booking-summary-lines p,
+:root[data-theme="light"] .screen-seat-selection .seat-booking-lines p {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+:root[data-theme="light"] .screen-seat-selection #seat-grid {
+  background:
+    linear-gradient(180deg, rgba(229, 9, 20, 0.05), rgba(229, 9, 20, 0.01) 35%),
+    #f8fafc;
+}
+
+:root[data-theme="light"] .screen-seat-selection .seat-btn.secondary:not(.seat-gap) {
+  background: #e8edf4 !important;
+  border-color: rgba(15, 23, 42, 0.24) !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] .screen-seat-selection .seat-btn.danger {
+  background: #d0d5dd !important;
+  border-color: #d0d5dd !important;
+  color: #667085 !important;
+}
+
+:root[data-theme="light"] .screen-seat-selection .seat-vip-note {
+  background: rgba(229, 9, 20, 0.08);
+  border-color: rgba(229, 9, 20, 0.24);
+  color: #8a1020;
 }

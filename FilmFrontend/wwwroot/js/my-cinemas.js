@@ -8,6 +8,7 @@
 
   let selectedCinemaId = null;
   let selectedDayIso = null;
+  let availableDays = [];
 
   function setStatus(message, kind) {
     statusEl.className = `status ${kind}`;
@@ -60,17 +61,26 @@
   }
 
   function renderDateStrip() {
-    const days = window.DateUtils.nextDays(10);
+    const days = availableDays
+      .map((iso) => ({ iso, label: window.DateUtils.formatDatePill(iso) }))
+      .filter((day) => day.iso);
+
+    if (!days.length) {
+      dateStripEl.innerHTML = "";
+      selectedDayIso = null;
+      return;
+    }
+
+    if (!selectedDayIso || !days.some((day) => day.iso === selectedDayIso)) {
+      selectedDayIso = days[0].iso;
+    }
+
     dateStripEl.innerHTML = days
-      .map((day, index) => {
-        const active = (selectedDayIso && selectedDayIso === day.iso) || (!selectedDayIso && index === 0);
+      .map((day) => {
+        const active = selectedDayIso === day.iso;
         return `<button class="btn-small secondary ${active ? "active" : ""}" data-day="${day.iso}">${day.label}</button>`;
       })
       .join("");
-
-    if (!selectedDayIso && days[0]) {
-      selectedDayIso = days[0].iso;
-    }
   }
 
   function buildFilmBlock(item) {
@@ -113,6 +123,17 @@
     try {
       const detail = await window.ApiClient.get(`/my-cinemas/${selectedCinemaId}/programmazione?day=${selectedDayIso}`);
       detailTitleEl.textContent = `${detail.cinema.nome} - ${detail.cinema.citta}`;
+
+      availableDays = Array.isArray(detail.availableDays)
+        ? detail.availableDays.map((value) => window.DateUtils.toIsoDate(value)).filter(Boolean)
+        : [];
+      renderDateStrip();
+
+      if (!availableDays.length) {
+        dayBodyEl.innerHTML = "<p class='subtle'>Nessuna proiezione disponibile nei prossimi giorni.</p>";
+        setStatus("Nessuna data con proiezioni disponibile per questo cinema.", "info");
+        return;
+      }
 
       const films = Array.isArray(detail.programmazione) ? detail.programmazione : [];
       if (!films.length) {
@@ -175,7 +196,6 @@
 
     listEl.innerHTML = "";
     detailShellEl.classList.remove("hidden");
-    renderDateStrip();
     bindDetailEvents();
     await loadCinemaProgrammazione();
   }

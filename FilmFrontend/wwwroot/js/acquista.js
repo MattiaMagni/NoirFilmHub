@@ -5,6 +5,17 @@
 	const selectedListEl = document.getElementById("selected-seats-list");
 	const timerEl = document.getElementById("seat-lock-timer");
 	const continueBtn = document.getElementById("acquista-continue");
+	const selectedCountEl = document.getElementById("selected-seats-count");
+	const selectedUnitPriceEl = document.getElementById("selected-seat-price");
+	const selectedVipExtraEl = document.getElementById("selected-seat-vip-extra");
+	const selectedTotalEl = document.getElementById("selected-seats-total");
+	const vipNoteEl = document.getElementById("seat-vip-note");
+	let summaryVipExtraEl = null;
+
+	function toPositiveNumber(value, fallback = 0) {
+		const parsed = Number(value);
+		return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+	}
 
 	let proiezioneId = null;
 	let resolvedParams = {};
@@ -12,6 +23,8 @@
 	let currentSeatState = null;
 	let lockExpiresAt = null;
 	let timerInterval = null;
+	let prezzoBaseCorrente = 0;
+	let vipSupplementCorrente = 0;
 
 	function setStatus(message, kind) {
 		statusEl.className = `status ${kind}`;
@@ -115,6 +128,48 @@
 		return currentSeatState.soldSet.has(code) || currentSeatState.lockedByOthersSet.has(code);
 	}
 
+	function seatIsVip(code) {
+		if (!currentSeatState) {
+			return false;
+		}
+		if (currentSeatState.vipSet && currentSeatState.vipSet.has(code)) {
+			return true;
+		}
+
+		const match = String(code || "").toUpperCase().match(/^([A-Z])(\d+)$/);
+		if (!match) {
+			return false;
+		}
+
+		const rowIndex = match[1].charCodeAt(0) - 65;
+		const colIndex = Number(match[2]) - 1;
+		const rows = Number(currentSeatState.numeroFile) || 10;
+		const cols = Number(currentSeatState.postiPerFila) || 12;
+		const aisleStart = cols >= 10 ? Math.floor(cols / 2) - 1 : -1;
+		const aisleEnd = cols >= 10 ? aisleStart + 1 : -1;
+		return isVipSeat(rowIndex, colIndex, rows, cols, aisleStart, aisleEnd);
+	}
+
+	function vipCountLabel(count) {
+		return count === 1 ? "posto VIP" : "posti VIP";
+	}
+
+	function isVipSeat(rowIndex, colIndex, rows, cols, aisleStart, aisleEnd) {
+		if (colIndex === aisleStart || colIndex === aisleEnd) {
+			return false;
+		}
+		const vipRowStart = Math.max(1, Math.floor(rows * 0.35));
+		const vipRowEnd = Math.min(rows - 2, Math.floor(rows * 0.75));
+		if (rowIndex < vipRowStart || rowIndex > vipRowEnd) {
+			return false;
+		}
+
+		const vipBand = Math.max(2, Math.floor(cols * 0.18));
+		const leftVipStart = Math.max(0, aisleStart - vipBand);
+		const rightVipEnd = Math.min(cols - 1, aisleEnd + vipBand);
+		return (colIndex >= leftVipStart && colIndex < aisleStart) || (colIndex > aisleEnd && colIndex <= rightVipEnd);
+	}
+
 	function renderSeats() {
 		if (!currentSeatState) {
 			seatGridEl.innerHTML = "<p class='subtle'>Piantina non disponibile.</p>";
@@ -127,40 +182,120 @@
 			? new Set(window.SeatMapUtils.parseSeatMap(currentSeatState.mappaPostiJson, rows, cols))
 			: null;
 
+		const centerAisleStart = cols >= 10 ? Math.floor(cols / 2) - 1 : -1;
+		const centerAisleEnd = cols >= 10 ? centerAisleStart + 1 : -1;
+
 		const htmlRows = [];
 		for (let r = 0; r < rows; r += 1) {
 			const colsHtml = [];
+			colsHtml.push(`<span class="seat-aisle side" aria-hidden="true"></span>`);
 			for (let c = 0; c < cols; c += 1) {
+				if (c === centerAisleStart || c === centerAisleEnd) {
+					colsHtml.push(`<span class="seat-aisle" aria-hidden="true"></span>`);
+					continue;
+				}
+
 				const code = buildSeatCode(r, c);
 				if (validSeats && !validSeats.has(code)) {
 					colsHtml.push(`<button class="btn-small secondary seat-btn seat-gap" data-seat="${code}" disabled>--</button>`);
 					continue;
 				}
 				const cls = seatButtonClass(code);
+				const vipClass = seatIsVip(code) || isVipSeat(r, c, rows, cols, centerAisleStart, centerAisleEnd) ? "seat-vip" : "";
 				const disabled = seatButtonDisabled(code) ? "disabled" : "";
-				const label = selectedSeats.has(code) ? "✓" : code;
-				colsHtml.push(`<button class="btn-small ${cls} seat-btn" data-seat="${code}" ${disabled}>${label}</button>`);
+				const label = selectedSeats.has(code) ? "✓" : (currentSeatState.soldSet.has(code) ? "x" : "");
+				const vipTitle = vipClass
+					? `Posto ${code} VIP (+${formatCurrency(vipSupplementCorrente)})`
+					: `Posto ${code}`;
+				colsHtml.push(`<button class="btn-small ${cls} seat-btn ${vipClass}" data-seat="${code}" title="${vipTitle}" aria-label="${vipTitle}" ${disabled}>${label}</button>`);
 			}
+			colsHtml.push(`<span class="seat-aisle side" aria-hidden="true"></span>`);
 			const rowLetter = String.fromCharCode(65 + r);
-			htmlRows.push(`<div class="seat-row"><span class="seat-row-label">${rowLetter}</span>${colsHtml.join("")}</div>`);
+			htmlRows.push(`<div class="seat-row"><span class="seat-row-label">${rowLetter}</span>${colsHtml.join("")}<span class="seat-row-label right">${rowLetter}</span></div>`);
 		}
 
 		const colLabels = [];
+		colLabels.push('<span class="seat-aisle side" aria-hidden="true"></span>');
 		for (let c = 0; c < cols; c += 1) {
+			if (c === centerAisleStart || c === centerAisleEnd) {
+				colLabels.push('<span class="seat-col-label gap"></span>');
+				continue;
+			}
 			colLabels.push(`<span class="seat-col-label">${c + 1}</span>`);
 		}
+		colLabels.push('<span class="seat-aisle side" aria-hidden="true"></span>');
 
 		seatGridEl.innerHTML = `
 			<div class="seat-legend">
 				<span class="seat-legend-item"><span class="seat-sample available"></span> Libero</span>
+				<span class="seat-legend-item"><span class="seat-sample vip"></span> VIP</span>
 				<span class="seat-legend-item"><span class="seat-sample selected"></span> Selezionato</span>
 				<span class="seat-legend-item"><span class="seat-sample sold"></span> Venduto</span>
 				<span class="seat-legend-item"><span class="seat-sample locked"></span> Bloccato</span>
 			</div>
-			<div class="seat-col-headers"><span class="seat-row-label"></span>${colLabels.join("")}</div>
+			<div class="seat-col-headers"><span class="seat-row-label"></span>${colLabels.join("")}<span class="seat-row-label"></span></div>
 			${htmlRows.join("")}
+			<div class="seat-col-headers bottom"><span class="seat-row-label"></span>${colLabels.join("")}<span class="seat-row-label"></span></div>
 		`;
 		selectedListEl.textContent = Array.from(selectedSeats).sort().join(", ") || "Nessuno";
+		updateSelectionSummary();
+	}
+
+	function updateSelectionSummary() {
+		const count = selectedSeats.size;
+		const selectedArray = Array.from(selectedSeats);
+		const vipCount = selectedArray.filter((seat) => seatIsVip(seat)).length;
+		const standardCount = count - vipCount;
+		const basePrice = toPositiveNumber(prezzoBaseCorrente, 0);
+		const vipSupplement = toPositiveNumber(vipSupplementCorrente, 0);
+		const vipExtraTotal = vipCount * vipSupplement;
+		const total = (standardCount * basePrice) + (vipCount * (basePrice + vipSupplement));
+
+		if (selectedCountEl) {
+			selectedCountEl.textContent = String(count);
+		}
+		if (selectedUnitPriceEl) {
+			if (vipSupplement > 0) {
+				selectedUnitPriceEl.textContent = `${formatCurrency(basePrice)} / VIP ${formatCurrency(basePrice + vipSupplement)}`;
+			} else {
+				selectedUnitPriceEl.textContent = formatCurrency(basePrice);
+			}
+		}
+		if (selectedVipExtraEl) {
+			if (vipSupplement > 0) {
+				selectedVipExtraEl.textContent = vipCount > 0
+					? `+${formatCurrency(vipExtraTotal)} (${vipCount} ${vipCountLabel(vipCount)})`
+					: `+${formatCurrency(vipSupplement)} per posto VIP`;
+			} else {
+				selectedVipExtraEl.textContent = "Nessuno";
+			}
+		}
+		if (selectedTotalEl) {
+			selectedTotalEl.textContent = formatCurrency(total);
+		}
+
+		summaryVipExtraEl = document.getElementById("acquista-summary-vip-extra");
+		if (summaryVipExtraEl) {
+			summaryVipExtraEl.textContent = vipSupplement > 0
+				? `Supplemento VIP: +${formatCurrency(vipSupplement)} per posto`
+				: "Supplemento VIP: non previsto";
+		}
+
+		if (vipNoteEl) {
+			if (vipSupplement > 0) {
+				const seatWord = vipCountLabel(vipCount);
+				const verb = vipCount === 1 ? "applicato" : "applicati";
+				vipNoteEl.textContent = vipCount > 0
+					? `Hai selezionato ${vipCount} ${seatWord}: ${verb} supplemento di ${formatCurrency(vipExtraTotal)}.`
+					: `Nota: i posti VIP costano ${formatCurrency(vipSupplement)} in piu rispetto al prezzo base.`;
+			} else {
+				vipNoteEl.textContent = "";
+			}
+		}
+
+		if (continueBtn) {
+			continueBtn.disabled = count === 0;
+		}
 	}
 
 	async function loadShowSummary() {
@@ -174,13 +309,16 @@
 		const data = String(show.data || "").slice(0, 10);
 		const ora = String(show.ora || "").slice(11, 16);
 		const salaNome = show.tipologiaSala || "2D";
+		prezzoBaseCorrente = Number(show.prezzoBase || 0);
 		summaryEl.innerHTML = `
 			<h3>${film.titolo}</h3>
 			<p class="subtle">Cinema: ${cinema.nome} (${cinema.citta})</p>
 			<p class="subtle">Data: ${data} - Ora: ${ora}</p>
 			<p class="subtle">Sala: ${p.idSala} (${salaNome})</p>
-			<p class="subtle">Prezzo base: ${formatCurrency(show.prezzoBase || 0)}</p>
+			<p class="subtle">Prezzo base: ${formatCurrency(prezzoBaseCorrente)}</p>
+			<p id="acquista-summary-vip-extra" class="subtle">Supplemento VIP: in aggiornamento...</p>
 		`;
+		updateSelectionSummary();
 	}
 
 	async function loadSeatState() {
@@ -189,10 +327,13 @@
 			...payload,
 			soldSet: new Set(payload.sold || []),
 			lockedByOthersSet: new Set(payload.lockedByOthers || []),
-			myLocksSet: new Set(payload.myLocks || [])
+			myLocksSet: new Set(payload.myLocks || []),
+			vipSet: new Set(payload.vipSeats || [])
 		};
 
 		selectedSeats = new Set(payload.myLocks || []);
+		prezzoBaseCorrente = toPositiveNumber(payload.prezzoBase, prezzoBaseCorrente);
+		vipSupplementCorrente = toPositiveNumber(payload.vipSupplement, vipSupplementCorrente);
 		lockExpiresAt = parseUtcMillis(payload.lockExpiresAtUtc);
 		startTimer();
 		renderSeats();

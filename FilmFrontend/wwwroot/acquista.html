@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Acquista</title>
-  <link rel="stylesheet" href="/css/styles.css?v=20260427-6">
+  <link rel="stylesheet" href="/css/styles.css?v=20260508-global-2">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -14,9 +14,9 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/acquista.js?v=20260427-3" defer></script>
+  <script src="/js/acquista.js?v=20260508-stitch-5" defer></script>
 </head>
-<body>
+<body class="screen-seat-selection">
   <div id="navbar-container"></div>
 
   <main class="page-shell ops-shell">
@@ -28,21 +28,32 @@
       </div>
     </section>
 
-    <section class="panel">
-      <div id="acquista-status" class="status info">Caricamento...</div>
-      <article id="acquista-summary" class="panel"></article>
-      <div class="panel">
-        <h3>Piantina sala</h3>
+    <div id="acquista-status" class="status info">Caricamento...</div>
+
+    <section class="seat-layout">
+      <aside id="acquista-summary" class="panel seat-movie-panel"></aside>
+
+      <section class="panel seat-stage-panel">
+        <div class="seat-screen-wrap">
+          <div class="seat-screen"></div>
+          <span class="seat-screen-label">SCREEN</span>
+        </div>
         <p id="seat-lock-timer" class="subtle"></p>
         <div id="seat-grid" class="seat-grid"></div>
-      </div>
-      <div class="panel">
-        <h4>Posti selezionati</h4>
-        <p id="selected-seats-list" class="subtle">Nessuno</p>
-        <div class="actions">
-          <button id="acquista-continue" class="primary" type="button">Continua</button>
+      </section>
+
+      <aside class="panel seat-booking-panel">
+        <h3>Riepilogo prenotazione</h3>
+        <div class="seat-booking-lines">
+          <p><span>Posti selezionati</span><strong id="selected-seats-count">0</strong></p>
+          <p><span>Prezzo unitario</span><strong id="selected-seat-price">-</strong></p>
+          <p><span>Supplemento VIP</span><strong id="selected-seat-vip-extra">-</strong></p>
+          <p><span>Totale</span><strong id="selected-seats-total">-</strong></p>
         </div>
-      </div>
+        <p id="seat-vip-note" class="seat-vip-note">I posti VIP costano piu del prezzo base.</p>
+        <p id="selected-seats-list" class="subtle">Nessuno</p>
+        <button id="acquista-continue" class="primary" type="button">Procedi al pagamento</button>
+      </aside>
     </section>
   </main>
 

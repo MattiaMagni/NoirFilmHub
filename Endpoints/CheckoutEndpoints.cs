@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FilmAPI.Data;
 using FilmAPI.DTOs;
 using FilmAPI.Model;
+using FilmAPI.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -43,14 +44,18 @@ public static class CheckoutEndpoints
             var soldSet = sold.ToHashSet();
             var myLocks = userId > 0 ? locks.Where(l => l.UtenteId == userId).Select(l => l.PostoCodice).ToHashSet() : new HashSet<string>();
             var lockedByOthers = locks.Where(l => l.UtenteId != userId).Select(l => l.PostoCodice).ToHashSet();
+            var vipSeats = SeatPricingUtils.GetVipSeats(show.Sala?.NumeroFile ?? 10, show.Sala?.PostiPerFila ?? 12, show.Sala?.MappaPostiJson);
 
             return Results.Ok(new
             {
                 ProiezioneId = proiezioneId,
                 SalaId = show.SalaId,
+                PrezzoBase = show.PrezzoBase,
+                VipSupplement = SeatPricingUtils.VipSupplement,
                 NumeroFile = show.Sala?.NumeroFile ?? 10,
                 PostiPerFila = show.Sala?.PostiPerFila ?? 12,
                 MappaPostiJson = show.Sala?.MappaPostiJson ?? string.Empty,
+                VipSeats = vipSeats,
                 Sold = soldSet,
                 LockedByOthers = lockedByOthers,
                 MyLocks = myLocks,

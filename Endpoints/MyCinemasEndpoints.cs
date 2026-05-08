@@ -53,6 +53,17 @@ public static class MyCinemasEndpoints
             }
 
             var selectedDay = (day ?? DateTime.Today).Date;
+            var windowStart = DateTime.Today;
+            var windowEndExclusive = windowStart.AddDays(31);
+
+            var availableDays = await db.Proiezioni
+                .AsNoTracking()
+                .Where(p => p.CinemaId == cinemaId && p.Data >= windowStart && p.Data < windowEndExclusive)
+                .Select(p => p.Data.Date)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToListAsync();
+
             var shows = await db.Proiezioni
                 .AsNoTracking()
                 .Include(p => p.Film)
@@ -102,6 +113,7 @@ public static class MyCinemasEndpoints
                     TipologieSala = cinema.Sale.Where(s => s.Attiva).Select(s => s.Tipologia).Distinct().OrderBy(x => x).ToList()
                 },
                 Giorno = selectedDay,
+                AvailableDays = availableDays,
                 Programmazione = films
             });
         }).AllowAnonymous();

@@ -289,7 +289,8 @@
 
     if (quickAddConfirmCount) {
       const total = selectedIds.length;
-      quickAddConfirmCount.textContent = `Stai per aggiungere ${total} ${total === 1 ? "film" : "film"} al catalogo:`;
+      const titoloLabel = total === 1 ? "titolo selezionato" : "titoli selezionati";
+      quickAddConfirmCount.textContent = `Hai ${total} ${titoloLabel}. Stai per aggiungere ${total} film al catalogo:`;
     }
 
     quickAddConfirmList.innerHTML = selectedIds

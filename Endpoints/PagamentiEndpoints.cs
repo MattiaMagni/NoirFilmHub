@@ -43,7 +43,8 @@ return validation.ErrorResult!;
 var show = validation.Show!;
 var requestedSeats = validation.RequestedSeats!;
 var now = DateTime.UtcNow;
-var total = decimal.Round(requestedSeats.Count * show.PrezzoBase, 2);
+var vipSeats = FilmAPI.Services.SeatPricingUtils.GetVipSeats(show.Sala?.NumeroFile ?? 10, show.Sala?.PostiPerFila ?? 12, show.Sala?.MappaPostiJson);
+var total = FilmAPI.Services.SeatPricingUtils.CalculateTotal(show.PrezzoBase, requestedSeats, vipSeats);
 
 var appBaseUrl = (Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001").TrimEnd('/');
 var seatsRawEncoded = Uri.EscapeDataString(string.Join(',', requestedSeats));
@@ -209,7 +210,8 @@ return Results.BadRequest(new { error = "Stripe non configurato: manca STRIPE_SE
 var show = validation.Show!;
 var requestedSeats = validation.RequestedSeats!;
 var now = DateTime.UtcNow;
-var total = decimal.Round(requestedSeats.Count * show.PrezzoBase, 2);
+var vipSeats = FilmAPI.Services.SeatPricingUtils.GetVipSeats(show.Sala?.NumeroFile ?? 10, show.Sala?.PostiPerFila ?? 12, show.Sala?.MappaPostiJson);
+var total = FilmAPI.Services.SeatPricingUtils.CalculateTotal(show.PrezzoBase, requestedSeats, vipSeats);
 
 var appBaseUrl = (Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001").TrimEnd('/');
 var seatsRawEncoded = Uri.EscapeDataString(string.Join(',', requestedSeats));
@@ -379,6 +381,7 @@ return (false, Results.BadRequest(new { error = "Dati acquisto non validi" }), n
 var show = await db.Proiezioni
 .Include(p => p.Cinema)
 .Include(p => p.Film)
+.Include(p => p.Sala)
 .FirstOrDefaultAsync(p => p.Id == proiezioneId);
 if (show is null)
 {

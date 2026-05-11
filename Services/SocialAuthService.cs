@@ -17,18 +17,20 @@ public class SocialAuthService
     private readonly SecurityAuditService _auditService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
+    private readonly EmailService _emailService;
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public SocialAuthService(FilmDbContext db, JwtTokenService jwtTokenService,
         SecurityAuditService auditService, IHttpClientFactory httpClientFactory,
-        IConfiguration configuration)
+        IConfiguration configuration, EmailService emailService)
     {
         _db = db;
         _jwtTokenService = jwtTokenService;
         _auditService = auditService;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
+        _emailService = emailService;
     }
 
     public async Task<(string? AuthorizationUrl, string? Error)> InitiateAsync(string provider, string? returnUrl, string? mode, string baseUrl)
@@ -173,6 +175,8 @@ public class SocialAuthService
 
                 await _db.SaveChangesAsync();
 
+                await _auditService.LogEventAsync(utente.Id, "SocialLoginCreated", stateEntity.Provider, ipAddress, userAgent);
+
                 var tokenRaw = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
                     .Replace("+", "-").Replace("/", "_").TrimEnd('=');
                 var tokenHash = ComputeSha256(tokenRaw);
@@ -186,12 +190,17 @@ public class SocialAuthService
                 });
                 await _db.SaveChangesAsync();
 
-                await _auditService.LogEventAsync(utente.Id, "SocialLoginCreated", stateEntity.Provider, ipAddress, userAgent);
-
-                var setupFrontend = frontendBaseUrl ?? baseUrl.TrimEnd('/');
-                var setupUrl = $"{setupFrontend}/setup-password.html" +
+                var frontend = frontendBaseUrl ?? baseUrl.TrimEnd('/');
+                var setupUrl = $"{frontend}/setup-password.html" +
                     $"?token={Uri.EscapeDataString(tokenRaw)}" +
                     $"&email={Uri.EscapeDataString(email)}";
+
+                try
+                {
+                    await _emailService.SendPasswordSetupEmail(utente.Email, tokenRaw, utente.Nome);
+                }
+                catch { }
+
                 return (true, null, setupUrl);
             }
         }

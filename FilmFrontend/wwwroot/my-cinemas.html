@@ -12,6 +12,7 @@
   <script src="/js/callback-auth.js" defer></script>
   <script src="/js/programmazione-shared.js" defer></script>
   <script src="/js/date-utils.js" defer></script>
+  <script src="/js/geo-permission.js" defer></script>
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
@@ -30,6 +31,20 @@
     </section>
 
     <section class="panel">
+      <div id="my-cinemas-filters" class="cinema-filter-bar">
+        <div class="filter-row">
+          <input id="cinema-filter-city" type="search" placeholder="Cerca citta..." aria-label="Filtra per citta">
+          <select id="cinema-filter-tipologia" aria-label="Filtra per tipologia sala">
+            <option value="">Tutte le tipologie</option>
+          </select>
+        </div>
+        <div id="cinema-filter-distance-row" class="filter-row hidden">
+          <label for="cinema-filter-radius">Distanza massima:</label>
+          <input id="cinema-filter-radius" type="range" min="1" max="200" value="50" step="1">
+          <span id="cinema-filter-radius-value">50 km</span>
+        </div>
+      </div>
+
       <div id="my-cinemas-status" class="status info">Caricamento...</div>
       <div id="my-cinemas-list" class="grid-cards"></div>
 

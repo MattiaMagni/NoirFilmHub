@@ -1,5 +1,6 @@
 using FilmAPI.Data;
 using FilmAPI.DTOs;
+using FilmAPI.Helpers;
 using FilmAPI.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -19,9 +20,12 @@ public static class CinemaEndpoints
 
         group.MapGet("/nearby", async (FilmDbContext db, double lat, double lng) =>
         {
-            var cinemas = await db.Cinemas
+            var all = await db.Cinemas
                 .AsNoTracking()
                 .Where(c => c.Latitudine.HasValue && c.Longitudine.HasValue)
+                .ToListAsync();
+
+            var cinemas = all
                 .Select(c => new
                 {
                     c.Id,
@@ -30,11 +34,11 @@ public static class CinemaEndpoints
                     c.Indirizzo,
                     c.Latitudine,
                     c.Longitudine,
-                    DistanzaKm = DistanceKm(lat, lng, c.Latitudine!.Value, c.Longitudine!.Value)
+                    DistanzaKm = GeoHelper.DistanceKm(lat, lng, c.Latitudine!.Value, c.Longitudine!.Value)
                 })
                 .OrderBy(c => c.DistanzaKm)
                 .Take(50)
-                .ToListAsync();
+                .ToList();
 
             return Results.Ok(cinemas);
         }).AllowAnonymous();
@@ -143,16 +147,4 @@ public static class CinemaEndpoints
 
         return DateTime.UtcNow.Ticks.ToString();
     }
-
-    private static double DistanceKm(double lat1, double lon1, double lat2, double lon2)
-    {
-        const double r = 6371d;
-        var dLat = ToRad(lat2 - lat1);
-        var dLon = ToRad(lon2 - lon1);
-        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) + Math.Cos(ToRad(lat1)) * Math.Cos(ToRad(lat2)) * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        return Math.Round(r * c, 2);
-    }
-
-    private static double ToRad(double degree) => degree * Math.PI / 180d;
 }

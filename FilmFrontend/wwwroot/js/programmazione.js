@@ -161,47 +161,6 @@
     }
   }
 
-  async function requestGeolocation() {
-    if (!navigator.geolocation) {
-      return null;
-    }
-    return await new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        (position) => resolve(position.coords),
-        () => resolve(null),
-        { enableHighAccuracy: false, timeout: 3500, maximumAge: 60000 }
-      );
-    });
-  }
-
-  async function loadCinemaSelectOptions() {
-    if (!chooseCinemaSelect) {
-      return;
-    }
-
-    try {
-      let cinemas;
-      if (geoPosition && geoPosition.latitude != null && geoPosition.longitude != null) {
-        cinemas = await window.ApiClient.get(`/cinemas/nearby?lat=${geoPosition.latitude}&lng=${geoPosition.longitude}`);
-      } else {
-        cinemas = await window.ApiClient.get("/cinemas");
-      }
-
-      const list = Array.isArray(cinemas) ? cinemas : [];
-      const options = ["<option value=''>Scegli cinema</option>"];
-      list.forEach((c) => {
-        const distanza = c.distanzaKm != null ? ` (${Number(c.distanzaKm).toFixed(1)} km)` : "";
-        const selected = Number(c.id) === Number(selectedCinemaId) ? " selected" : "";
-        options.push(`<option value="${c.id}"${selected}>${c.nome} - ${c.citta}${distanza}</option>`);
-      });
-
-      chooseCinemaSelect.innerHTML = options.join("");
-    } catch (error) {
-      chooseCinemaSelect.innerHTML = "<option value=''>Cinema non disponibile</option>";
-      setStatus(`Errore caricamento cinema: ${error.message}`, "error");
-    }
-  }
-
   function bindEvents() {
     searchEl.addEventListener("input", debounce(loadFilms, 280));
     categoryEl.addEventListener("change", loadFilms);
@@ -273,7 +232,7 @@
       tabsEl.style.display = "none";
     }
 
-    geoPosition = await requestGeolocation();
+    geoPosition = await window.GeoPermission.requestGeoWithPopup();
 
     const userCinemaId = await loadCinemaFromUserIfAny();
     selectedCinemaId = userCinemaId || getStoredCinemaId();

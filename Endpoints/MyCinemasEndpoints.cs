@@ -1,5 +1,7 @@
 using FilmAPI.Data;
 using FilmAPI.DTOs;
+using FilmAPI.Helpers;
+using FilmAPI.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +12,77 @@ public static class MyCinemasEndpoints
 {
     public static RouteGroupBuilder MapMyCinemas(this RouteGroupBuilder group)
     {
-        group.MapGet("/", async (FilmDbContext db) =>
+        group.MapGet("/tipologie", async (FilmDbContext db) =>
         {
-            var cinemas = await db.Cinemas
+            var tipologie = await db.Sale
                 .AsNoTracking()
+                .Where(s => s.Attiva)
+                .Select(s => s.Tipologia)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToListAsync();
+
+            return Results.Ok(tipologie);
+        }).AllowAnonymous();
+
+        group.MapGet("/", async (
+            FilmDbContext db,
+            string? citta,
+            string? tipologiaSala,
+            double? lat,
+            double? lng,
+            double? raggio) =>
+        {
+            IQueryable<Cinema> query = db.Cinemas.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(citta))
+            {
+                query = query.Where(c => EF.Functions.Like(c.Citta, $"%{citta.Trim()}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(tipologiaSala))
+            {
+                query = query.Where(c => c.Sale.Any(s => s.Attiva && s.Tipologia == tipologiaSala.Trim()));
+            }
+
+            var hasGeo = lat.HasValue && lng.HasValue;
+
+            List<Cinema> cinemas;
+            if (hasGeo)
+            {
+                cinemas = await query
+                    .Include(c => c.Sale)
+                    .Where(c => c.Latitudine.HasValue && c.Longitudine.HasValue)
+                    .ToListAsync();
+
+                var withDistance = cinemas
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Nome,
+                        c.Citta,
+                        c.Indirizzo,
+                        c.Latitudine,
+                        c.Longitudine,
+                        c.CodiceLocale,
+                        TipologieSala = c.Sale
+                            .Where(s => s.Attiva)
+                            .Select(s => s.Tipologia)
+                            .Distinct()
+                            .OrderBy(x => x)
+                            .ToList(),
+                        DistanzaKm = GeoHelper.DistanceKm(lat!.Value, lng!.Value, c.Latitudine!.Value, c.Longitudine!.Value)
+                    })
+                    .Where(c => !raggio.HasValue || c.DistanzaKm <= raggio.Value)
+                    .OrderBy(c => c.DistanzaKm)
+                    .ThenBy(c => c.Citta)
+                    .ThenBy(c => c.Nome)
+                    .ToList();
+
+                return Results.Ok(withDistance);
+            }
+
+            cinemas = await query
                 .Include(c => c.Sale)
                 .OrderBy(c => c.Citta)
                 .ThenBy(c => c.Nome)
@@ -53,6 +122,7 @@ public static class MyCinemasEndpoints
             }
 
             var selectedDay = (day ?? DateTime.Today).Date;
+            var nextDay = selectedDay.AddDays(1);
             var windowStart = DateTime.Today;
             var windowEndExclusive = windowStart.AddDays(31);
 
@@ -68,7 +138,7 @@ public static class MyCinemasEndpoints
                 .AsNoTracking()
                 .Include(p => p.Film)
                 .Include(p => p.Sala)
-                .Where(p => p.CinemaId == cinemaId && p.Data.Date == selectedDay)
+                .Where(p => p.CinemaId == cinemaId && p.Data >= selectedDay && p.Data < nextDay)
                 .OrderBy(p => p.Ora)
                 .ToListAsync();
 

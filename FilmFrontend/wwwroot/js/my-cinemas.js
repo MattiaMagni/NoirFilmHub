@@ -5,10 +5,20 @@
   const detailTitleEl = document.getElementById("my-cinemas-detail-title");
   const dateStripEl = document.getElementById("my-cinemas-date-strip");
   const dayBodyEl = document.getElementById("my-cinemas-day-body");
+  const filtersEl = document.getElementById("my-cinemas-filters");
+  const filterCityEl = document.getElementById("cinema-filter-city");
+  const filterTipologiaEl = document.getElementById("cinema-filter-tipologia");
+  const filterDistanceRowEl = document.getElementById("cinema-filter-distance-row");
+  const filterRadiusEl = document.getElementById("cinema-filter-radius");
+  const filterRadiusValueEl = document.getElementById("cinema-filter-radius-value");
 
   let selectedCinemaId = null;
   let selectedDayIso = null;
   let availableDays = [];
+
+  let geoPosition = null;
+  let cityDebounce = null;
+  let radiusDebounce = null;
 
   function setStatus(message, kind) {
     statusEl.className = `status ${kind}`;
@@ -30,33 +40,83 @@
       ? cinema.tipologieSala.map((t) => `<span class='tag info'>${t}</span>`).join(" ")
       : "<span class='tag info'>Tipologia non definita</span>";
 
+    const distanceBadge = cinema.distanzaKm != null
+      ? `<span class='tag accent'>${Number(cinema.distanzaKm).toFixed(1)} km</span>`
+      : "";
+
     return `
       <article class="card cinema-card">
         <div class="card-body">
-          <h3>${cinema.nome}</h3>
+          <h3>${cinema.nome}${distanceBadge ? ` <span class="cinema-distance-badge">${distanceBadge}</span>` : ""}</h3>
           <p class="subtle">${cinema.citta} - ${cinema.indirizzo}</p>
-          <div class="actions">${tipologie}</div>
+          <div class="actions">${tipologie}${distanceBadge}</div>
           <p><a class="button secondary" href="/my-cinemas.html?idCinema=${cinema.id}">Apri programmazione</a></p>
         </div>
       </article>
     `;
   }
 
+  function buildQueryString() {
+    const params = new URLSearchParams();
+
+    const city = (filterCityEl && filterCityEl.value || "").trim();
+    if (city) {
+      params.set("citta", city);
+    }
+
+    if (filterTipologiaEl && filterTipologiaEl.value) {
+      params.set("tipologiaSala", filterTipologiaEl.value);
+    }
+
+    if (geoPosition && geoPosition.latitude != null && geoPosition.longitude != null) {
+      params.set("lat", String(geoPosition.latitude));
+      params.set("lng", String(geoPosition.longitude));
+
+      if (filterRadiusEl) {
+        const raggio = Number(filterRadiusEl.value);
+        if (raggio > 0 && raggio < 200) {
+          params.set("raggio", String(raggio));
+        }
+      }
+    }
+
+    return params.toString();
+  }
+
   async function loadCinemaList() {
     setStatus("Caricamento cinema...", "info");
     try {
-      const cinemas = await window.ApiClient.get("/my-cinemas");
+      const query = buildQueryString();
+      const cinemas = await window.ApiClient.get(`/my-cinemas${query ? '?' + query : ''}`);
       const items = Array.isArray(cinemas) ? cinemas : [];
       if (!items.length) {
-        listEl.innerHTML = "<p class='subtle'>Nessun cinema disponibile.</p>";
+        listEl.innerHTML = "<p class='subtle'>Nessun cinema disponibile con i filtri selezionati.</p>";
         setStatus("Nessun cinema trovato.", "info");
         return;
       }
       listEl.innerHTML = items.map(renderCinemaCard).join("");
-      setStatus(`Caricati ${items.length} cinema.`, "success");
+      const geoText = geoPosition ? " (ordinati per distanza)" : "";
+      setStatus(`Caricati ${items.length} cinema${geoText}.`, "success");
     } catch (error) {
       listEl.innerHTML = "";
       setStatus(`Errore caricamento cinema: ${error.message}`, "error");
+    }
+  }
+
+  async function loadTipologie() {
+    if (!filterTipologiaEl) {
+      return;
+    }
+    try {
+      const tipologie = await window.ApiClient.get("/my-cinemas/tipologie");
+      const list = Array.isArray(tipologie) ? tipologie : [];
+      const options = ["<option value=''>Tutte le tipologie</option>"];
+      list.forEach((t) => {
+        options.push(`<option value="${t}">${t}</option>`);
+      });
+      filterTipologiaEl.innerHTML = options.join("");
+    } catch {
+      filterTipologiaEl.innerHTML = "<option value=''>Tutte le tipologie</option>";
     }
   }
 
@@ -121,7 +181,13 @@
 
     setStatus("Caricamento programmazione cinema...", "info");
     try {
-      const detail = await window.ApiClient.get(`/my-cinemas/${selectedCinemaId}/programmazione?day=${selectedDayIso}`);
+      const params = new URLSearchParams();
+      if (selectedDayIso) {
+        params.set("day", selectedDayIso);
+      }
+      const detail = await window.ApiClient.get(
+        `/my-cinemas/${selectedCinemaId}/programmazione${params.toString() ? '?' + params : ''}`
+      );
       detailTitleEl.textContent = `${detail.cinema.nome} - ${detail.cinema.citta}`;
 
       availableDays = Array.isArray(detail.availableDays)
@@ -186,17 +252,57 @@
     });
   }
 
+  function bindFilterEvents() {
+    if (filterCityEl) {
+      filterCityEl.addEventListener("input", () => {
+        if (cityDebounce) clearTimeout(cityDebounce);
+        cityDebounce = setTimeout(() => loadCinemaList(), 300);
+      });
+    }
+
+    if (filterTipologiaEl) {
+      filterTipologiaEl.addEventListener("change", () => loadCinemaList());
+    }
+
+    if (filterRadiusEl) {
+      filterRadiusEl.addEventListener("input", () => {
+        if (filterRadiusValueEl) {
+          filterRadiusValueEl.textContent = `${filterRadiusEl.value} km`;
+        }
+        if (radiusDebounce) clearTimeout(radiusDebounce);
+        radiusDebounce = setTimeout(() => loadCinemaList(), 400);
+      });
+    }
+  }
+
   async function initMyCinemasPage() {
     selectedCinemaId = getCinemaIdFromQuery();
+
     if (!selectedCinemaId) {
       detailShellEl.classList.add("hidden");
+      if (filtersEl) filtersEl.style.display = "";
+
+      geoPosition = await window.GeoPermission.requestGeoWithPopup();
+      if (geoPosition) {
+        if (filterDistanceRowEl) filterDistanceRowEl.classList.remove("hidden");
+        setStatus("Posizione ottenuta, caricamento cinema...", "info");
+      }
+      if (filterRadiusValueEl && filterRadiusEl) {
+        filterRadiusValueEl.textContent = `${filterRadiusEl.value} km`;
+      }
+
+      await loadTipologie();
+      bindFilterEvents();
       await loadCinemaList();
       return;
     }
 
+    if (filtersEl) filtersEl.style.display = "none";
     listEl.innerHTML = "";
     detailShellEl.classList.remove("hidden");
     bindDetailEvents();
+
+    selectedDayIso = selectedDayIso || window.DateUtils.toIsoDate(new Date());
     await loadCinemaProgrammazione();
   }
 

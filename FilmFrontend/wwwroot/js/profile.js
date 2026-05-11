@@ -86,6 +86,16 @@
         <strong>Provider social collegati:</strong> ${externalLoginsHtml}
       </div>
       <div style="margin-bottom:16px;">
+        <strong>Geolocalizzazione:</strong>
+        <button class="geo-toggle-btn" id="btn-geo-toggle" aria-label="Attiva/disattiva geolocalizzazione">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="geo-toggle-icon">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span id="geo-toggle-label">Attiva</span>
+        </button>
+      </div>
+      <div style="margin-bottom:16px;">
         <strong>Sessioni:</strong>
         <button class="btn-small danger" id="btn-revoke-sessions" style="margin-left:8px;">Disconnetti tutti i dispositivi</button>
       </div>`;
@@ -94,12 +104,22 @@
       var btnCp = document.getElementById("btn-change-password");
       var btnSp = document.getElementById("btn-setup-password");
       var btnRs = document.getElementById("btn-revoke-sessions");
+      var btnGeo = document.getElementById("btn-geo-toggle");
       if (btnCp) btnCp.addEventListener("click", openChangePasswordModal);
       if (btnSp) btnSp.addEventListener("click", setupPasswordDirect);
       if (btnRs) btnRs.addEventListener("click", async () => {
         if (confirm("Sei sicuro? Tutti i dispositivi verranno disconnessi."))
           await window.AuthService.revokeAllSessions();
       });
+      if (btnGeo) {
+        var geoOn = localStorage.getItem("geo_enabled") !== "0";
+        updateGeoButton(btnGeo, geoOn);
+        btnGeo.addEventListener("click", function () {
+          var on = localStorage.getItem("geo_enabled") !== "0";
+          localStorage.setItem("geo_enabled", on ? "0" : "1");
+          updateGeoButton(btnGeo, !on);
+        });
+      }
     }, 100);
   }
 
@@ -180,6 +200,21 @@
       setStatus("Prenotazione annullata.", "success");
       await loadProfile();
     } catch (error) { setStatus(`Errore: ${error.message}`, "error"); }
+  }
+
+  function updateGeoButton(btn, on) {
+    var icon = btn.querySelector("#geo-toggle-icon");
+    var label = btn.querySelector("#geo-toggle-label");
+    if (!icon || !label) return;
+    if (on) {
+      btn.style.color = "var(--ok)";
+      icon.innerHTML = '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>';
+      label.textContent = "Attiva";
+    } else {
+      btn.style.color = "var(--color-text-secondary)";
+      icon.innerHTML = '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/><line x1="2" y1="2" x2="22" y2="22"/>';
+      label.textContent = "Disattivata";
+    }
   }
 
   async function initProfilePage() {

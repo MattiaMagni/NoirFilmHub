@@ -1,44 +1,33 @@
 (function () {
-  const form = document.getElementById("login-form");
-  const statusEl = document.getElementById("login-status");
-
-  function setStatus(message, kind) {
+  function setStatus(statusEl, message, kind) {
+    if (!statusEl) return;
     statusEl.className = "status " + kind;
     statusEl.textContent = message;
   }
 
-  async function submitForm(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    const email = form.email.value.trim();
-    const password = form.password.value;
-
-    if (!email || !password) {
-      setStatus("Inserisci email e password.", "error");
-      return;
-    }
-
-    setStatus("Accesso in corso...", "info");
+    var form = document.getElementById("login-form");
+    var statusEl = document.getElementById("login-status");
+    var email = form.email.value.trim();
+    var password = form.password.value;
+    if (!email || !password) { setStatus(statusEl, "Inserisci email e password.", "error"); return; }
+    setStatus(statusEl, "Accesso in corso...", "info");
     try {
       await window.AuthService.login(email, password);
-      setStatus("Login effettuato.", "success");
-      const callback = window.AuthService.getCallbackFromLocation ? window.AuthService.getCallbackFromLocation() : null;
-      const saved = callback || window.AuthService.consumeRedirect();
+      setStatus(statusEl, "Login effettuato.", "success");
+      var callback = window.AuthService.getCallbackFromLocation ? window.AuthService.getCallbackFromLocation() : null;
+      var saved = callback || window.AuthService.consumeRedirect();
       window.location.replace(saved || "/index.html");
     } catch (error) {
-      setStatus(error && error.status === 401 ? "Credenziali non valide." : `Errore: ${error.message}`, "error");
+      setStatus(statusEl, error && error.status === 401 ? "Credenziali non valide." : "Errore: " + (error.message || "Errore sconosciuto"), "error");
     }
   }
 
   async function initLoginPage() {
-    if (!form || !window.AuthGuard || !window.AuthService) {
-      return;
-    }
-
-    if (await window.AuthGuard.redirectIfAuthenticated("/index.html")) {
-      return;
-    }
-
-    form.addEventListener("submit", submitForm);
+    var form = document.getElementById("login-form");
+    if (!form) return;
+    form.addEventListener("submit", handleSubmit);
   }
 
   window.initLoginPage = initLoginPage;

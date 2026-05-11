@@ -17,6 +17,11 @@ public class FilmDbContext : DbContext
     public DbSet<FilmCategoria> FilmCategorie => Set<FilmCategoria>();
     public DbSet<Prenotazione> Prenotazioni => Set<Prenotazione>();
     public DbSet<SeatLock> SeatLocks => Set<SeatLock>();
+    public DbSet<UserExternalLogin> UserExternalLogins => Set<UserExternalLogin>();
+    public DbSet<AccountActionToken> AccountActionTokens => Set<AccountActionToken>();
+    public DbSet<ExternalAuthState> ExternalAuthStates => Set<ExternalAuthState>();
+    public DbSet<ExternalAuthExchangeCode> ExternalAuthExchangeCodes => Set<ExternalAuthExchangeCode>();
+    public DbSet<UserSecurityAuditLog> UserSecurityAuditLogs => Set<UserSecurityAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,8 +73,23 @@ public class FilmDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<Utente>()
+            .HasIndex(u => u.NormalizedEmail)
+            .IsUnique();
+
+        modelBuilder.Entity<Utente>()
+            .HasIndex(u => u.Ruolo);
+
+        modelBuilder.Entity<Utente>()
             .Property(u => u.Ruolo)
             .HasMaxLength(32);
+
+        modelBuilder.Entity<Utente>()
+            .Property(u => u.PasswordHash)
+            .IsRequired(false);
+
+        modelBuilder.Entity<Utente>()
+            .Property(u => u.CreditoPiattaforma)
+            .HasPrecision(10, 2);
 
         modelBuilder.Entity<Prenotazione>()
             .Property(p => p.TotalePrezzo)
@@ -141,6 +161,53 @@ public class FilmDbContext : DbContext
             .HasIndex(s => new { s.ProiezioneId, s.PostoCodice })
             .IsUnique();
 
+        // --- Iteration 5: Identity & Security ---
+
+        modelBuilder.Entity<UserExternalLogin>()
+            .HasOne(el => el.Utente)
+            .WithMany(u => u.ExternalLogins)
+            .HasForeignKey(el => el.UtenteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserExternalLogin>()
+            .HasIndex(el => new { el.Provider, el.ProviderKey })
+            .IsUnique();
+
+        modelBuilder.Entity<UserExternalLogin>()
+            .HasIndex(el => new { el.Provider, el.TenantId, el.ProviderKey });
+
+        modelBuilder.Entity<AccountActionToken>()
+            .HasOne(t => t.Utente)
+            .WithMany()
+            .HasForeignKey(t => t.UtenteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AccountActionToken>()
+            .HasIndex(t => t.TokenHash)
+            .IsUnique();
+
+        modelBuilder.Entity<ExternalAuthState>()
+            .HasKey(s => s.Id);
+
+        modelBuilder.Entity<ExternalAuthExchangeCode>()
+            .HasIndex(e => e.CodeHash)
+            .IsUnique();
+
+        modelBuilder.Entity<UserSecurityAuditLog>()
+            .HasOne(l => l.Utente)
+            .WithMany()
+            .HasForeignKey(l => l.UtenteId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<UserSecurityAuditLog>()
+            .HasIndex(l => new { l.UtenteId, l.CreatedAtUtc });
+
+        modelBuilder.Entity<UserSecurityAuditLog>()
+            .HasIndex(l => new { l.EventType, l.CreatedAtUtc });
+
+        modelBuilder.Entity<UserSecurityAuditLog>()
+            .HasIndex(l => l.CreatedAtUtc);
+
         modelBuilder.Entity<Categoria>().HasData(
             new Categoria { Id = 1, Nome = "Fantasy", Descrizione = "Film fantasy" },
             new Categoria { Id = 2, Nome = "Horror", Descrizione = "Film horror" },
@@ -149,6 +216,5 @@ public class FilmDbContext : DbContext
             new Categoria { Id = 5, Nome = "Azione", Descrizione = "Film d'azione" },
             new Categoria { Id = 6, Nome = "Thriller", Descrizione = "Film thriller" }
         );
-
     }
 }

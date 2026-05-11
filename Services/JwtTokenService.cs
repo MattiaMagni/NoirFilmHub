@@ -32,7 +32,9 @@ public class JwtTokenService
             new(ClaimTypes.NameIdentifier, utente.Id.ToString()),
             new(ClaimTypes.Name, $"{utente.Nome} {utente.Cognome}".Trim()),
             new(ClaimTypes.Role, utente.Ruolo),
-            new("ruolo", utente.Ruolo)
+            new("ruolo", utente.Ruolo),
+            new("auth_version", utente.AuthVersion.ToString()),
+            new("security_stamp", utente.SecurityStamp)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));

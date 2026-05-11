@@ -3,12 +3,8 @@
 
   async function parseResponse(response) {
     const contentType = response.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
-      return await response.json();
-    }
-    if (response.status === 204) {
-      return null;
-    }
+    if (contentType.includes("application/json")) return await response.json();
+    if (response.status === 204) return null;
     return await response.text();
   }
 
@@ -17,25 +13,20 @@
   }
 
   function createOptions(method, data, headers) {
-    const options = {
-      method,
-      headers: {
-        ...(headers || {})
-      }
-    };
-
+    const options = { method, headers: { ...(headers || {}) } };
     if (shouldIncludeBody(method, data)) {
-      if (!options.headers["Content-Type"]) {
-        options.headers["Content-Type"] = "application/json";
-      }
+      if (!options.headers["Content-Type"]) options.headers["Content-Type"] = "application/json";
       options.body = JSON.stringify(data ?? {});
     }
-
     return options;
   }
 
   async function rawRequest(path, options) {
     const response = await fetch(baseUrl + path, options);
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get("Retry-After") || "60", 10);
+      throw { status: 429, message: `Troppi tentativi. Riprova tra ${retryAfter} secondi.`, retryAfter };
+    }
     const payload = await parseResponse(response);
     if (!response.ok) {
       throw {
@@ -44,48 +35,28 @@
         details: payload
       };
     }
-
     return payload;
   }
 
   async function request(path, options, retryOn401) {
     const opt = options || {};
     const method = opt.method || "GET";
-    const headers = {
-      ...(opt.headers || {})
-    };
-
-    if (opt.body !== undefined && !headers["Content-Type"]) {
-      headers["Content-Type"] = "application/json";
-    }
+    const headers = { ...(opt.headers || {}) };
+    if (opt.body !== undefined && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
 
     if (window.AuthService) {
       const token = await window.AuthService.ensureValidAccessToken();
-      if (token && !headers.Authorization) {
-        headers.Authorization = `Bearer ${token}`;
-      }
+      if (token && !headers.Authorization) headers.Authorization = `Bearer ${token}`;
     }
 
     try {
-      return await rawRequest(path, {
-        ...opt,
-        method,
-        headers
-      });
+      return await rawRequest(path, { ...opt, method, headers });
     } catch (error) {
       if (error && error.status === 401 && retryOn401 !== false && window.AuthService) {
         try {
           const token = await window.AuthService.refreshAccessToken();
-          const retryHeaders = {
-            ...headers,
-            Authorization: `Bearer ${token}`
-          };
-
-          return await rawRequest(path, {
-            ...opt,
-            method,
-            headers: retryHeaders
-          });
+          const retryHeaders = { ...headers, Authorization: `Bearer ${token}` };
+          return await rawRequest(path, { ...opt, method, headers: retryHeaders });
         } catch {
           window.AuthService.clearSession();
           const currentPath = window.location.pathname.toLowerCase();
@@ -96,14 +67,10 @@
           throw error;
         }
       }
-
       if (error && error.status === 403) {
         const currentPath = window.location.pathname.toLowerCase();
-        if (currentPath !== "/index.html") {
-          window.location.replace("/index.html");
-        }
+        if (currentPath !== "/index.html") window.location.replace("/index.html");
       }
-
       throw error;
     }
   }

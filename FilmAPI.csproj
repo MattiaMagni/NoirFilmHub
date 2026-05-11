@@ -23,6 +23,7 @@
     <PackageReference Include="Stripe.net" Version="49.0.0" />
     <PackageReference Include="ZXing.Net" Version="0.16.10" />
     <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.20" />
+    <PackageReference Include="MailKit" Version="4.11.0" />
   </ItemGroup>
 
   <ItemGroup>

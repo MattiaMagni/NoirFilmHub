@@ -37,6 +37,7 @@ TestResults/
 # Secrets
 .env
 !.env.example
+docs/project/credenziali.txt
 
 # OS
 Thumbs.db

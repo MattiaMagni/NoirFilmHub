@@ -4,7 +4,7 @@
     "FilmFrontend": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "index.html",
       "applicationUrl": "http://localhost:5001",
       "environmentVariables": {

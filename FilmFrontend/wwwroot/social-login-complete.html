@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Accesso Social</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260508-global-2">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <main class="container page-shell" style="text-align:center;min-height:60vh;display:flex;align-items:center;justify-content:center;">
+    <section class="panel" style="max-width:500px;width:100%;">
+      <div id="social-status" class="status info">
+        <div style="margin:24px 0;">
+          <div class="spinner" style="width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;"></div>
+          <p>Accesso in corso...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="footer-container"></div>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      await window.bootstrapLayout();
+      const statusEl = document.getElementById("social-status");
+      try {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+
+        if (params.has("error")) {
+          statusEl.className = "status error";
+          statusEl.innerHTML = `<p>Errore di autenticazione</p><p>${params.get("error")}</p><a href="/login.html" class="button primary">Torna al login</a>`;
+          return;
+        }
+
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+        const userRaw = params.get("user");
+        const returnUrl = params.get("return_url") || "/index.html";
+
+        if (!accessToken || !refreshToken || !userRaw) {
+          statusEl.className = "status error";
+          statusEl.innerHTML = `<p>Dati di accesso incompleti.</p><a href="/login.html" class="button primary">Torna al login</a>`;
+          return;
+        }
+
+        const user = JSON.parse(decodeURIComponent(userRaw));
+        window.AuthService.setSession({ accessToken, refreshToken, utente: user });
+        window.location.replace(returnUrl);
+      } catch (e) {
+        statusEl.className = "status error";
+        statusEl.innerHTML = `<p>Errore durante l'elaborazione del login.</p><a href="/login.html" class="button primary">Torna al login</a>`;
+      }
+    });
+  </script>
+</body>
+</html>

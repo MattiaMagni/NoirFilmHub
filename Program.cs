@@ -1,9 +1,8 @@
-using DotNetEnv;
 using System.Security.Claims;
 using System.Text;
 
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using FilmAPI.Data;
 using FilmAPI.Endpoints;
 using FilmAPI.Model;
@@ -15,7 +14,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using QuestPDF.Infrastructure;
 
-// load .env
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,11 +26,7 @@ builder.Services.AddCors(options =>
         policy
             .SetIsOriginAllowed(origin =>
             {
-                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-                {
-                    return false;
-                }
-
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri)) return false;
                 var host = uri.Host.ToLowerInvariant();
                 return host == "localhost" || host == "127.0.0.1";
             })
@@ -55,8 +49,12 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TmdbService>();
 builder.Services.AddScoped<TicketPdfService>();
 builder.Services.AddScoped<TicketEmailService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<SecurityAuditService>();
+builder.Services.AddScoped<SocialAuthService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<TmdbSyncHostedService>();
+builder.Services.AddHostedService<CleanupHostedService>();
 
 var authEnabled = (Environment.GetEnvironmentVariable("AUTH_ENABLED") ?? "true")
     .Equals("true", StringComparison.OrdinalIgnoreCase);
@@ -84,6 +82,55 @@ if (authEnabled)
                 RoleClaimType = ClaimTypes.Role,
                 NameClaimType = ClaimTypes.NameIdentifier
             };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async context =>
+                {
+                    var userIdClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var authVersionClaim = context.Principal?.FindFirst("auth_version")?.Value;
+
+                    if (userIdClaim == null || authVersionClaim == null)
+                    {
+                        context.Fail("Token claims incompleti");
+                        return;
+                    }
+
+                    var dbContext = context.HttpContext.RequestServices.GetRequiredService<FilmDbContext>();
+                    var utente = await dbContext.Utenti
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(u => u.Id == int.Parse(userIdClaim));
+
+                    if (utente == null)
+                    {
+                        context.Fail("Utente non trovato");
+                        return;
+                    }
+
+                    if (utente.IsDisabled)
+                    {
+                        context.Fail("Account disabilitato");
+                        return;
+                    }
+
+                    if (utente.AuthVersion.ToString() != authVersionClaim)
+                    {
+                        context.Fail("Token invalidato - sessione scaduta");
+                        return;
+                    }
+
+                    var iatClaim = context.Principal?.FindFirst("iat")?.Value;
+                    if (iatClaim != null && utente.PasswordChangedAtUtc.HasValue)
+                    {
+                        var iat = DateTimeOffset.FromUnixTimeSeconds(long.Parse(iatClaim)).UtcDateTime;
+                        if (utente.PasswordChangedAtUtc.Value > iat)
+                        {
+                            context.Fail("Password cambiata - token invalidato");
+                            return;
+                        }
+                    }
+                }
+            };
         });
 }
 else
@@ -104,13 +151,12 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
-// build connection string from env
-var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+var host2 = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
 var port = Environment.GetEnvironmentVariable("DB_PORT") ?? "3306";
 var name = Environment.GetEnvironmentVariable("DB_NAME") ?? "film-api-db";
 var user = Environment.GetEnvironmentVariable("DB_USER") ?? "root";
 var pass = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "root";
-var connectionString = $"Server={host};Port={port};Database={name};User Id={user};Password={pass};";
+var connectionString = $"Server={host2};Port={port};Database={name};User Id={user};Password={pass};";
 
 var serverVersion = dbUseAutoDetect
     ? ServerVersion.AutoDetect(connectionString)
@@ -126,7 +172,6 @@ if (dbProvider.Equals("InMemory", StringComparison.OrdinalIgnoreCase))
 }
 else
 {
-    // Pomelo.EntityFrameworkCore.MySql uses UseMySql extension
     builder.Services.AddDbContext<FilmDbContext>(dbOptions => dbOptions
         .UseMySql(connectionString, serverVersion)
         .LogTo(Console.WriteLine, LogLevel.Information)
@@ -150,7 +195,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// apply migrations automatically (best-effort)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
@@ -158,6 +202,37 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
+
+        // Cleanup: delete all existing users, then create ONLY the admin
+        var resetUsers = (Environment.GetEnvironmentVariable("RESET_USERS") ?? "false")
+            .Equals("true", StringComparison.OrdinalIgnoreCase);
+        if (resetUsers)
+        {
+            await db.UserSecurityAuditLogs.ExecuteDeleteAsync();
+            await db.AccountActionTokens.ExecuteDeleteAsync();
+            await db.UserExternalLogins.ExecuteDeleteAsync();
+            await db.ExternalAuthExchangeCodes.ExecuteDeleteAsync();
+            await db.ExternalAuthStates.ExecuteDeleteAsync();
+            await db.Prenotazioni.ExecuteDeleteAsync();
+            await db.Utenti.ExecuteDeleteAsync();
+            logger.LogInformation("All users and related data deleted for reset.");
+        }
+
+        var usersWithNullNormalized = await db.Utenti
+            .Where(u => u.NormalizedEmail == null || u.NormalizedEmail == "")
+            .ToListAsync();
+        foreach (var u in usersWithNullNormalized)
+        {
+            u.NormalizedEmail = u.Email.ToUpperInvariant();
+            u.LocalCredentialsEnabled = true;
+            u.AuthVersion = 1;
+            u.SecurityStamp = Guid.NewGuid().ToString("N");
+            u.CreatedAtUtc = DateTime.UtcNow;
+            u.EmailVerified = true;
+        }
+        if (usersWithNullNormalized.Count > 0)
+            await db.SaveChangesAsync();
+
         var adminEmail = Environment.GetEnvironmentVariable("DEFAULT_ADMIN_EMAIL") ?? "admin@filmapi.local";
         var adminPassword = Environment.GetEnvironmentVariable("DEFAULT_ADMIN_PASSWORD") ?? "Admin123!";
 
@@ -167,11 +242,17 @@ using (var scope = app.Services.CreateScope())
             db.Utenti.Add(new Utente
             {
                 Email = adminEmail,
+                NormalizedEmail = adminEmail.ToUpperInvariant(),
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
                 Nome = "Admin",
                 Cognome = "Sistema",
                 Telefono = string.Empty,
-                Ruolo = RuoloUtente.Admin
+                Ruolo = RuoloUtente.Admin,
+                LocalCredentialsEnabled = true,
+                AuthVersion = 1,
+                SecurityStamp = Guid.NewGuid().ToString("N"),
+                EmailVerified = true,
+                CreatedAtUtc = DateTime.UtcNow
             });
             await db.SaveChangesAsync();
         }
@@ -189,28 +270,8 @@ using (var scope = app.Services.CreateScope())
         if (!await db.Cinemas.AnyAsync())
         {
             db.Cinemas.AddRange(
-                new Cinema
-                {
-                    Nome = "Noir Cinemas Milano",
-                    Citta = "Milano",
-                    Indirizzo = "Via Torino 10",
-                    Capienza = 260,
-                    CodiceLocale = "0131220507688",
-                    Latitudine = 45.4642,
-                    Longitudine = 9.1900,
-                    Attivo = true
-                },
-                new Cinema
-                {
-                    Nome = "Noir Cinemas Lissone",
-                    Citta = "Lissone",
-                    Indirizzo = "Viale Martiri 20",
-                    Capienza = 220,
-                    CodiceLocale = "0131220507689",
-                    Latitudine = 45.6160,
-                    Longitudine = 9.2400,
-                    Attivo = true
-                }
+                new Cinema { Nome = "Noir Cinemas Milano", Citta = "Milano", Indirizzo = "Via Torino 10", Capienza = 260, CodiceLocale = "0131220507688", Latitudine = 45.4642, Longitudine = 9.1900, Attivo = true },
+                new Cinema { Nome = "Noir Cinemas Lissone", Citta = "Lissone", Indirizzo = "Viale Martiri 20", Capienza = 220, CodiceLocale = "0131220507689", Latitudine = 45.6160, Longitudine = 9.2400, Attivo = true }
             );
             await db.SaveChangesAsync();
         }
@@ -230,16 +291,11 @@ using (var scope = app.Services.CreateScope())
             await db.SaveChangesAsync();
         }
 
-        var existingSale = await db.Sale.ToListAsync();
-        var saleDaAggiornare = existingSale
-            .Where(s => string.IsNullOrWhiteSpace(s.MappaPostiJson))
-            .ToList();
-        if (saleDaAggiornare.Count > 0)
+        var existingSale = await db.Sale.Where(s => string.IsNullOrWhiteSpace(s.MappaPostiJson)).ToListAsync();
+        if (existingSale.Count > 0)
         {
-            foreach (var sala in saleDaAggiornare)
-            {
+            foreach (var sala in existingSale)
                 sala.MappaPostiJson = BuildSeatMapJson(sala.NumeroFile, sala.PostiPerFila, 2);
-            }
             await db.SaveChangesAsync();
         }
 
@@ -249,50 +305,10 @@ using (var scope = app.Services.CreateScope())
             var categories = await db.Categorie.AsNoTracking().ToListAsync();
             var filmList = new List<Film>
             {
-                new Film
-                {
-                    Titolo = "Dune: Parte Due",
-                    TitoloOriginale = "Dune: Part Two",
-                    DataProduzione = new DateTime(2024, 1, 1),
-                    DataUscita = new DateTime(2024, 2, 28),
-                    RegistaId = registi[0].Id,
-                    Durata = 166,
-                    DescrizioneLunga = "Paul Atreides affronta la guerra su Arrakis mentre il suo destino si compie.",
-                    CastPrincipale = "Timothee Chalamet, Zendaya, Rebecca Ferguson",
-                    CopertinaPath = "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg",
-                    FilmatoPath = "https://www.youtube.com/watch?v=Way9Dexny3w",
-                    TmdbSyncStato = "Seeded"
-                },
-                new Film
-                {
-                    Titolo = "Oppenheimer",
-                    TitoloOriginale = "Oppenheimer",
-                    DataProduzione = new DateTime(2023, 1, 1),
-                    DataUscita = new DateTime(2023, 8, 23),
-                    RegistaId = registi[1].Id,
-                    Durata = 180,
-                    DescrizioneLunga = "La storia dello scienziato che ha guidato il progetto Manhattan.",
-                    CastPrincipale = "Cillian Murphy, Emily Blunt, Robert Downey Jr.",
-                    CopertinaPath = "https://image.tmdb.org/t/p/w500/ptpr0kGAckfQkJeJIt8st5dglvd.jpg",
-                    FilmatoPath = "https://www.youtube.com/watch?v=uYPbbksJxIg",
-                    TmdbSyncStato = "Seeded"
-                },
-                new Film
-                {
-                    Titolo = "Barbie",
-                    TitoloOriginale = "Barbie",
-                    DataProduzione = new DateTime(2023, 1, 1),
-                    DataUscita = new DateTime(2023, 7, 20),
-                    RegistaId = registi[2].Id,
-                    Durata = 114,
-                    DescrizioneLunga = "Barbie entra nel mondo reale e scopre se stessa.",
-                    CastPrincipale = "Margot Robbie, Ryan Gosling",
-                    CopertinaPath = "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
-                    FilmatoPath = "https://www.youtube.com/watch?v=pBk4NYhWNMM",
-                    TmdbSyncStato = "Seeded"
-                }
+                new Film { Titolo = "Dune: Parte Due", TitoloOriginale = "Dune: Part Two", DataProduzione = new DateTime(2024, 1, 1), DataUscita = new DateTime(2024, 2, 28), RegistaId = registi[0].Id, Durata = 166, DescrizioneLunga = "Paul Atreides affronta la guerra su Arrakis mentre il suo destino si compie.", CastPrincipale = "Timothee Chalamet, Zendaya, Rebecca Ferguson", CopertinaPath = "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg", FilmatoPath = "https://www.youtube.com/watch?v=Way9Dexny3w", TmdbSyncStato = "Seeded" },
+                new Film { Titolo = "Oppenheimer", TitoloOriginale = "Oppenheimer", DataProduzione = new DateTime(2023, 1, 1), DataUscita = new DateTime(2023, 8, 23), RegistaId = registi[1].Id, Durata = 180, DescrizioneLunga = "La storia dello scienziato che ha guidato il progetto Manhattan.", CastPrincipale = "Cillian Murphy, Emily Blunt, Robert Downey Jr.", CopertinaPath = "https://image.tmdb.org/t/p/w500/ptpr0kGAckfQkJeJIt8st5dglvd.jpg", FilmatoPath = "https://www.youtube.com/watch?v=uYPbbksJxIg", TmdbSyncStato = "Seeded" },
+                new Film { Titolo = "Barbie", TitoloOriginale = "Barbie", DataProduzione = new DateTime(2023, 1, 1), DataUscita = new DateTime(2023, 7, 20), RegistaId = registi[2].Id, Durata = 114, DescrizioneLunga = "Barbie entra nel mondo reale e scopre se stessa.", CastPrincipale = "Margot Robbie, Ryan Gosling", CopertinaPath = "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg", FilmatoPath = "https://www.youtube.com/watch?v=pBk4NYhWNMM", TmdbSyncStato = "Seeded" }
             };
-
             db.Films.AddRange(filmList);
             await db.SaveChangesAsync();
 
@@ -303,13 +319,9 @@ using (var scope = app.Services.CreateScope())
                     var categoriaId = film.Titolo.Contains("Barbie", StringComparison.OrdinalIgnoreCase)
                         ? categories.FirstOrDefault(x => x.Nome == "Commedia")?.Id
                         : categories.FirstOrDefault(x => x.Nome == "Azione")?.Id;
-
                     if (categoriaId.HasValue)
-                    {
                         db.FilmCategorie.Add(new FilmCategoria { FilmId = film.Id, CategoriaId = categoriaId.Value });
-                    }
                 }
-
                 await db.SaveChangesAsync();
             }
         }
@@ -320,7 +332,6 @@ using (var scope = app.Services.CreateScope())
             var sale = await db.Sale.AsNoTracking().ToListAsync();
             var today = DateTime.Today;
             var random = new Random(42);
-
             foreach (var s in sale)
             {
                 for (var d = 0; d < 7; d++)
@@ -342,26 +353,20 @@ using (var scope = app.Services.CreateScope())
                     }
                 }
             }
-
             await db.SaveChangesAsync();
         }
         logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)
     {
-        // log and continue - in some MariaDB versions provider may fail to acquire lock
-        logger.LogError(ex, "Automatic database migration failed; the application will continue. If the database is not initialized, run 'dotnet ef database update' or apply migrations manually.");
+        logger.LogError(ex, "Automatic database migration failed; the application will continue.");
     }
 }
 
 app.UseStatusCodePages(async statusContext =>
 {
     var response = statusContext.HttpContext.Response;
-    if (response.HasStarted)
-    {
-        return;
-    }
-
+    if (response.HasStarted) return;
     if (response.StatusCode == StatusCodes.Status401Unauthorized)
     {
         response.ContentType = "application/json";
@@ -400,22 +405,16 @@ static string BuildSeatMapJson(int rows, int cols, int aisleWidth)
     var safeAisle = Math.Clamp(aisleWidth, 0, 4);
     var centerStart = safeAisle > 0 ? Math.Max(0, (safeCols / 2) - (safeAisle / 2)) : -1;
     var centerEnd = safeAisle > 0 ? Math.Min(safeCols - 1, centerStart + safeAisle - 1) : -1;
-
     var seats = new List<string>(safeRows * safeCols);
     for (var r = 0; r < safeRows; r++)
     {
         var rowCode = ((char)('A' + r)).ToString();
         for (var c = 0; c < safeCols; c++)
         {
-            if (safeAisle > 0 && c >= centerStart && c <= centerEnd)
-            {
-                continue;
-            }
-
+            if (safeAisle > 0 && c >= centerStart && c <= centerEnd) continue;
             seats.Add($"{rowCode}{c + 1}");
         }
     }
-
     return JsonSerializer.Serialize(new { rows = safeRows, cols = safeCols, seats });
 }
 

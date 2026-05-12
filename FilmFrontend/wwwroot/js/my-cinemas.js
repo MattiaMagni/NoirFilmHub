@@ -74,7 +74,7 @@
 
       if (filterRadiusEl) {
         const raggio = Number(filterRadiusEl.value);
-        if (raggio > 0 && raggio < 200) {
+        if (raggio > 0 && raggio < 201) {
           params.set("raggio", String(raggio));
         }
       }
@@ -255,24 +255,72 @@
   function bindFilterEvents() {
     if (filterCityEl) {
       filterCityEl.addEventListener("input", () => {
+        saveFiltersToStorage();
         if (cityDebounce) clearTimeout(cityDebounce);
         cityDebounce = setTimeout(() => loadCinemaList(), 300);
       });
     }
 
     if (filterTipologiaEl) {
-      filterTipologiaEl.addEventListener("change", () => loadCinemaList());
+      filterTipologiaEl.addEventListener("change", () => {
+        saveFiltersToStorage();
+        loadCinemaList();
+      });
     }
 
     if (filterRadiusEl) {
       filterRadiusEl.addEventListener("input", () => {
         if (filterRadiusValueEl) {
-          filterRadiusValueEl.textContent = `${filterRadiusEl.value} km`;
+          const val = Number(filterRadiusEl.value);
+          if (val >= 201) {
+            filterRadiusValueEl.textContent = "Nessuna distanza";
+            filterRadiusValueEl.className = "cinema-radius-unlimited";
+          } else {
+            filterRadiusValueEl.textContent = `${val} km`;
+            filterRadiusValueEl.className = "";
+          }
         }
+        saveFiltersToStorage();
         if (radiusDebounce) clearTimeout(radiusDebounce);
         radiusDebounce = setTimeout(() => loadCinemaList(), 400);
       });
     }
+  }
+
+  const FILTER_STORAGE_KEY = "cinema_filter_state";
+
+  function saveFiltersToStorage() {
+    const state = {
+      citta: filterCityEl?.value?.trim() ?? "",
+      tipologiaSala: filterTipologiaEl?.value ?? "",
+      raggioKm: filterRadiusEl ? Number(filterRadiusEl.value) : null,
+      lastGeo: geoPosition ? { lat: geoPosition.latitude, lng: geoPosition.longitude, timestamp: Date.now() } : null
+    };
+    try {
+      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(state));
+    } catch { /* localStorage non disponibile */ }
+  }
+
+  function hydrateFiltersFromStorage() {
+    try {
+      const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (state.citta && filterCityEl) filterCityEl.value = state.citta;
+      if (state.tipologiaSala && filterTipologiaEl) filterTipologiaEl.value = state.tipologiaSala;
+      if (state.raggioKm != null && filterRadiusEl) {
+        filterRadiusEl.value = String(state.raggioKm);
+        if (filterRadiusValueEl) {
+          if (state.raggioKm >= 201) {
+            filterRadiusValueEl.textContent = "Nessuna distanza";
+            filterRadiusValueEl.className = "cinema-radius-unlimited";
+          } else {
+            filterRadiusValueEl.textContent = `${state.raggioKm} km`;
+            filterRadiusValueEl.className = "";
+          }
+        }
+      }
+    } catch { /* ignore parse errors */ }
   }
 
   async function initMyCinemasPage() {
@@ -286,11 +334,20 @@
       if (geoPosition) {
         if (filterDistanceRowEl) filterDistanceRowEl.classList.remove("hidden");
         setStatus("Posizione ottenuta, caricamento cinema...", "info");
+        saveFiltersToStorage();
       }
       if (filterRadiusValueEl && filterRadiusEl) {
-        filterRadiusValueEl.textContent = `${filterRadiusEl.value} km`;
+        const initialRadius = Number(filterRadiusEl.value);
+        if (initialRadius >= 201) {
+          filterRadiusValueEl.textContent = "Nessuna distanza";
+          filterRadiusValueEl.className = "cinema-radius-unlimited";
+        } else {
+          filterRadiusValueEl.textContent = `${initialRadius} km`;
+          filterRadiusValueEl.className = "";
+        }
       }
 
+      hydrateFiltersFromStorage();
       await loadTipologie();
       bindFilterEvents();
       await loadCinemaList();

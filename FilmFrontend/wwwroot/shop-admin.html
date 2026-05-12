@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Gestione Negozio</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260508-global-2">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div><p class="eyebrow">Admin</p><h1 class="ops-title">Gestione Negozio</h1><p class="ops-subtitle">Crea prodotti, gift card template e offerte.</p></div>
+    </section>
+    <div id="shop-admin-status" class="status info">Caricamento...</div>
+
+    <section class="panel">
+      <h3>Nuovo prodotto</h3>
+      <div id="admin-prod-form">
+        <div class="filter-row">
+          <input id="admin-prod-nome" type="text" placeholder="Nome" required>
+          <input id="admin-prod-sku" type="text" placeholder="SKU" required>
+        </div>
+        <div class="filter-row" style="margin-top:0.5rem">
+          <input id="admin-prod-desc" type="text" placeholder="Descrizione">
+          <select id="admin-prod-cat">
+            <option value="Abbigliamento">Abbigliamento</option>
+            <option value="Accessori">Accessori</option>
+            <option value="Food">Food</option>
+            <option value="Gadget">Gadget</option>
+          </select>
+        </div>
+        <div class="filter-row" style="margin-top:0.5rem">
+          <input id="admin-prod-price" type="number" min="0" step="0.01" value="9.99" placeholder="Prezzo">
+          <input id="admin-prod-img" type="text" placeholder="URL immagine">
+        </div>
+        <button id="admin-prod-add" class="button primary" style="margin-top:0.5rem">Crea prodotto</button>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:1rem">
+      <h3>Prodotti esistenti</h3>
+      <div id="admin-prod-list" class="grid-cards"></div>
+    </section>
+
+    <section class="panel" style="margin-top:1rem">
+      <h3>Nuova offerta / coupon</h3>
+      <div class="filter-row">
+        <input id="admin-coupon-code" type="text" placeholder="Codice (NFH-PROMO-XXXX)" required maxlength="32">
+        <select id="admin-coupon-type"><option value="Percentuale">Percentuale</option><option value="Fisso">Fisso</option></select>
+      </div>
+      <div class="filter-row" style="margin-top:0.5rem">
+        <input id="admin-coupon-val" type="number" min="0" step="0.01" value="10" placeholder="Valore">
+        <select id="admin-coupon-target"><option value="Carrello">Tutto il carrello</option><option value="Cinema">Cinema specifico</option></select>
+      </div>
+      <div class="filter-row" style="margin-top:0.5rem">
+        <select id="admin-coupon-cinema" class="hidden"><option value="">Seleziona cinema</option></select>
+      </div>
+      <div class="filter-row" style="margin-top:0.5rem">
+        <label>Dal: <input id="admin-coupon-dal" type="date"></label>
+        <label>Al: <input id="admin-coupon-al" type="date"></label>
+      </div>
+      <button id="admin-coupon-add" class="button primary" style="margin-top:0.5rem">Crea offerta</button>
+    </section>
+  </main>
+  <div id="footer-container"></div>
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireAuth(window.location.pathname)) return;
+      await window.bootstrapLayout();
+      initAdminShop();
+    });
+
+    async function initAdminShop() {
+      var st = document.getElementById("shop-admin-status");
+      function s(m,k) { st.className="status "+k; st.textContent=m; }
+      s("Pronto.","success");
+
+      // Load cinemas for coupon target
+      try { var cinemas = await window.ApiClient.get("/cinemas"); var sel = document.getElementById("admin-coupon-cinema"); if(sel) { sel.innerHTML='<option value="">Seleziona cinema</option>'+cinemas.map(c=>'<option value="'+c.id+'">'+c.nome+' - '+c.citta+'</option>').join(""); } } catch {}
+
+      document.getElementById("admin-coupon-target").addEventListener("change", function() {
+        document.getElementById("admin-coupon-cinema").classList.toggle("hidden", this.value !== "Cinema");
+      });
+
+      // Add product
+      document.getElementById("admin-prod-add").addEventListener("click", async () => {
+        var nome = document.getElementById("admin-prod-nome").value.trim();
+        var sku = document.getElementById("admin-prod-sku").value.trim();
+        if(!nome||!sku) { s("Nome e SKU obbligatori.","error"); return; }
+        try {
+          await window.ApiClient.post("/shop/products", {
+            sku, nome, descrizione: document.getElementById("admin-prod-desc").value,
+            categoria: document.getElementById("admin-prod-cat").value,
+            prezzoBase: Number(document.getElementById("admin-prod-price").value||9.99),
+            immaginePath: document.getElementById("admin-prod-img").value, attivo: true
+          });
+          s("Prodotto creato!","success"); loadProducts();
+        } catch(e) { s("Errore: "+e.message,"error"); }
+      });
+
+      // Add coupon
+      document.getElementById("admin-coupon-add").addEventListener("click", async () => {
+        var code = document.getElementById("admin-coupon-code").value.trim().toUpperCase();
+        if(!code) { s("Codice obbligatorio.","error"); return; }
+        var tipoTarget = document.getElementById("admin-coupon-target").value;
+        var targetId = tipoTarget==="Cinema" ? Number(document.getElementById("admin-coupon-cinema").value||0) : null;
+        if(targetId===0) targetId=null;
+        try {
+          await window.ApiClient.post("/coupons", {
+            codice: code, tipoSconto: document.getElementById("admin-coupon-type").value,
+            valoreSconto: Number(document.getElementById("admin-coupon-val").value||10),
+            tipoTarget, targetId, quantitaMinima: 1,
+            validoDal: document.getElementById("admin-coupon-dal").value||new Date().toISOString().slice(0,10),
+            validoAl: document.getElementById("admin-coupon-al").value||new Date(Date.now()+30*86400000).toISOString().slice(0,10),
+            maxUtilizzi: 0, maxPerUtente: 1, stackable: false, attivo: true
+          });
+          s("Offerta creata!","success");
+        } catch(e) { s("Errore: "+e.message,"error"); }
+      });
+
+      async function loadProducts() {
+        try {
+          var prods = await window.ApiClient.get("/shop/products");
+          var list = document.getElementById("admin-prod-list");
+          if(!list) return;
+          if(!prods.length) { list.innerHTML="<p class='subtle'>Nessun prodotto.</p>"; return; }
+          list.innerHTML = prods.map(p=>'<div class="card"><div class="card-body"><h4>'+p.nome+'</h4><p class="subtle">'+p.sku+' - '+p.prezzoBase.toFixed(2)+' EUR</p></div></div>').join("");
+        } catch {}
+      }
+      await loadProducts();
+    }
+  </script>
+</body>
+</html>

@@ -94,10 +94,13 @@ DTOs/
 Endpoints/
  AuthEndpoints.cs
  BigliettiEndpoints.cs
+ CartEndpoints.cs
  CategorieEndpoints.cs
  CheckoutEndpoints.cs
  CinemaEndpoints.cs
+ CouponEndpoints.cs
  FilmEndpoints.cs
+ GiftCardEndpoints.cs
  MyCinemasEndpoints.cs
  PagamentiEndpoints.cs
  PrenotazioniEndpoints.cs
@@ -105,7 +108,9 @@ Endpoints/
  ProiezioniEndpoints.cs
  RegistiEndpoints.cs
  SaleEndpoints.cs
+ ShopEndpoints.cs
  TmdbEndpoints.cs
+Helpers/GeoHelper.cs
 Migrations/
  20260316105055_InitialCreate.cs
  20260316105055_InitialCreate.Designer.cs
@@ -121,16 +126,33 @@ Migrations/
  20260427213414_RemoveCreditPlatform.Designer.cs
  20260510211220_Iteration5_IdentityAndSecurity.cs
  20260510211220_Iteration5_IdentityAndSecurity.Designer.cs
+ 20260512082922_Iteration5_1_Ecommerce.cs
+ 20260512082922_Iteration5_1_Ecommerce.Designer.cs
+ 20260512093030_RemoveRinnoviResidui.cs
+ 20260512093030_RemoveRinnoviResidui.Designer.cs
+ 20260512115021_CartGiftCardAndStripeColumns.cs
+ 20260512115021_CartGiftCardAndStripeColumns.Designer.cs
  FilmDbContextModelSnapshot.cs
 Model/
  AccountActionToken.cs
+ Cart.cs
+ CartItem.cs
  Categoria.cs
  Cinema.cs
+ Coupon.cs
+ CouponUsage.cs
  ExternalAuthExchangeCode.cs
  ExternalAuthState.cs
  Film.cs
  FilmCategoria.cs
+ GiftCard.cs
+ GiftCardTemplate.cs
+ GiftCardTransaction.cs
+ InventoryReservation.cs
+ NotificationSubscription.cs
  Prenotazione.cs
+ Product.cs
+ ProductVariant.cs
  Proiezione.cs
  Regista.cs
  RuoloUtente.cs
@@ -146,6 +168,7 @@ obj/Debug/net9.0/
 Program.cs
 Services/
  AuthService.cs
+ CartService.cs
  CleanupHostedService.cs
  EmailService.cs
  JwtTokenService.cs

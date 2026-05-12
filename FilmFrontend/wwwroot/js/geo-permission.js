@@ -27,9 +27,7 @@
       }
 
       var existing = document.getElementById("geo-permission-overlay");
-      if (existing) {
-        existing.remove();
-      }
+      if (existing) existing.remove();
 
       var overlay = document.createElement("div");
       overlay.id = "geo-permission-overlay";
@@ -38,7 +36,7 @@
         '<div class="geo-popup-card">' +
           '<p class="geo-popup-icon">&#x1f4cd;</p>' +
           '<h3>Vuoi vedere i cinema piu vicini a te?</h3>' +
-          '<p class="subtle">Attiva la tua posizione per ordinare i cinema per distanza e scoprire quelli nella tua zona.</p>' +
+          '<p class="subtle">Attiva la tua posizione per ordinare i cinema per distanza.</p>' +
           '<div class="geo-popup-actions">' +
             '<button class="button primary" id="geo-popup-yes">Attiva posizione</button>' +
             '<button class="button secondary" id="geo-popup-no">No, grazie</button>' +
@@ -48,13 +46,7 @@
       document.body.appendChild(overlay);
 
       overlay.querySelector("#geo-popup-yes").onclick = function () {
-        var card = overlay.querySelector(".geo-popup-card");
-        if (card) card.innerHTML =
-          '<p class="geo-popup-icon">&#x1f4cd;</p>' +
-          '<h3>Recupero della posizione in corso...</h3>' +
-          '<p class="subtle">Attendi il prompt del browser per autorizzare la geolocalizzazione.</p>';
-        sessionStorage.setItem("geo_popup_dismissed", "1");
-        setTimeout(function () { overlay.remove(); }, 600);
+        overlay.remove();
         resolve(true);
       };
 
@@ -77,7 +69,11 @@
   async function requestGeoWithPopup() {
     var granted = await showGeoPopup();
     if (!granted) return null;
-    return await requestGeolocation();
+    var coords = await requestGeolocation();
+    if (coords) {
+      sessionStorage.setItem("geo_popup_dismissed", "1");
+    }
+    return coords;
   }
 
   window.GeoPermission = {

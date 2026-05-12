@@ -390,20 +390,62 @@
 			}
 		});
 
-		continueBtn.addEventListener("click", () => {
-			if (!selectedSeats.size) {
-				setStatus("Seleziona almeno un posto per continuare.", "error");
-				return;
-			}
+		const addCartBtn = document.getElementById("acquista-add-cart");
+		if (addCartBtn) {
+			addCartBtn.addEventListener("click", async () => {
+				if (!selectedSeats.size) {
+					setStatus("Seleziona almeno un posto.", "error");
+					return;
+				}
 
-			const params = new URLSearchParams();
-			params.set("idShow", resolvedParams.idShow);
-			params.set("idFilm", resolvedParams.idFilm);
-			params.set("idCinema", resolvedParams.idCinema);
-			params.set("idSala", resolvedParams.idSala);
-			params.set("posti", Array.from(selectedSeats).join(","));
-			window.location.href = `/pagamento.html?${params.toString()}`;
-		});
+				addCartBtn.disabled = true;
+				addCartBtn.textContent = "Aggiunta...";
+				setStatus("Aggiunta al carrello...", "info");
+
+				try {
+					const guestToken = sessionStorage.getItem("cart_guest_token");
+					const headers = {};
+					if (guestToken && !(window.AuthService && window.AuthService.isAuthenticated())) {
+						headers["X-Guest-Token"] = guestToken;
+					}
+					const cart = await window.ApiClient.post("/cart", null, headers);
+					if (cart && cart.guestToken && !cart.utenteId) {
+						sessionStorage.setItem("cart_guest_token", cart.guestToken);
+					}
+
+					// Calculate VIP pricing per seat
+					const seatsArray = Array.from(selectedSeats);
+					const vipSeats = seatsArray.filter(s => seatIsVip(s));
+					const standardSeats = seatsArray.filter(s => !seatIsVip(s));
+					const vipPrice = prezzoBaseCorrente + vipSupplementCorrente;
+
+					// Add standard seats as one item (VariantId=0)
+					if (standardSeats.length > 0) {
+						await window.ApiClient.post(`/cart/${cart.id}/items`, {
+							itemType: "Ticket", itemId: proiezioneId, variantId: 0,
+							quantita: standardSeats.length, prezzoUnitario: prezzoBaseCorrente,
+							dettaglioJson: JSON.stringify({ posti: standardSeats, tipo: "standard" })
+						});
+					}
+					// Add VIP seats as separate item (VariantId=1)
+					if (vipSeats.length > 0) {
+						await window.ApiClient.post(`/cart/${cart.id}/items`, {
+							itemType: "Ticket", itemId: proiezioneId, variantId: 1,
+							quantita: vipSeats.length, prezzoUnitario: vipPrice,
+							dettaglioJson: JSON.stringify({ posti: vipSeats, tipo: "vip" })
+						});
+					}
+
+					showCartToast();
+					setStatus("Ticket aggiunto al carrello!", "success");
+					addCartBtn.textContent = "Aggiunto!";
+				} catch (error) {
+					setStatus(`Errore: ${error.message}`, "error");
+					addCartBtn.disabled = false;
+					addCartBtn.textContent = "Aggiungi al carrello";
+				}
+			});
+		}
 	}
 
 	async function resolveParams(raw) {
@@ -468,4 +510,17 @@
 	}
 
 	window.initAcquistaPage = initAcquistaPage;
+
+	function showCartToast() {
+		var existing = document.getElementById("cart-toast-overlay");
+		if (existing) existing.remove();
+		var overlay = document.createElement("div");
+		overlay.id = "cart-toast-overlay";
+		overlay.className = "cart-toast-overlay";
+		overlay.innerHTML = '<div class="cart-toast-card"><p class="cart-toast-icon">&#x1f6cd;</p><h3>Aggiunto al carrello!</h3><p class="subtle">Cosa vuoi fare?</p><div class="cart-toast-actions"><button class="button primary" id="cart-toast-goto">Vai al carrello</button><button class="button secondary" id="cart-toast-continue">Continua acquisti</button></div></div>';
+		document.body.appendChild(overlay);
+		document.getElementById("cart-toast-goto").onclick = function() { window.location.href = "/cart.html"; };
+		document.getElementById("cart-toast-continue").onclick = function() { overlay.remove(); };
+		overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+	}
 })();

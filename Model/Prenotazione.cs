@@ -18,5 +18,7 @@ public class Prenotazione
     public DateTime? ValidatoAtUtc { get; set; }
     public int? ValidatoDaUtenteId { get; set; }
     public int? CinemaValidazioneId { get; set; }
+    public int? CartId { get; set; }
+    public Cart? Cart { get; set; }
     public string Stato { get; set; } = "Confermata";
 }

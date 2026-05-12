@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Shop</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260508-global-2">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/shop.js?v=20260512-2" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Noir Shop</p>
+        <h1 class="ops-title">Shop</h1>
+        <p class="ops-subtitle">Gift card, merchandise e offerte speciali per la tua esperienza cinema.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="shop-tabs">
+        <button class="shop-tab active" data-tab="giftcards">Gift Card</button>
+        <button class="shop-tab" data-tab="merch">Merchandise</button>
+        <button class="shop-tab" data-tab="offers">Offerte</button>
+      </div>
+
+      <div id="shop-status" class="status info">Caricamento...</div>
+
+      <!-- GIFT CARD TAB -->
+      <div id="shop-tab-giftcards" class="shop-tab-content">
+        <div id="giftcard-grid" class="grid-cards"></div>
+        <div class="panel" style="margin-top:1rem">
+          <h3>Importo personalizzato</h3>
+          <div class="filter-row">
+            <input id="giftcard-custom-amount" type="number" min="5" max="500" step="5" value="25" placeholder="Importo in EUR">
+          </div>
+          <div class="filter-row" style="margin-top:0.5rem">
+            <input id="giftcard-recipient-email" type="email" placeholder="Email destinatario (opzionale, per regalo)">
+          </div>
+          <div class="filter-row" style="margin-top:0.5rem">
+            <input id="giftcard-message" type="text" placeholder="Messaggio personalizzato (opzionale)" maxlength="200">
+          </div>
+          <button id="giftcard-custom-add" class="button primary" style="margin-top:0.5rem">Aggiungi al carrello</button>
+        </div>
+      </div>
+
+      <!-- MERCHANDISE TAB -->
+      <div id="shop-tab-merch" class="shop-tab-content hidden">
+        <div class="filter-row">
+          <select id="merch-category-filter" aria-label="Filtra categoria">
+            <option value="">Tutte le categorie</option>
+            <option value="Abbigliamento">Abbigliamento</option>
+            <option value="Accessori">Accessori</option>
+            <option value="Food">Food</option>
+            <option value="Gadget">Gadget</option>
+          </select>
+        </div>
+        <div id="merch-grid" class="grid-cards"></div>
+      </div>
+
+      <!-- OFFERS TAB -->
+      <div id="shop-tab-offers" class="shop-tab-content hidden">
+        <div class="filter-row">
+          <select id="offers-cinema-filter" aria-label="Filtra cinema">
+            <option value="">Tutti i cinema</option>
+          </select>
+        </div>
+        <div id="offers-list" class="grid-cards"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN SECTION (role-aware via JS) -->
+    <section id="shop-admin-section" class="panel hidden" style="margin-top:2rem">
+      <h2>Gestione Shop (Admin)</h2>
+
+      <article class="panel">
+        <h3>Aggiungi prodotto</h3>
+        <div class="filter-row">
+          <input id="admin-prod-nome" type="text" placeholder="Nome prodotto" required>
+          <input id="admin-prod-sku" type="text" placeholder="SKU" required>
+        </div>
+        <div class="filter-row" style="margin-top:0.5rem">
+          <input id="admin-prod-desc" type="text" placeholder="Descrizione">
+          <select id="admin-prod-categoria">
+            <option value="Abbigliamento">Abbigliamento</option>
+            <option value="Accessori">Accessori</option>
+            <option value="Food">Food</option>
+            <option value="Gadget">Gadget</option>
+          </select>
+        </div>
+        <div class="filter-row" style="margin-top:0.5rem">
+          <input id="admin-prod-prezzo" type="number" min="0" step="0.01" value="9.99" placeholder="Prezzo">
+          <input id="admin-prod-immagine" type="text" placeholder="URL immagine (opzionale)">
+        </div>
+        <button id="admin-prod-add" class="button primary" style="margin-top:0.5rem">Crea prodotto</button>
+      </article>
+
+      <article class="panel" style="margin-top:1rem">
+        <h3>Crea offerta / coupon</h3>
+        <div class="filter-row">
+          <input id="admin-coupon-codice" type="text" placeholder="Codice (es. NFH-PROMO-XXXX)" required maxlength="32">
+          <select id="admin-coupon-tipo">
+            <option value="Percentuale">Percentuale</option>
+            <option value="Fisso">Fisso</option>
+          </select>
+        </div>
+        <div class="filter-row" style="margin-top:0.5rem">
+          <input id="admin-coupon-valore" type="number" min="0" step="0.01" value="10" placeholder="Valore sconto">
+          <select id="admin-coupon-target">
+            <option value="Carrello">Tutto il carrello</option>
+            <option value="Cinema">Cinema specifico</option>
+            <option value="Film">Film specifico</option>
+          </select>
+        </div>
+        <div class="filter-row" style="margin-top:0.5rem">
+          <select id="admin-coupon-cinema" class="hidden" aria-label="Cinema target">
+            <option value="">Seleziona cinema</option>
+          </select>
+          <input id="admin-coupon-targetid" type="number" class="hidden" placeholder="ID target" value="0">
+        </div>
+        <div class="filter-row" style="margin-top:0.5rem">
+          <label>Valido dal: <input id="admin-coupon-dal" type="date"></label>
+          <label>Valido al: <input id="admin-coupon-al" type="date"></label>
+        </div>
+        <button id="admin-coupon-add" class="button primary" style="margin-top:0.5rem">Crea offerta</button>
+      </article>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      await window.bootstrapLayout();
+      await window.initShopPage();
+    });
+  </script>
+</body>
+</html>

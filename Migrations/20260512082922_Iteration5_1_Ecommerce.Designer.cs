@@ -4,6 +4,7 @@ using FilmAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FilmAPI.Migrations
 {
     [DbContext(typeof(FilmDbContext))]
-    partial class FilmDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260512082922_Iteration5_1_Ecommerce")]
+    partial class Iteration5_1_Ecommerce
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -81,14 +84,11 @@ namespace FilmAPI.Migrations
                     b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("GiftCardCode")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("GuestToken")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<decimal>("ImportoGiftCard")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<int>("RinnoviResidui")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("ScontoCoupon")
                         .HasPrecision(10, 2)
@@ -97,9 +97,6 @@ namespace FilmAPI.Migrations
                     b.Property<string>("Stato")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("StripeSessionId")
-                        .HasColumnType("longtext");
 
                     b.Property<decimal>("Subtotale")
                         .HasPrecision(10, 2)

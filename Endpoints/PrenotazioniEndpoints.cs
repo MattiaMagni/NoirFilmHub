@@ -133,6 +133,22 @@ public static class PrenotazioniEndpoints
                 return Results.Forbid();
             }
 
+            if (prenotazione.Stato == "Confermata")
+            {
+                var refundAmount = decimal.Round(prenotazione.TotalePrezzo * 0.5m, 2);
+                if (refundAmount > 0)
+                {
+                    var code = "NFH-RF-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
+                    db.GiftCards.Add(new GiftCard
+                    {
+                        Codice = code, ImportoIniziale = refundAmount, SaldoResiduo = refundAmount,
+                        UtenteAcquirenteId = prenotazione.UtenteId,
+                        Messaggio = $"Rimborso 50% per prenotazione annullata (#{prenotazione.Id})",
+                        Stato = "Active", CreatoIl = DateTime.UtcNow
+                    });
+                }
+            }
+
             prenotazione.Stato = "Annullata";
             await db.SaveChangesAsync();
             return Results.NoContent();

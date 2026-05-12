@@ -107,6 +107,19 @@ async function setupNavbar() {
     if (manageToggle) {
       manageToggle.classList.toggle("active", activeInManage);
     }
+
+    // Cart badge: show count if available
+    try {
+      if (window.AuthService && window.AuthService.isAuthenticated()) {
+        var cart = await window.ApiClient.post("/cart", {});
+        var badge = document.getElementById("cart-badge");
+        if (badge && cart && cart.items) {
+          var count = cart.items.length;
+          badge.textContent = count || "0";
+          badge.classList.toggle("hidden", !count || count <= 0);
+        }
+      }
+    } catch { }
   } catch {
   }
 }

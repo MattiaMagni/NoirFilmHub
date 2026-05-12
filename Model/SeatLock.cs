@@ -8,6 +8,8 @@ public class SeatLock
     public int UtenteId { get; set; }
     public Utente Utente { get; set; } = null!;
     public string PostoCodice { get; set; } = string.Empty;
+    public int? CartId { get; set; }
+    public Cart? Cart { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAtUtc { get; set; }
 }

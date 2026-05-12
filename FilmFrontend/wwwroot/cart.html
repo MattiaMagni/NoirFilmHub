@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Carrello</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260508-global-2">
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/cart.js?v=20260512-3" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Carrello</p>
+        <h1 class="ops-title">Il tuo carrello</h1>
+        <p class="ops-subtitle">Rivedi i tuoi articoli e completa l'acquisto in sicurezza con Stripe.</p>
+      </div>
+    </section>
+
+    <div id="cart-status" class="status info">Caricamento...</div>
+
+    <div class="cart-layout">
+      <section class="cart-items-section">
+        <div id="cart-items"></div>
+      </section>
+
+      <aside class="cart-summary-section">
+        <div id="cart-summary" class="panel hidden">
+          <h3>Riepilogo ordine</h3>
+          <div class="cart-summary-lines">
+            <div class="cart-summary-row"><span>Subtotale</span><strong id="cart-subtotale">-</strong></div>
+            <div class="cart-summary-row"><span>Sconto offerta</span><strong id="cart-sconto" style="color:var(--color-accent)">-</strong></div>
+            <div class="cart-summary-row"><span>Saldo gift card</span><strong id="cart-giftcard-amount" style="color:var(--color-accent)">-</strong></div>
+            <hr>
+            <div class="cart-summary-row" style="font-size:1.2rem"><span>Totale</span><strong id="cart-totale">-</strong></div>
+          </div>
+          <div class="cart-coupon-section">
+            <input id="cart-giftcard-input" type="text" placeholder="Codice gift card" maxlength="32" style="text-transform:uppercase">
+            <button id="cart-giftcard-apply" class="btn-small secondary">Usa</button>
+          </div>
+          <div class="cart-coupon-section">
+            <input id="cart-coupon-input" type="text" placeholder="Codice offerta" maxlength="32" style="text-transform:uppercase">
+            <button id="cart-coupon-apply" class="btn-small secondary">Applica</button>
+          </div>
+          <button id="cart-checkout" class="button primary" style="width:100%;margin-top:1rem">Paga con Stripe</button>
+          <p class="subtle" style="margin-top:0.5rem;font-size:0.8rem;text-align:center">Pagamento sicuro gestito da Stripe.<br>Nessun dato carta viene inserito in questa app.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      await window.bootstrapLayout();
+      await window.initCartPage();
+    });
+  </script>
+</body>
+</html>

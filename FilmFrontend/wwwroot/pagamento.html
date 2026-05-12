@@ -43,12 +43,8 @@
   <div id="footer-container"></div>
 
   <script>
-    window.addEventListener("DOMContentLoaded", async () => {
-      if (!window.AuthGuard || !window.AuthGuard.requireAuth(window.location.pathname + window.location.search)) {
-        return;
-      }
-      await window.bootstrapLayout();
-      await window.initPagamentoPage();
+    window.addEventListener("DOMContentLoaded", () => {
+      window.location.replace("/cart.html");
     });
   </script>
 </body>

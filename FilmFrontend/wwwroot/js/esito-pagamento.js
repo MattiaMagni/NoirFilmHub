@@ -56,7 +56,24 @@
     try {
       const result = await window.ApiClient.get(`/pagamenti/esito?session_id=${encodeURIComponent(sessionId)}`);
 
-      if (result.stato !== "Confermata") {
+      // Cart-based order
+      if (result.cartId) {
+        bodyEl.innerHTML = `
+          <article class="panel">
+            <h3>Ordine completato!</h3>
+            <p class="subtle">Ordine #${result.cartId} - ${result.stato || "Confermato"}</p>
+            <p class="subtle">Riceverai le email di conferma con i dettagli dei biglietti e le gift card acquistate.</p>
+            <div class="actions">
+              <a class="button secondary" href="/programmazione.html">Torna alla programmazione</a>
+              <a class="button primary" href="/profile.html">Vai al profilo</a>
+            </div>
+          </article>
+        `;
+        setStatus("Ordine completato.", "success");
+        return;
+      }
+
+      // Single booking
         setStatus("Pagamento registrato ma prenotazione non ancora finalizzata. Riprova tra pochi secondi.", "info");
         bodyEl.innerHTML = `
           <article class="panel">

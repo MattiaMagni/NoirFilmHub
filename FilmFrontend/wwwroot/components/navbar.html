@@ -15,6 +15,7 @@
         <a href="/index.html" data-nav="home">Home</a>
         <a href="/programmazione.html" data-nav="programmazione">Programmazione</a>
         <a href="/my-cinemas.html" data-nav="my-cinemas">Cinema</a>
+        <a href="/shop.html" data-nav="shop">Shop</a>
 
         <div class="nav-dropdown hidden" data-auth="role" data-roles="admin,power_user">
           <button id="nav-manage-toggle" class="nav-menu-btn" type="button" aria-haspopup="true" aria-expanded="false">
@@ -28,6 +29,7 @@
             <a href="/sale.html" data-nav="sale" role="menuitem">Sale</a>
             <a href="/validazione-biglietti.html" data-nav="validazione-biglietti" role="menuitem">Validazione biglietti</a>
             <a href="/tmdb-admin.html" data-nav="tmdb-admin" role="menuitem">TMDB</a>
+            <a href="/shop-admin.html" data-nav="shop-admin" role="menuitem" data-auth="role" data-roles="admin">Negozio</a>
             <a href="/cinemas.html" data-nav="cinemas" role="menuitem" data-auth="role" data-roles="admin">Cinema</a>
             <a href="/categorie.html" data-nav="categorie" role="menuitem" data-auth="role" data-roles="admin">Categorie</a>
             <a href="/utenti.html" data-nav="utenti" role="menuitem" data-auth="role" data-roles="admin">Utenti</a>
@@ -37,6 +39,13 @@
 
       <div class="nav-actions">
         <button id="theme-toggle" class="btn-small secondary theme-toggle" type="button" aria-label="Passa al tema chiaro">Tema chiaro</button>
+        <a href="/cart.html" data-nav="cart" class="nav-cart-icon" aria-label="Carrello">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          <span id="cart-badge" class="cart-badge hidden">0</span>
+        </a>
         <a href="/profile.html" data-nav="profile" data-auth="authenticated">Area personale</a>
         <a href="/login.html" data-nav="login" data-auth="anonymous">Login</a>
         <a href="/register.html" data-nav="register" data-auth="anonymous">Registrazione</a>

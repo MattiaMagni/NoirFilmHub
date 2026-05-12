@@ -170,6 +170,49 @@ public static class ProiezioniEndpoints
             return Results.NoContent();
         }).RequireAuthorization("AdminOrPowerUser");
 
+        group.MapPost("/{id:int}/cancel", async (int id, FilmDbContext db, ILoggerFactory loggerFactory) =>
+        {
+            var logger = loggerFactory.CreateLogger("ProiezioniEndpoints");
+            var show = await db.Proiezioni
+                .Include(p => p.Film)
+                .Include(p => p.Cinema)
+                .FirstOrDefaultAsync(p => p.Id == id);
+            if (show == null) return Results.NotFound();
+
+            var bookings = await db.Prenotazioni
+                .Include(b => b.Utente)
+                .Where(b => b.ProiezioneId == id && b.Stato == "Confermata")
+                .ToListAsync();
+
+            var now = DateTime.UtcNow;
+            foreach (var booking in bookings)
+            {
+                // Calculate total refund (what they actually paid, excluding gift card portion)
+                var refundAmount = booking.TotalePrezzo;
+
+                // Generate a gift card for the refund
+                var code = "NFH-RF-" + Guid.NewGuid().ToString("N")[..6].ToUpper();
+                db.GiftCards.Add(new GiftCard
+                {
+                    Codice = code, ImportoIniziale = refundAmount, SaldoResiduo = refundAmount,
+                    UtenteAcquirenteId = booking.UtenteId, Messaggio = $"Rimborso per proiezione annullata: {show.Film.Titolo} del {show.Data:yyyy-MM-dd} presso {show.Cinema.Nome}",
+                    Stato = "Active", CreatoIl = now
+                });
+
+                booking.Stato = "Annullata";
+
+                // Release seats
+                await db.SeatLocks
+                    .Where(l => l.ProiezioneId == id && l.PostoCodice != null && booking.PostiSelezionati.Contains(l.PostoCodice))
+                    .ExecuteDeleteAsync();
+            }
+
+            await db.SaveChangesAsync();
+            logger.LogInformation("Proiezione {ShowId} cancellata. {Count} prenotazioni rimborsate con gift card.", id, bookings.Count);
+
+            return Results.Ok(new { cancelled = true, bookingsRefunded = bookings.Count });
+        }).RequireAuthorization("AdminOrPowerUser");
+
         return group;
     }
 

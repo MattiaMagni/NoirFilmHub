@@ -52,6 +52,7 @@ builder.Services.AddScoped<TicketEmailService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<SecurityAuditService>();
 builder.Services.AddScoped<SocialAuthService>();
+builder.Services.AddScoped<CartService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<TmdbSyncHostedService>();
 builder.Services.AddHostedService<CleanupHostedService>();
@@ -355,6 +356,31 @@ using (var scope = app.Services.CreateScope())
             }
             await db.SaveChangesAsync();
         }
+
+        // Seed shop data
+        if (!await db.GiftCardTemplates.AnyAsync())
+        {
+            db.GiftCardTemplates.AddRange(
+                new GiftCardTemplate { Nome = "Gift Card 10 EUR", Importo = 10m, Attivo = true },
+                new GiftCardTemplate { Nome = "Gift Card 20 EUR", Importo = 20m, Attivo = true },
+                new GiftCardTemplate { Nome = "Gift Card 30 EUR", Importo = 30m, Attivo = true },
+                new GiftCardTemplate { Nome = "Gift Card 50 EUR", Importo = 50m, Attivo = true }
+            );
+        }
+
+        if (!await db.Prodotti.AnyAsync())
+        {
+            db.Prodotti.AddRange(
+                new Product { Sku = "NFH-POP-L", Nome = "Ciotola Popcorn Grande", Descrizione = "Ciotola riutilizzabile per popcorn con logo Noir Film Hub. Capacità 2L.", Categoria = "Food", PrezzoBase = 8.90m },
+                new Product { Sku = "NFH-POP-S", Nome = "Ciotola Popcorn Piccola", Descrizione = "Ciotola compatta per popcorn, perfetta per i bambini.", Categoria = "Food", PrezzoBase = 5.90m },
+                new Product { Sku = "NFH-BOR-500", Nome = "Boraccia Noir 500ml", Descrizione = "Boraccia termica in acciaio con logo Noir Film Hub. 500ml.", Categoria = "Accessori", PrezzoBase = 14.90m },
+                new Product { Sku = "NFH-TSH-M", Nome = "T-Shirt Noir Film Hub", Descrizione = "T-shirt nera in cotone organico con stampa logo frontale.", Categoria = "Abbigliamento", PrezzoBase = 19.90m },
+                new Product { Sku = "NFH-HOD-BK", Nome = "Felpa con Cappuccio Noir", Descrizione = "Felpa nera con cappuccio e stampa logo. Cotone misto 80%.", Categoria = "Abbigliamento", PrezzoBase = 39.90m },
+                new Product { Sku = "NFH-PIN-SET", Nome = "Set Spille da Collezione", Descrizione = "Set di 3 spille smaltate con icone cinema. Collezione limitata.", Categoria = "Gadget", PrezzoBase = 12.90m },
+                new Product { Sku = "NFH-TOTE-BK", Nome = "Tote Bag Noir Film Hub", Descrizione = "Borsa in tela con stampa Noir Film Hub. 40x35cm.", Categoria = "Accessori", PrezzoBase = 7.90m }
+            );
+        }
+
         logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)
@@ -395,6 +421,10 @@ app.MapGroup("/checkout").MapCheckout();
 app.MapGroup("/pagamenti").MapPagamenti();
 app.MapGroup("/tickets").MapBiglietti();
 app.MapGroup("/tmdb").MapTmdb();
+app.MapGroup("/cart").MapCart();
+app.MapGroup("/shop").MapShop();
+app.MapGroup("/coupons").MapCoupons();
+app.MapGroup("/giftcards").MapGiftCards();
 
 app.Run();
 

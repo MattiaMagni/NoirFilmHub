@@ -3178,3 +3178,122 @@ button.theme-toggle:focus-visible::after {
   border-color: rgba(16, 24, 40, 0.14);
   box-shadow: 0 24px 60px rgba(16, 24, 40, 0.14);
 }
+
+/* ===== Cart Layout ===== */
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .cart-layout { grid-template-columns: 1fr; }
+}
+.cart-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+}
+.cart-item-main { display: flex; gap: 0.75rem; align-items: flex-start; flex: 1; }
+.cart-item-icon { font-size: 1.5rem; width: 2.2rem; text-align: center; }
+.cart-item-info h4 { margin: 0 0 0.25rem 0; font-size: 0.95rem; }
+.cart-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; }
+.cart-seat-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.cart-seat-chips button { font-size: 0.75rem; padding: 0.1rem 0.5rem; }
+.cart-qty-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.3rem; }
+.cart-qty-row button { width: 28px; height: 28px; padding: 0; font-size: 1rem; }
+.cart-qty-val { min-width: 1.5rem; text-align: center; font-weight: 600; }
+.cart-summary-section { position: sticky; top: 1rem; }
+.cart-summary-lines { display: flex; flex-direction: column; gap: 0.5rem; }
+.cart-summary-row { display: flex; justify-content: space-between; align-items: center; }
+.cart-summary-row span { color: var(--color-text-muted); }
+.cart-coupon-section { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.cart-coupon-section input { flex: 1; }
+
+/* ===== Navbar Cart Icon ===== */
+.nav-cart-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text);
+  text-decoration: none;
+  padding: 0.4rem;
+}
+.nav-cart-icon:hover { color: var(--color-primary); }
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ===== Cart Toast ===== */
+.cart-toast-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.6);
+  animation: fadeIn 0.2s ease;
+}
+.cart-toast-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+}
+.cart-toast-icon { font-size: 2.5rem; margin: 0 0 0.5rem; }
+.cart-toast-actions { display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: center; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ===== Gift Card Card ===== */
+.giftcard-card { text-align: center; }
+.giftcard-amount { font-size: 1.8rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem; }
+.shop-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.shop-tab { padding: 0.5rem 1.2rem; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); border-radius: 0.5rem; cursor: pointer; font-weight: 500; }
+.shop-tab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.shop-tab-content { }
+.shop-tab-content.hidden { display: none; }
+
+/* ===== Cinema filter bar ===== */
+.cinema-radius-unlimited { font-style: italic; color: var(--color-primary); }
+
+/* ===== Profile Layout ===== */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 800px) { .profile-layout { grid-template-columns: 1fr; } }
+.profile-sidebar { position: sticky; top: 1rem; }
+.profile-sidebar label { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-text-muted); }
+.profile-sidebar input { width: 100%; }
+.profile-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.profile-tab { padding: 0.5rem 1.2rem; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); border-radius: 0.5rem; cursor: pointer; font-weight: 500; }
+.profile-tab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.profile-tab-content.hidden { display: none; }
+
+/* ===== Password row ===== */
+.pw-row { display: flex; gap: 0.25rem; }
+.pw-row input { flex: 1; }
+
+/* ===== Modal ===== */
+.modal-overlay { position: fixed; inset: 0; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); }
+.modal-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.5rem; max-width: 420px; width: 90%; }
+.modal-card label { display: block; margin-top: 0.5rem; font-size: 0.85rem; }

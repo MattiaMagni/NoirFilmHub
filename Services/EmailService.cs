@@ -111,6 +111,57 @@ public class EmailService
         return await SendEmail(toEmail, subject, body);
     }
 
+    public async Task<bool> SendGiftCardEmail(string toEmail, string codice, decimal importo, string? messaggio)
+    {
+        var subject = "Hai ricevuto una Gift Card - CineBase";
+        var body = $@"
+<h2>Hai ricevuto una Gift Card!</h2>
+<p>Qualcuno ti ha inviato una Gift Card CineBase del valore di <strong>{importo:C}</strong>.</p>
+<p>Il tuo codice e: <strong style=""font-size:1.2rem;letter-spacing:2px;"">{codice}</strong></p>
+{(string.IsNullOrWhiteSpace(messaggio) ? "" : $"<p><em>Messaggio: {EscapeHtml(messaggio)}</em></p>")}
+<p>Usa questo codice nel carrello per scalare il saldo dal tuo ordine.</p>
+<hr>
+<p style=""color:#888;font-size:12px;"">Questa e un'email automatica, non rispondere.</p>";
+        return await SendEmail(toEmail, subject, body);
+    }
+
+    public async Task<bool> SendGiftCardBalanceEmail(string toEmail, string codice, decimal saldoResiduo)
+    {
+        var subject = "Saldo Gift Card Aggiornato - CineBase";
+        var body = $@"
+<h2>Saldo Gift Card Aggiornato</h2>
+<p>La tua Gift Card <strong>{codice}</strong> e stata utilizzata per un acquisto.</p>
+<p>Saldo residuo: <strong>{saldoResiduo:C}</strong></p>
+<p>Puoi continuare a usare il codice per acquisti futuri fino a esaurimento del saldo.</p>
+<hr>
+<p style=""color:#888;font-size:12px;"">Questa e un'email automatica, non rispondere.</p>";
+        return await SendEmail(toEmail, subject, body);
+    }
+
+    public async Task<bool> SendOrderConfirmationEmail(string toEmail, int cartId, decimal subtotale, decimal sconto, decimal importoGiftCard, decimal totale, int giftCardCount, int ticketCount)
+    {
+        var subject = $"Conferma Ordine #CART-{cartId} - CineBase";
+        var items = new List<string>();
+        if (ticketCount > 0) items.Add($"{ticketCount} biglietto/i");
+        if (giftCardCount > 0) items.Add($"{giftCardCount} gift card");
+        var itemList = string.Join(", ", items);
+        var body = $@"
+<h2>Grazie per il tuo ordine!</h2>
+<p>Il tuo ordine <strong>#CART-{cartId}</strong> e stato confermato.</p>
+<p>Riepilogo:</p>
+<ul>
+<li>Articoli: {itemList}</li>
+<li>Subtotale: {subtotale:C}</li>
+{(sconto > 0 ? $"<li>Sconto: -{sconto:C}</li>" : "")}
+{(importoGiftCard > 0 ? $"<li>Saldo gift card: -{importoGiftCard:C}</li>" : "")}
+<li><strong>Totale addebitato: {totale:C}</strong></li>
+</ul>
+<p>Per i dettagli dei biglietti e i codici gift card, controlla le email separate inviate per ciascun articolo.</p>
+<hr>
+<p style=""color:#888;font-size:12px;"">Questa e un'email automatica, non rispondere.</p>";
+        return await SendEmail(toEmail, subject, body);
+    }
+
     private string BuildLink(string page, string token, string email)
     {
         var baseUrl = _configuration["APP_BASE_URL"] ?? "http://localhost:5001";

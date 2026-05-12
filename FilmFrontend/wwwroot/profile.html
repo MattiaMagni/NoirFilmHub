@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Noir Film Hub - Area personale</title>
+  <title>Noir Film Hub - Area Personale</title>
   <link rel="stylesheet" href="/css/styles.css?v=20260508-global-2">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
@@ -12,143 +12,93 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/profile.js?v=20260510-1" defer></script>
+  <script src="/js/profile.js?v=20260513-1" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
-  <main class="container page-shell">
-    <section class="hero">
-      <div class="hero-panel">
+
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
         <p class="eyebrow">Area personale</p>
-        <h1>Area personale</h1>
-        <p>Gestisci i tuoi dati di contatto e consulta in modo centralizzato lo storico delle programmazioni salvate.</p>
+        <h1 class="ops-title">Il tuo account</h1>
+        <p class="ops-subtitle">Gestisci profilo, biglietti, gift card e preferenze.</p>
       </div>
     </section>
 
-    <section class="panel">
-      <h2>Dati contatto</h2>
-      <form id="profile-form">
-        <div class="form-grid">
-          <div>
-            <label for="profile-email">Email</label>
-            <input id="profile-email" type="email" disabled>
-          </div>
-          <div>
-            <label for="profile-nome">Nome</label>
-            <input id="profile-nome" name="nome" type="text" required>
-          </div>
-          <div>
-            <label for="profile-cognome">Cognome</label>
-            <input id="profile-cognome" name="cognome" type="text" required>
-          </div>
-          <div>
-            <label for="profile-telefono">Telefono</label>
-            <input id="profile-telefono" name="telefono" type="text">
-          </div>
-        </div>
-        <div class="actions">
-          <button class="primary" type="submit">Salva profilo</button>
-        </div>
-      </form>
-      <div id="profile-status" class="status info">Caricamento profilo...</div>
-    </section>
+    <div id="profile-status" class="status info">Caricamento...</div>
 
-    <section class="panel" id="security-section" style="display:none;">
-      <h2>Sicurezza Account</h2>
-      <div id="security-content"></div>
-      <div id="security-status" class="status subtle"></div>
-    </section>
+    <div class="profile-layout">
+      <!-- Sidebar -->
+      <aside class="profile-sidebar panel">
+        <h3>Profilo</h3>
+        <form id="profile-form">
+          <label>Email</label>
+          <input id="profile-email" type="email" disabled>
+          <label>Nome</label>
+          <input id="profile-nome" type="text" required>
+          <label>Cognome</label>
+          <input id="profile-cognome" type="text" required>
+          <label>Telefono</label>
+          <input id="profile-telefono" type="text">
+          <button class="button primary" type="submit" style="width:100%;margin-top:0.5rem">Salva modifiche</button>
+        </form>
 
-    <section class="panel">
-      <h2>Prenotazioni</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Film</th>
-              <th>Cinema</th>
-              <th>Data</th>
-              <th>Ora</th>
-              <th>Posti</th>
-              <th>Stato</th>
-              <th>Azione</th>
-            </tr>
-          </thead>
-          <tbody id="prenotazioni-body"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-  <div id="footer-container"></div>
+        <hr>
+        <div id="security-section" style="display:none">
+          <h4>Sicurezza</h4>
+          <div id="security-content"></div>
+        </div>
+      </aside>
 
-  <!-- Change Password Modal -->
-  <div id="change-password-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-panel">
-      <h3>Cambia Password</h3>
-      <form id="change-password-form">
-        <div class="form-grid">
-          <div>
-            <label for="cp-current">Password corrente</label>
-            <div class="pw-wrap">
-              <input id="cp-current" type="password" required>
-              <button type="button" class="pw-toggle" tabindex="-1" aria-label="Mostra password"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-            </div>
-          </div>
-          <div>
-            <label for="cp-new">Nuova password</label>
-            <div class="pw-wrap">
-              <input id="cp-new" type="password" required minlength="8">
-              <button type="button" class="pw-toggle" tabindex="-1" aria-label="Mostra password"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-            </div>
-          </div>
-          <div>
-            <label for="cp-new2">Conferma nuova password</label>
-            <div class="pw-wrap">
-              <input id="cp-new2" type="password" required minlength="8">
-              <button type="button" class="pw-toggle" tabindex="-1" aria-label="Mostra password"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-            </div>
-          </div>
+      <!-- Main content -->
+      <section class="profile-main">
+        <div class="profile-tabs">
+          <button class="profile-tab active" data-tab="bookings">I miei biglietti</button>
+          <button class="profile-tab" data-tab="giftcards">Gift Card</button>
         </div>
-        <div class="actions">
-          <button class="primary" type="submit">Cambia password</button>
-          <button class="button secondary" type="button" id="cp-cancel">Annulla</button>
+
+        <div id="tab-bookings" class="profile-tab-content">
+          <table class="table">
+            <thead><tr><th>ID</th><th>Film</th><th>Cinema</th><th>Data</th><th>Ora</th><th>Posti</th><th>Stato</th><th>Azioni</th></tr></thead>
+            <tbody id="prenotazioni-body"></tbody>
+          </table>
         </div>
-      </form>
-      <div id="cp-status" class="status subtle"></div>
+
+        <div id="tab-giftcards" class="profile-tab-content hidden">
+          <div id="giftcards-body"></div>
+        </div>
+      </section>
     </div>
-  </div>
 
-  <style>
-    .modal-overlay { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000; }
-    .modal-panel { background:var(--bg-panel);padding:24px;border-radius:8px;max-width:450px;width:90%; }
-    .pw-wrap { position:relative;display:flex; }
-    .pw-wrap input { width:100%;padding-right:40px; }
-    .pw-toggle { position:absolute;right:0;top:0;bottom:0;width:40px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);font-size:16px; }
-    .pw-toggle:hover { color:var(--color-text); }
-  </style>
+    <!-- Change Password Modal -->
+    <div id="change-password-modal" class="modal-overlay" style="display:none">
+      <div class="modal-card">
+        <h3>Cambia password</h3>
+        <form id="change-password-form">
+          <label>Password attuale</label>
+          <input id="cp-current" type="password" required>
+          <label>Nuova password</label>
+          <div class="pw-row"><input id="cp-new" type="password" required minlength="8"><button type="button" class="btn-small secondary pw-toggle" data-target="cp-new" aria-label="Mostra password">👁</button></div>
+          <label>Conferma password</label>
+          <div class="pw-row"><input id="cp-new2" type="password" required minlength="8"><button type="button" class="btn-small secondary pw-toggle" data-target="cp-new2" aria-label="Mostra password">👁</button></div>
+          <div id="cp-status" class="status"></div>
+          <div class="actions">
+            <button type="submit" class="button primary">Cambia password</button>
+            <button type="button" id="cp-cancel" class="button secondary">Annulla</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
 
-  <script>
-    function initPasswordToggles() {
-      document.querySelectorAll(".pw-toggle").forEach(function(btn) {
-        btn.addEventListener("click", function() {
-          var input = this.closest(".pw-wrap").querySelector("input");
-          var show = input.type === "password";
-          input.type = show ? "text" : "password";
-          this.querySelector("svg").innerHTML = show
-            ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
-            : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-        });
-      });
-    }
-  </script>
+  <div id="footer-container"></div>
 
   <script>
     window.addEventListener("DOMContentLoaded", async () => {
-      if (!window.AuthGuard || !window.AuthGuard.requireAuth()) return;
+      if (!window.AuthGuard || !window.AuthGuard.requireAuth(window.location.pathname)) return;
       await window.bootstrapLayout();
       await window.initProfilePage();
-      initPasswordToggles();
     });
   </script>
 </body>

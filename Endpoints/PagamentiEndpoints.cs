@@ -111,7 +111,120 @@ url = session.Url
 });
 }).RequireAuthorization();
 
-group.MapGet("/esito", async (string session_id, ClaimsPrincipal user, FilmDbContext db, TicketPdfService pdfService, TicketEmailService emailService, ILoggerFactory loggerFactory) =>
+group.MapPost("/cart-checkout", async (CartCheckoutRequest req, ClaimsPrincipal user, FilmDbContext db, ILoggerFactory loggerFactory, EmailService emailService) =>
+{
+var logger = loggerFactory.CreateLogger("PagamentiEndpoints");
+if (!TryGetUserId(user, out var userId))
+    return Results.Unauthorized();
+
+if (string.IsNullOrWhiteSpace(stripeSecret))
+    return Results.BadRequest(new { error = "Stripe non configurato" });
+
+var cart = await db.Carts
+    .Include(c => c.CartItems)
+    .FirstOrDefaultAsync(c => c.Id == req.CartId && c.UtenteId == userId && c.Stato == "Active");
+
+if (cart == null) return Results.BadRequest(new { error = "Carrello non trovato o non attivo" });
+if (cart.CartItems.Count == 0) return Results.BadRequest(new { error = "Carrello vuoto" });
+
+var now = DateTime.UtcNow;
+var appBaseUrl = (Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001").TrimEnd('/');
+var userEmail = (await db.Utenti.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId))?.Email ?? "";
+
+// Validate ticket items
+foreach (var item in cart.CartItems.Where(ci => ci.ItemType == "Ticket"))
+{
+    var seats = (item.DettaglioJson != null ? System.Text.Json.JsonSerializer.Deserialize<SeatInfo>(item.DettaglioJson) : null)?.Posti ?? new List<string>();
+    var selezionati = string.Join(',', seats);
+    var validation = await ValidatePurchaseAsync(db, userId, item.ItemId, selezionati, true, null);
+    if (!validation.Success)
+        return Results.BadRequest(new { error = $"Posti non piu disponibili per lo show {item.ItemId}" });
+}
+
+// Calculate totals
+var subtotale = cart.CartItems.Sum(i => i.PrezzoUnitario * i.Quantita);
+var sconto = cart.ScontoCoupon;
+var totaleDopoCoupon = Math.Max(0, subtotale - sconto);
+var importoGiftCard = cart.ImportoGiftCard;
+var stripeAmount = Math.Max(0, totaleDopoCoupon - importoGiftCard);
+
+cart.Stato = "Checkout";
+cart.UpdatedAtUtc = now;
+
+// Build line items for Stripe
+var lineItems = new List<SessionLineItemOptions>();
+foreach (var item in cart.CartItems)
+{
+    var desc = item.ItemType switch
+    {
+        "Ticket" => $"Biglietto (ID show: {item.ItemId})",
+        "GiftCard" => $"Gift Card {item.PrezzoUnitario:C}",
+        "Merchandise" => $"Prodotto ID {item.ItemId}",
+        _ => item.ItemType
+    };
+    lineItems.Add(new SessionLineItemOptions
+    {
+        Quantity = item.Quantita,
+        PriceData = new SessionLineItemPriceDataOptions
+        {
+            Currency = "eur",
+            UnitAmount = (long)Math.Round(item.PrezzoUnitario * 100m, MidpointRounding.AwayFromZero),
+            ProductData = new SessionLineItemPriceDataProductDataOptions
+            {
+                Name = desc,
+                Description = item.DettaglioJson ?? ""
+            }
+        }
+    });
+}
+
+// If gift card covers everything, stripe amount is 0; still create session for record
+if (stripeAmount <= 0 && importoGiftCard >= totaleDopoCoupon)
+{
+    // Full gift card payment - finalize immediately without Stripe
+    await FinalizeCartOrderAsync(db, cart, userId, logger, emailService);
+    return Results.Ok(new { redirectToStripe = false, message = "Pagamento completato con gift card", cartId = cart.Id });
+}
+
+var couponLine = sconto > 0 ? new List<SessionLineItemOptions> { new()
+{
+    Quantity = 1,
+    PriceData = new SessionLineItemPriceDataOptions
+    {
+        Currency = "eur",
+        UnitAmount = (long)Math.Round(-sconto * 100m, MidpointRounding.AwayFromZero),
+        ProductData = new SessionLineItemPriceDataProductDataOptions { Name = "Sconto coupon" }
+    }
+}} : new List<SessionLineItemOptions>();
+
+var sessionService = new SessionService();
+var options = new SessionCreateOptions
+{
+    Mode = "payment",
+    SuccessUrl = $"{appBaseUrl}/esito-pagamento.html?session_id={{CHECKOUT_SESSION_ID}}&cart=1",
+    CancelUrl = $"{appBaseUrl}/cart.html",
+    ClientReferenceId = $"cart:{userId}:{cart.Id}",
+    CustomerEmail = userEmail,
+    Metadata = new Dictionary<string, string>
+    {
+        ["userId"] = userId.ToString(),
+        ["cartId"] = cart.Id.ToString(),
+        ["importoGiftCard"] = importoGiftCard.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        ["giftCardCode"] = cart.GiftCardCode ?? ""
+    },
+    LineItems = lineItems.Concat(couponLine).ToList()
+};
+
+var session = await sessionService.CreateAsync(options);
+
+// Save stripe session reference on cart
+cart.StripeSessionId = session.Id;
+await db.SaveChangesAsync();
+
+return Results.Ok(new { sessionId = session.Id, url = session.Url });
+}).RequireAuthorization();
+
+group.MapGet("/esito", async (string session_id, ClaimsPrincipal user, FilmDbContext db, TicketPdfService pdfService, TicketEmailService emailService, ILoggerFactory loggerFactory, EmailService emailSvc) =>
 {
 var logger = loggerFactory.CreateLogger("PagamentiEndpoints");
 
@@ -134,6 +247,30 @@ var booking = await db.Prenotazioni
 
 if (booking is null)
 {
+// Check if this is a cart checkout
+var cart = await db.Carts
+    .Include(c => c.CartItems)
+    .FirstOrDefaultAsync(c => c.StripeSessionId == session_id && c.UtenteId == userId && c.Stato == "Checkout");
+
+if (cart != null && !string.IsNullOrWhiteSpace(stripeSecret))
+{
+    try
+    {
+        var sessionService = new SessionService();
+        var stripeSession = await sessionService.GetAsync(session_id);
+        if (stripeSession.PaymentStatus == "paid")
+        {
+            await FinalizeCartOrderAsync(db, cart, userId, logger, emailSvc);
+        }
+        return Results.Ok(new { stato = cart.Stato, cartId = cart.Id, items = cart.CartItems.Count });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Errore verifica esito cart checkout {SessionId}", session_id);
+        return Results.Ok(new { stato = "Errore" });
+    }
+}
+
 return Results.NotFound();
 }
 
@@ -365,6 +502,130 @@ return Results.Ok(new { received = true });
 return group;
 }
 
+private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, int userId, ILogger logger, EmailService? emailService = null)
+{
+    var now = DateTime.UtcNow;
+
+    // Deduct gift card balance if used
+    if (!string.IsNullOrWhiteSpace(cart.GiftCardCode) && cart.ImportoGiftCard > 0)
+    {
+        var gc = await db.GiftCards.FirstOrDefaultAsync(g => g.Codice == cart.GiftCardCode && g.Stato == "Active");
+        if (gc != null)
+        {
+            var deduct = Math.Min(cart.ImportoGiftCard, gc.SaldoResiduo);
+            gc.SaldoResiduo -= deduct;
+            if (gc.SaldoResiduo <= 0) { gc.SaldoResiduo = 0; gc.Stato = "Consumed"; }
+            db.GiftCardTransactions.Add(new GiftCardTransaction
+            {
+                GiftCardId = gc.Id, CartId = cart.Id, Tipo = "Redemption", Importo = deduct, SaldoDopo = gc.SaldoResiduo
+            });
+        }
+    }
+
+    // Process ticket items -> Prenotazioni
+    var ticketItems = await db.CartItems.Where(ci => ci.CartId == cart.Id && ci.ItemType == "Ticket").ToListAsync();
+    var allBookings = new List<Prenotazione>();
+    foreach (var item in ticketItems)
+    {
+        var seats = new List<string>();
+        if (!string.IsNullOrWhiteSpace(item.DettaglioJson))
+        {
+            try { var info = System.Text.Json.JsonSerializer.Deserialize<SeatInfo>(item.DettaglioJson); seats = info?.Posti ?? new List<string>(); }
+            catch { }
+        }
+        var codice = BuildCodiceAcquisto();
+        while (await db.Prenotazioni.AnyAsync(p => p.CodiceAcquisto == codice)) { codice = BuildCodiceAcquisto(); }
+        var booking = new Prenotazione
+        {
+            UtenteId = userId, ProiezioneId = item.ItemId, NumeroPosti = Math.Max(1, seats.Count),
+            PostiSelezionati = string.Join(',', seats), TotalePrezzo = item.PrezzoUnitario * item.Quantita,
+            ImportoCartaUsato = item.PrezzoUnitario * item.Quantita, CodiceAcquisto = codice,
+            DataPrenotazione = now, Stato = "Confermata", CartId = cart.Id
+        };
+        db.Prenotazioni.Add(booking);
+        allBookings.Add(booking);
+    }
+
+    // Process gift card items -> generate GiftCard records
+    var gcItems = await db.CartItems.Where(ci => ci.CartId == cart.Id && ci.ItemType == "GiftCard").ToListAsync();
+    foreach (var item in gcItems)
+    {
+        string detailJson = item.DettaglioJson ?? "{}";
+        string? destinatario = null; string? messaggio = null;
+        try
+        {
+            var d = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(detailJson);
+            if (d.TryGetProperty("emailDestinatario", out var e) && e.ValueKind == System.Text.Json.JsonValueKind.String) destinatario = e.GetString();
+            if (d.TryGetProperty("messaggio", out var m) && m.ValueKind == System.Text.Json.JsonValueKind.String) messaggio = m.GetString();
+        } catch { }
+        for (int i = 0; i < item.Quantita; i++)
+        {
+            var code = "NFH-GC-" + Guid.NewGuid().ToString("N")[..8].ToUpper() + "-" + Guid.NewGuid().ToString("N")[..4].ToUpper();
+            db.GiftCards.Add(new GiftCard
+            {
+                Codice = code, ImportoIniziale = item.PrezzoUnitario, SaldoResiduo = item.PrezzoUnitario,
+                UtenteAcquirenteId = userId, EmailDestinatario = destinatario, Messaggio = messaggio, Stato = "Active", CreatoIl = now
+            });
+        }
+    }
+
+    // Process merchandise items -> decrement stock
+    var merchItems = await db.CartItems.Where(ci => ci.CartId == cart.Id && ci.ItemType == "Merchandise").ToListAsync();
+    foreach (var item in merchItems)
+    {
+        if (item.VariantId.HasValue)
+        {
+            var variant = await db.ProductVariants.FindAsync(item.VariantId.Value);
+            if (variant != null) variant.Stock = Math.Max(0, variant.Stock - item.Quantita);
+        }
+    }
+
+    // Remove seat locks
+    await db.SeatLocks.Where(l => l.CartId == cart.Id).ExecuteDeleteAsync();
+    await db.InventoryReservations.Where(r => r.CartId == cart.Id).ExecuteDeleteAsync();
+
+    cart.Stato = "Converted";
+    cart.UpdatedAtUtc = now;
+    await db.SaveChangesAsync();
+
+    // Send gift card emails and balance notifications
+    if (emailService != null)
+    {
+        var utente = await db.Utenti.FindAsync(userId);
+        var userEmail = utente?.Email ?? "";
+
+        // Collect all gift cards just created for this order
+        var createdGc = await db.GiftCards
+            .Where(g => g.UtenteAcquirenteId == userId && g.CreatoIl >= now.AddSeconds(-30) && g.CreatoIl <= now.AddSeconds(5))
+            .ToListAsync();
+
+        // Send one email per gift card code to the purchaser
+        foreach (var gc in createdGc)
+        {
+            string? destinatario = gc.EmailDestinatario;
+            await emailService.SendGiftCardEmail(userEmail, gc.Codice, gc.ImportoIniziale, gc.Messaggio);
+            // If different recipient, also notify them
+            if (!string.IsNullOrWhiteSpace(destinatario) && !string.Equals(destinatario, userEmail, StringComparison.OrdinalIgnoreCase))
+                await emailService.SendGiftCardEmail(destinatario, gc.Codice, gc.ImportoIniziale, gc.Messaggio);
+        }
+
+        // Send order confirmation email to purchaser (summary, no sensitive codes)
+        await emailService.SendOrderConfirmationEmail(userEmail, cart.Id, cart.Subtotale, cart.ScontoCoupon, cart.ImportoGiftCard, cart.Totale, createdGc.Count, cart.CartItems.Count(ci => ci.ItemType == "Ticket"));
+
+        // Notify about gift card balance used
+        if (!string.IsNullOrWhiteSpace(cart.GiftCardCode) && cart.ImportoGiftCard > 0)
+        {
+            var gcUsed = await db.GiftCards.FirstOrDefaultAsync(g => g.Codice == cart.GiftCardCode);
+            if (gcUsed != null)
+            {
+                var gcOwner = await db.Utenti.FindAsync(gcUsed.UtenteAcquirenteId);
+                if (gcOwner != null)
+                    await emailService.SendGiftCardBalanceEmail(gcOwner.Email, gcUsed.Codice, gcUsed.SaldoResiduo);
+            }
+        }
+    }
+}
+
 private static async Task<(bool Success, IResult? ErrorResult, Proiezione? Show, List<string>? RequestedSeats, string? UserEmail)> ValidatePurchaseAsync(
 FilmDbContext db,
 int userId,
@@ -540,5 +801,15 @@ private static bool TryGetUserId(ClaimsPrincipal user, out int userId)
 {
 var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
 return int.TryParse(userIdValue, out userId);
+}
+
+public class CartCheckoutRequest
+{
+    public int CartId { get; set; }
+}
+
+public class SeatInfo
+{
+    public List<string> Posti { get; set; } = new();
 }
 }

@@ -34,6 +34,12 @@ public class CartService
         {
             // Clean up expired ticket items (seat locks released)
             await RemoveExpiredTicketItemsAsync(cart);
+            // Extend active locks by 5 minutes to prevent expiry while user is on cart page
+            var now = DateTime.UtcNow;
+            var extendUntil = now.AddMinutes(5);
+            await _db.SeatLocks
+                .Where(l => l.CartId == cart.Id && l.ExpiresAtUtc > now && l.ExpiresAtUtc < extendUntil)
+                .ExecuteUpdateAsync(s => s.SetProperty(l => l.ExpiresAtUtc, extendUntil));
         }
 
         if (cart == null)
@@ -95,31 +101,60 @@ public class CartService
             .Select(l => l.PostoCodice)
             .ToListAsync();
 
-        if (expiredLockSeats.Count == 0) return;
+        if (expiredLockSeats.Count > 0)
+        {
+            // Remove expired seat locks
+            await _db.SeatLocks
+                .Where(l => l.CartId == cart.Id && l.ExpiresAtUtc < now)
+                .ExecuteDeleteAsync();
+        }
 
-        // Remove expired seat locks
-        await _db.SeatLocks
-            .Where(l => l.CartId == cart.Id && l.ExpiresAtUtc < now)
-            .ExecuteDeleteAsync();
-
-        // Remove ticket items whose locks have all expired
+        // Refresh ticket items: remove if no active locks, trim if some expired
         var ticketItems = await _db.CartItems
             .Where(ci => ci.CartId == cart.Id && ci.ItemType == "Ticket")
             .ToListAsync();
 
+        var modified = false;
         foreach (var item in ticketItems)
         {
-            var hasActiveLocks = await _db.SeatLocks
-                .AnyAsync(l => l.CartId == cart.Id && l.ProiezioneId == item.ItemId);
-            if (!hasActiveLocks)
+            var activeLockSeats = await _db.SeatLocks
+                .Where(l => l.CartId == cart.Id && l.ProiezioneId == item.ItemId)
+                .Select(l => l.PostoCodice)
+                .ToListAsync();
+
+            if (activeLockSeats.Count == 0)
             {
                 _db.CartItems.Remove(item);
+                modified = true;
+            }
+            else if (expiredLockSeats.Count > 0 && !string.IsNullOrWhiteSpace(item.DettaglioJson))
+            {
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(item.DettaglioJson);
+                    if (doc.RootElement.TryGetProperty("posti", out var postiEl) && postiEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        var remaining = postiEl.EnumerateArray()
+                            .Select(e => e.GetString())
+                            .Where(s => s != null && activeLockSeats.Contains(s))
+                            .ToList();
+                        if (remaining.Count < postiEl.GetArrayLength())
+                        {
+                            item.DettaglioJson = System.Text.Json.JsonSerializer.Serialize(new { posti = remaining, tipo = doc.RootElement.TryGetProperty("tipo", out var t) ? t.GetString() : null });
+                            item.Quantita = remaining.Count;
+                            modified = true;
+                        }
+                    }
+                }
+                catch { }
             }
         }
 
-        await _db.SaveChangesAsync();
-        await RecalculateAsync(cart);
-        await _db.SaveChangesAsync();
+        if (modified || expiredLockSeats.Count > 0)
+        {
+            await _db.SaveChangesAsync();
+            await RecalculateAsync(cart);
+        }
     }
 
     public async Task MergeGuestCartAsync(int userId, string guestToken)

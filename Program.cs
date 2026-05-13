@@ -174,7 +174,7 @@ if (dbProvider.Equals("InMemory", StringComparison.OrdinalIgnoreCase))
 else
 {
     builder.Services.AddDbContext<FilmDbContext>(dbOptions => dbOptions
-        .UseMySql(connectionString, serverVersion)
+        .UseMySql(connectionString, serverVersion) 
         .LogTo(Console.WriteLine, LogLevel.Information)
         .EnableSensitiveDataLogging()
         .EnableDetailedErrors());

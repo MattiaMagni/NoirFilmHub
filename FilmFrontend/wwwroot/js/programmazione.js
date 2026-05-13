@@ -213,6 +213,40 @@
 
   }
 
+  async function loadCinemaSelectOptions() {
+    if (!chooseCinemaSelect) return;
+    try {
+      const geoEnabled = localStorage.getItem("geo_enabled") !== "0";
+      let cinemas;
+
+      if (geoPosition && geoPosition.latitude && geoEnabled) {
+        cinemas = await window.ApiClient.get(`/cinemas/nearby?lat=${geoPosition.latitude}&lng=${geoPosition.longitude}`);
+        if (Array.isArray(cinemas) && cinemas.length) {
+          const nearbyOpts = cinemas.map(c => {
+            var km = c.distanzaKm != null ? ` (${Number(c.distanzaKm).toFixed(1)} km)` : "";
+            return `<option value="${c.id}">${c.nome} - ${c.citta}${km}</option>`;
+          }).join("");
+          chooseCinemaSelect.innerHTML = `<option value="">Scegli cinema</option>${nearbyOpts}`;
+          if (selectedCinemaId) {
+            chooseCinemaSelect.value = String(selectedCinemaId);
+          }
+          return;
+        }
+      }
+
+      cinemas = await window.ApiClient.get("/cinemas");
+      const options = (Array.isArray(cinemas) ? cinemas : [])
+        .map(c => `<option value="${c.id}">${c.nome} - ${c.citta}</option>`)
+        .join("");
+      chooseCinemaSelect.innerHTML = `<option value="">Scegli cinema</option>${options}`;
+      if (selectedCinemaId) {
+        chooseCinemaSelect.value = String(selectedCinemaId);
+      }
+    } catch {
+      chooseCinemaSelect.innerHTML = "<option value=''>Scegli cinema</option>";
+    }
+  }
+
   function debounce(fn, delay) {
     let timer = null;
     return function debounced(...args) {

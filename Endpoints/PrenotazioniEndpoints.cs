@@ -144,7 +144,7 @@ public static class PrenotazioniEndpoints
                         Codice = code, ImportoIniziale = refundAmount, SaldoResiduo = refundAmount,
                         UtenteAcquirenteId = prenotazione.UtenteId,
                         Messaggio = $"Rimborso 50% per prenotazione annullata (#{prenotazione.Id})",
-                        Stato = "Active", CreatoIl = DateTime.UtcNow
+                        Stato = "Active", CreatoIl = DateTime.UtcNow, Scadenza = DateTime.UtcNow.AddYears(1)
                     });
                 }
             }

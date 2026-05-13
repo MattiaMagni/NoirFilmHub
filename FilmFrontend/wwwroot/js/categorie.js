@@ -80,11 +80,51 @@
     }
   }
 
+  function openEditModal(categoria) {
+    var content = `
+      <h3>Modifica categoria #${categoria.id}</h3>
+      <form id="modal-edit-form">
+        <label>Nome</label>
+        <input id="modal-nome" type="text" value="${categoria.nome || ""}" required>
+        <label>Descrizione</label>
+        <input id="modal-descrizione" type="text" value="${categoria.descrizione || ""}">
+        <div class="actions" style="margin-top:1rem">
+          <button type="submit" class="button primary">Salva modifiche</button>
+          <button type="button" class="button secondary" id="modal-cancel-btn">Annulla</button>
+        </div>
+      </form>`;
+
+    var card = window.ModalUtils.open(content);
+    if (!card) return;
+
+    card.querySelector("#modal-cancel-btn").addEventListener("click", function () {
+      if (window.confirm("Annullare le modifiche? I dati non verranno salvati.")) {
+        window.ModalUtils.close();
+      }
+    });
+
+    card.querySelector("#modal-edit-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var nome = document.getElementById("modal-nome").value.trim();
+      if (!nome) { alert("Nome obbligatorio."); return; }
+      if (!window.confirm("Salvare le modifiche?")) return;
+      try {
+        await window.ApiClient.put(`/categorie/${categoria.id}`, {
+          nome: nome,
+          descrizione: document.getElementById("modal-descrizione").value.trim() || null
+        });
+        window.ModalUtils.close();
+        setStatus("Categoria aggiornata.", "success");
+        await loadCategorie();
+      } catch (error) {
+        alert("Errore: " + error.message);
+      }
+    });
+  }
+
   async function handleTableClick(event) {
     const button = event.target.closest("button[data-action]");
-    if (!button) {
-      return;
-    }
+    if (!button) return;
 
     const id = Number(button.dataset.id);
     const action = button.dataset.action;
@@ -92,21 +132,14 @@
     if (action === "edit") {
       try {
         const categoria = await window.ApiClient.get(`/categorie/${id}`);
-        editingId = id;
-        form.nome.value = categoria.nome || "";
-        form.descrizione.value = categoria.descrizione || "";
-        submitBtn.textContent = "Salva modifiche";
-        cancelBtn.classList.remove("hidden");
-        setStatus(`Modifica categoria #${id}`, "info");
+        openEditModal(categoria);
       } catch (error) {
         setStatus(`Errore: ${error.message}`, "error");
       }
     }
 
     if (action === "delete") {
-      if (!window.confirm(`Eliminare categoria #${id}?`)) {
-        return;
-      }
+      if (!window.confirm(`Eliminare categoria #${id}?`)) return;
       try {
         await window.ApiClient.delete(`/categorie/${id}`);
         setStatus("Categoria eliminata.", "success");
@@ -118,9 +151,7 @@
   }
 
   function initCategoriePage() {
-    if (!form || !tableBody) {
-      return;
-    }
+    if (!form || !tableBody) return;
     form.addEventListener("submit", submitForm);
     tableBody.addEventListener("click", handleTableClick);
     cancelBtn.addEventListener("click", resetForm);

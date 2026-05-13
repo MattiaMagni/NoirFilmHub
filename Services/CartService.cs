@@ -76,7 +76,7 @@ public class CartService
             }
         }
 
-        cart.Totale = cart.Subtotale - cart.ScontoCoupon;
+        cart.Totale = cart.Subtotale - cart.ScontoCoupon - cart.ImportoGiftCard;
         if (cart.Totale < 0) cart.Totale = 0;
 
         cart.UpdatedAtUtc = DateTime.UtcNow;

@@ -563,8 +563,8 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
             var code = "NFH-GC-" + Guid.NewGuid().ToString("N")[..8].ToUpper() + "-" + Guid.NewGuid().ToString("N")[..4].ToUpper();
             db.GiftCards.Add(new GiftCard
             {
-                Codice = code, ImportoIniziale = item.PrezzoUnitario, SaldoResiduo = item.PrezzoUnitario,
-                UtenteAcquirenteId = userId, EmailDestinatario = destinatario, Messaggio = messaggio, Stato = "Active", CreatoIl = now
+                        Codice = code, ImportoIniziale = item.PrezzoUnitario, SaldoResiduo = item.PrezzoUnitario,
+                        UtenteAcquirenteId = userId, EmailDestinatario = destinatario, Messaggio = messaggio, Stato = "Active", CreatoIl = now, Scadenza = now.AddYears(1)
             });
         }
     }

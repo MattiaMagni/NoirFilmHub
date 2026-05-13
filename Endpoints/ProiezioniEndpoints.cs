@@ -196,7 +196,7 @@ public static class ProiezioniEndpoints
                 {
                     Codice = code, ImportoIniziale = refundAmount, SaldoResiduo = refundAmount,
                     UtenteAcquirenteId = booking.UtenteId, Messaggio = $"Rimborso per proiezione annullata: {show.Film.Titolo} del {show.Data:yyyy-MM-dd} presso {show.Cinema.Nome}",
-                    Stato = "Active", CreatoIl = now
+                    Stato = "Active", CreatoIl = now, Scadenza = now.AddYears(1)
                 });
 
                 booking.Stato = "Annullata";

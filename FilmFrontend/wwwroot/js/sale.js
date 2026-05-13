@@ -20,19 +20,24 @@
     cancelBtn.classList.add("hidden");
   }
 
-  async function loadCinemas() {
+  async function loadCinemasIntoSelect(selectEl, selectedId) {
     try {
       const cinemas = await window.ApiClient.get("/cinemas");
-      cinemaSelect.innerHTML = "<option value=''>Seleziona cinema</option>";
+      selectEl.innerHTML = "<option value=''>Seleziona cinema</option>";
       (Array.isArray(cinemas) ? cinemas : []).forEach((c) => {
         const option = document.createElement("option");
         option.value = String(c.id);
         option.textContent = `${c.id} - ${c.nome}`;
-        cinemaSelect.appendChild(option);
+        selectEl.appendChild(option);
       });
+      if (selectedId) selectEl.value = String(selectedId);
     } catch (error) {
       setStatus(`Errore caricamento cinema: ${error.message}`, "error");
     }
+  }
+
+  async function loadCinemas() {
+    await loadCinemasIntoSelect(cinemaSelect, null);
   }
 
   function renderRows(items) {
@@ -109,21 +114,88 @@
     }
   }
 
-  async function handleTableClick(event) {
-    const button = event.target.closest("button[data-action]");
-    if (!button) {
-      return;
-    }
-    const action = button.dataset.action;
-    const id = Number(button.dataset.id);
-    if (!id) {
-      return;
-    }
+  async function openEditModal(sala) {
+    var content = `
+      <h3>Modifica sala #${sala.id}</h3>
+      <form id="modal-edit-form">
+        <label>Cinema</label>
+        <select id="modal-cinemaId" required></select>
+        <label>Numero progressivo</label>
+        <input id="modal-numeroProgressivo" type="number" value="${sala.numeroProgressivo || ""}" required>
+        <label>Tipologia</label>
+        <select id="modal-tipologia">
+          <option value="2D" ${sala.tipologia === "2D" ? "selected" : ""}>2D</option>
+          <option value="3D" ${sala.tipologia === "3D" ? "selected" : ""}>3D</option>
+          <option value="ISENSE" ${sala.tipologia === "ISENSE" ? "selected" : ""}>ISENSE</option>
+          <option value="XL" ${sala.tipologia === "XL" ? "selected" : ""}>XL</option>
+        </select>
+        <label>Nome</label>
+        <input id="modal-nome" type="text" value="${sala.nome || ""}">
+        <label>Numero file</label>
+        <input id="modal-numeroFile" type="number" value="${sala.numeroFile || 10}" required>
+        <label>Posti per fila</label>
+        <input id="modal-postiPerFila" type="number" value="${sala.postiPerFila || 12}" required>
+        <label>Mappa posti (JSON)</label>
+        <input id="modal-mappaPostiJson" type="text" value="${sala.mappaPostiJson || ""}">
+        <label>Stato</label>
+        <select id="modal-attiva">
+          <option value="true" ${sala.attiva !== false ? "selected" : ""}>Attiva</option>
+          <option value="false" ${sala.attiva === false ? "selected" : ""}>Non attiva</option>
+        </select>
+        <div class="actions" style="margin-top:1rem">
+          <button type="submit" class="button primary">Salva modifiche</button>
+          <button type="button" class="button secondary" id="modal-cancel-btn">Annulla</button>
+        </div>
+      </form>`;
 
-    if (action === "delete") {
-      if (!window.confirm(`Confermi eliminazione sala #${id}?`)) {
+    var card = window.ModalUtils.open(content);
+    if (!card) return;
+
+    await loadCinemasIntoSelect(document.getElementById("modal-cinemaId"), sala.cinemaId);
+
+    card.querySelector("#modal-cancel-btn").addEventListener("click", function () {
+      if (window.confirm("Annullare le modifiche? I dati non verranno salvati.")) {
+        window.ModalUtils.close();
+      }
+    });
+
+    card.querySelector("#modal-edit-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var payload = {
+        cinemaId: Number(document.getElementById("modal-cinemaId").value),
+        numeroProgressivo: Number(document.getElementById("modal-numeroProgressivo").value),
+        tipologia: document.getElementById("modal-tipologia").value,
+        nome: document.getElementById("modal-nome").value.trim(),
+        numeroFile: Number(document.getElementById("modal-numeroFile").value),
+        postiPerFila: Number(document.getElementById("modal-postiPerFila").value),
+        mappaPostiJson: document.getElementById("modal-mappaPostiJson").value.trim(),
+        attiva: String(document.getElementById("modal-attiva").value) !== "false"
+      };
+      if (!payload.cinemaId || !payload.numeroProgressivo || !payload.tipologia || !payload.numeroFile || !payload.postiPerFila) {
+        alert("Compila tutti i campi obbligatori.");
         return;
       }
+      if (!window.confirm("Salvare le modifiche?")) return;
+      try {
+        await window.ApiClient.put(`/sale/${sala.id}`, payload);
+        window.ModalUtils.close();
+        setStatus("Sala aggiornata.", "success");
+        await loadSale();
+      } catch (error) {
+        alert("Errore: " + error.message);
+      }
+    });
+  }
+
+  async function handleTableClick(event) {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+    const action = button.dataset.action;
+    const id = Number(button.dataset.id);
+    if (!id) return;
+
+    if (action === "delete") {
+      if (!window.confirm(`Confermi eliminazione sala #${id}?`)) return;
       try {
         await window.ApiClient.delete(`/sale/${id}`);
         setStatus("Sala eliminata.", "success");
@@ -137,18 +209,7 @@
     if (action === "edit") {
       try {
         const sala = await window.ApiClient.get(`/sale/${id}`);
-        editingId = sala.id;
-        form.cinemaId.value = String(sala.cinemaId || "");
-        form.numeroProgressivo.value = sala.numeroProgressivo || "";
-        form.tipologia.value = sala.tipologia || "2D";
-        form.nome.value = sala.nome || "";
-        form.numeroFile.value = sala.numeroFile || 10;
-        form.postiPerFila.value = sala.postiPerFila || 12;
-        form.mappaPostiJson.value = sala.mappaPostiJson || "";
-        form.attiva.value = String(sala.attiva !== false);
-        submitBtn.textContent = "Salva modifiche";
-        cancelBtn.classList.remove("hidden");
-        setStatus(`Modifica sala #${id}`, "info");
+        openEditModal(sala);
       } catch (error) {
         setStatus(`Errore caricamento sala: ${error.message}`, "error");
       }

@@ -1,31 +1,34 @@
 (function () {
-  async function requestGeolocation() {
-    if (!navigator.geolocation) return null;
+  function requestGeolocation() {
+    if (!navigator.geolocation) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        function (pos) { resolve(pos.coords); },
+        function () { resolve(null); },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      );
+    }).catch(function () { return null; });
+  }
+
+  function getCachedCoords() {
     try {
-      return await new Promise((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve(pos.coords),
-          () => resolve(null),
-          { enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 }
-        );
-      });
-    } catch {
-      return null;
-    }
+      var raw = sessionStorage.getItem("geo_coords_cache");
+      if (!raw) return null;
+      var c = JSON.parse(raw);
+      if (!c.lat || !c.lng) return null;
+      return { latitude: c.lat, longitude: c.lng };
+    } catch { return null; }
+  }
+
+  function setCachedCoords(coords) {
+    if (!coords || !coords.latitude) return;
+    try {
+      sessionStorage.setItem("geo_coords_cache", JSON.stringify({ lat: coords.latitude, lng: coords.longitude, ts: Date.now() }));
+    } catch {}
   }
 
   function showGeoPopup() {
     return new Promise((resolve) => {
-      if (localStorage.getItem("geo_enabled") === "0") {
-        resolve(false);
-        return;
-      }
-
-      if (sessionStorage.getItem("geo_popup_dismissed") === "1") {
-        resolve(false);
-        return;
-      }
-
       var existing = document.getElementById("geo-permission-overlay");
       if (existing) existing.remove();
 
@@ -47,6 +50,8 @@
 
       overlay.querySelector("#geo-popup-yes").onclick = function () {
         overlay.remove();
+        localStorage.removeItem("geo_enabled");
+        sessionStorage.setItem("geo_popup_accepted", "1");
         resolve(true);
       };
 
@@ -66,13 +71,34 @@
     });
   }
 
+  function isGeoDisabled() {
+    return localStorage.getItem("geo_enabled") === "0";
+  }
+
   async function requestGeoWithPopup() {
+    if (sessionStorage.getItem("geo_popup_accepted") === "1") {
+      if (isGeoDisabled()) return null;
+      var cached = getCachedCoords();
+      if (cached) {
+        requestGeolocation().then(function (fresh) {
+          if (fresh) setCachedCoords(fresh);
+        });
+        return cached;
+      }
+      var coords = await requestGeolocation();
+      if (coords) setCachedCoords(coords);
+      return coords;
+    }
+
+    if (sessionStorage.getItem("geo_popup_dismissed") === "1") return null;
+
     var granted = await showGeoPopup();
     if (!granted) return null;
+
+    if (isGeoDisabled()) return null;
+
     var coords = await requestGeolocation();
-    if (coords) {
-      sessionStorage.setItem("geo_popup_dismissed", "1");
-    }
+    if (coords) setCachedCoords(coords);
     return coords;
   }
 

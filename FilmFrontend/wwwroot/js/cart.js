@@ -151,15 +151,18 @@
       if (!c) { setStatus("Inserisci un codice offerta.", "error"); return; }
       try { var r = await window.ApiClient.post(`/cart/${cartId}/apply-coupon`, { codice: c }); setStatus(`Offerta applicata! -${formatCurrency(r.sconto)}`, "success"); await loadCart(); } catch(e) { setStatus(`Errore: ${e.message}`, "error"); }
     });
-    document.getElementById("cart-checkout")?.addEventListener("click", async () => {
+    document.getElementById("cart-checkout")?.addEventListener("click", async function () {
       if (!window.AuthService || !window.AuthService.isAuthenticated()) { window.location.href = `/login.html?callback=${encodeURIComponent("/cart.html")}`; return; }
       if (!cartId) { setStatus("Carrello non caricato.", "error"); return; }
+      if (this.disabled) return;
+      this.disabled = true;
+      this.textContent = "Pagamento in corso...";
       setStatus("Reindirizzamento a Stripe...", "info");
       try {
         var r = await window.ApiClient.post("/pagamenti/cart-checkout", { cartId });
         if (r.redirectToStripe === false) { setStatus("Pagamento completato con gift card!", "success"); setTimeout(() => { window.location.href = "/profile.html"; }, 1500); return; }
-        if (r && r.url) { window.location.href = r.url; } else { setStatus("Errore: sessione pagamento non disponibile", "error"); }
-      } catch(e) { setStatus(`Errore: ${e.message}`, "error"); }
+        if (r && r.url) { window.location.href = r.url; } else { setStatus("Errore: sessione pagamento non disponibile", "error"); this.disabled = false; this.textContent = "Paga con Stripe"; }
+      } catch(e) { setStatus(`Errore: ${e.message}`, "error"); this.disabled = false; this.textContent = "Paga con Stripe"; }
     });
   }
 

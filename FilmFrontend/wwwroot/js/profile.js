@@ -81,7 +81,7 @@
     if (!active.length) { giftcardsBody.innerHTML = "<p class='subtle'>Nessuna gift card attiva.</p>"; return; }
     giftcardsBody.innerHTML = active.map(c => `<div class="panel" style="margin-bottom:0.5rem">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><strong>${c.codice.substring(0, 8)}...</strong> <span class="subtle">${c.codice}</span></div>
+        <div><strong>...${c.codice.slice(-4)}</strong></div>
         <div><span style="font-size:1.2rem;font-weight:700;color:var(--color-primary)">${c.saldoResiduo.toFixed(2)} EUR</span></div>
       </div>
       <p class="subtle">Scadenza: ${c.scadenza ? new Date(c.scadenza).toLocaleDateString("it-IT") : "Nessuna scadenza"}</p>
@@ -105,6 +105,7 @@
     content.innerHTML = `
       <p>${passwordStatus} ${passwordActions}</p>
       <p><strong>Provider:</strong> ${externalLoginsHtml}</p>
+      <p id="geo-toggle-row"><span>Posizione geografica</span> <button class="btn-small" id="btn-geo-toggle"></button></p>
       <p><button class="btn-small danger" id="btn-revoke-sessions">Disconnetti tutti</button></p>`;
     setTimeout(() => {
       var btnCp = document.getElementById("btn-change-password");
@@ -118,7 +119,19 @@
   }
 
   function updateGeoButton() {
+    var btn = document.getElementById("btn-geo-toggle");
+    if (!btn) return;
     var on = localStorage.getItem("geo_enabled") !== "0";
+    btn.textContent = on ? "Disattiva" : "Attiva";
+    btn.className = on ? "btn-small danger" : "btn-small primary";
+    btn.onclick = function () {
+      if (on) {
+        localStorage.setItem("geo_enabled", "0");
+      } else {
+        localStorage.removeItem("geo_enabled");
+      }
+      updateGeoButton();
+    };
   }
 
   function showCancelToast(bookingId) {

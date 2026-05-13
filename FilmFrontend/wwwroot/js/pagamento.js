@@ -68,10 +68,13 @@
   }
 
   function bindEvents() {
-    confirmBtn.addEventListener("click", async () => {
+    confirmBtn.addEventListener("click", async function () {
       if (!context) {
         return;
       }
+      if (this.disabled) return;
+      this.disabled = true;
+      this.textContent = "Pagamento in corso...";
 
       setStatus("Reindirizzamento verso Stripe in corso...", "info");
 
@@ -89,6 +92,8 @@
         window.location.href = result.url;
       } catch (error) {
         setStatus(`Errore pagamento: ${error.message}`, "error");
+        this.disabled = false;
+        this.textContent = "Paga con Stripe";
       }
     });
   }

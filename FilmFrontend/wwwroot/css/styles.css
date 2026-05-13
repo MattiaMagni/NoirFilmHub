@@ -3034,6 +3034,12 @@ button.theme-toggle:focus-visible::after {
   border-color: rgba(51, 65, 85, 0.2);
 }
 
+:root[data-theme="light"] .screen-programmazione-grid #cinema-selezionato-badge {
+  background: rgba(229, 9, 20, 0.1);
+  border-color: rgba(229, 9, 20, 0.3);
+  color: #b91c1c;
+}
+
 :root[data-theme="light"] .screen-programmazione-detail .booking-summary-lines p,
 :root[data-theme="light"] .screen-seat-selection .seat-booking-lines p {
   background: #f8fafc;

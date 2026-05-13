@@ -136,7 +136,7 @@ foreach (var item in cart.CartItems.Where(ci => ci.ItemType == "Ticket"))
 {
     var seats = (item.DettaglioJson != null ? System.Text.Json.JsonSerializer.Deserialize<SeatInfo>(item.DettaglioJson) : null)?.Posti ?? new List<string>();
     var selezionati = string.Join(',', seats);
-    var validation = await ValidatePurchaseAsync(db, userId, item.ItemId, selezionati, true, null);
+    var validation = await ValidatePurchaseAsync(db, userId, item.ItemId, selezionati, false, null);
     if (!validation.Success)
         return Results.BadRequest(new { error = $"Posti non piu disponibili per lo show {item.ItemId}" });
 }

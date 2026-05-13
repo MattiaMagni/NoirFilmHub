@@ -73,11 +73,17 @@
     if (item.itemType === "Ticket") {
       var seats = detail.posti || [];
       var tipo = detail.tipo === "vip" ? "VIP" : "Standard";
+      var film = detail.film || "";
+      var cinema = detail.cinema || "";
+      var data = detail.data || "";
+      var ora = detail.ora || "";
+      var projInfo = film ? `${film} — ${cinema}<br>${data} ${ora}` : "";
       return `<div class="cart-item-card panel">
         <div class="cart-item-main">
           <div class="cart-item-icon">&#x1f3ac;</div>
           <div class="cart-item-info">
             <h4>Biglietto cinema <span class="tag ${detail.tipo === 'vip' ? 'accent' : 'info'}">${tipo}</span></h4>
+            ${projInfo ? '<p class="subtle" style="font-size:0.78rem">'+projInfo+'</p>' : ''}
             <p class="subtle">${seats.length} posto/i: ${seats.join(", ") || "N/D"}</p>
             <p class="subtle">${formatCurrency(item.prezzoUnitario)} cad.</p>
           </div>
@@ -171,6 +177,8 @@
       if (!cartId) { setStatus("Carrello non caricato.", "error"); return; }
       if (this.disabled) return;
       this.disabled = true;
+      clearInterval(cartRefreshTimer);
+      cartRefreshTimer = null;
       this.textContent = "Pagamento in corso...";
       setStatus("Reindirizzamento a Stripe...", "info");
       try {

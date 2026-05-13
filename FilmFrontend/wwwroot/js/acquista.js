@@ -25,6 +25,10 @@
 	let timerInterval = null;
 	let prezzoBaseCorrente = 0;
 	let vipSupplementCorrente = 0;
+	let currentFilmTitolo = "";
+	let currentCinemaNome = "";
+	let currentShowData = "";
+	let currentShowOra = "";
 
 	function setStatus(message, kind) {
 		statusEl.className = `status ${kind}`;
@@ -310,6 +314,10 @@
 		const ora = String(show.ora || "").slice(11, 16);
 		const salaNome = show.tipologiaSala || "2D";
 		prezzoBaseCorrente = Number(show.prezzoBase || 0);
+		currentFilmTitolo = film.titolo || "";
+		currentCinemaNome = cinema.nome || "";
+		currentShowData = data;
+		currentShowOra = ora;
 		summaryEl.innerHTML = `
 			<h3>${film.titolo}</h3>
 			<p class="subtle">Cinema: ${cinema.nome} (${cinema.citta})</p>
@@ -424,7 +432,7 @@
 						await window.ApiClient.post(`/cart/${cart.id}/items`, {
 							itemType: "Ticket", itemId: proiezioneId, variantId: 0,
 							quantita: standardSeats.length, prezzoUnitario: prezzoBaseCorrente,
-							dettaglioJson: JSON.stringify({ posti: standardSeats, tipo: "standard" })
+							dettaglioJson: JSON.stringify({ posti: standardSeats, tipo: "standard", film: currentFilmTitolo, cinema: currentCinemaNome, data: currentShowData, ora: currentShowOra })
 						});
 					}
 					// Add VIP seats as separate item (VariantId=1)
@@ -432,7 +440,7 @@
 						await window.ApiClient.post(`/cart/${cart.id}/items`, {
 							itemType: "Ticket", itemId: proiezioneId, variantId: 1,
 							quantita: vipSeats.length, prezzoUnitario: vipPrice,
-							dettaglioJson: JSON.stringify({ posti: vipSeats, tipo: "vip" })
+							dettaglioJson: JSON.stringify({ posti: vipSeats, tipo: "vip", film: currentFilmTitolo, cinema: currentCinemaNome, data: currentShowData, ora: currentShowOra })
 						});
 					}
 

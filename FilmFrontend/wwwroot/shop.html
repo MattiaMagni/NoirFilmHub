@@ -84,54 +84,72 @@
 
       <article class="panel">
         <h3>Aggiungi prodotto</h3>
-        <div class="filter-row">
-          <input id="admin-prod-nome" type="text" placeholder="Nome prodotto" required>
-          <input id="admin-prod-sku" type="text" placeholder="SKU" required>
+        <label>Nome prodotto</label>
+        <input id="admin-prod-nome" type="text" placeholder="es. Felpa Logo Noir" required>
+        <label style="margin-top:0.5rem">SKU</label>
+        <input id="admin-prod-sku" type="text" placeholder="es. NFH-FLP-GR" required>
+        <label style="margin-top:0.5rem">Descrizione</label>
+        <input id="admin-prod-desc" type="text" placeholder="Breve descrizione del prodotto">
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+          <div style="flex:1">
+            <label>Categoria</label>
+            <select id="admin-prod-categoria">
+              <option value="Abbigliamento">Abbigliamento</option>
+              <option value="Accessori">Accessori</option>
+              <option value="Food">Food</option>
+              <option value="Gadget">Gadget</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <label>Prezzo (EUR)</label>
+            <input id="admin-prod-prezzo" type="number" min="0" step="0.01" value="9.99" placeholder="0.00">
+          </div>
         </div>
-        <div class="filter-row" style="margin-top:0.5rem">
-          <input id="admin-prod-desc" type="text" placeholder="Descrizione">
-          <select id="admin-prod-categoria">
-            <option value="Abbigliamento">Abbigliamento</option>
-            <option value="Accessori">Accessori</option>
-            <option value="Food">Food</option>
-            <option value="Gadget">Gadget</option>
-          </select>
-        </div>
-        <div class="filter-row" style="margin-top:0.5rem">
-          <input id="admin-prod-prezzo" type="number" min="0" step="0.01" value="9.99" placeholder="Prezzo">
-          <input id="admin-prod-immagine" type="text" placeholder="URL immagine (opzionale)">
-        </div>
-        <button id="admin-prod-add" class="button primary" style="margin-top:0.5rem">Crea prodotto</button>
+        <label style="margin-top:0.5rem">Immagine</label>
+        <input id="admin-prod-immagine" type="text" placeholder="URL immagine o percorso (es. /assets/products/felpa.webp)">
+        <label style="margin-top:0.5rem">Carica immagine da file</label>
+        <input id="admin-prod-upload" type="file" accept="image/*" style="padding:4px">
+        <button id="admin-prod-add" class="button primary" style="margin-top:0.75rem;width:100%">Crea prodotto</button>
       </article>
 
       <article class="panel" style="margin-top:1rem">
         <h3>Crea offerta / coupon</h3>
-        <div class="filter-row">
-          <input id="admin-coupon-codice" type="text" placeholder="Codice (es. NFH-PROMO-XXXX)" required maxlength="32">
-          <select id="admin-coupon-tipo">
-            <option value="Percentuale">Percentuale</option>
-            <option value="Fisso">Fisso</option>
-          </select>
+        <label>Codice offerta</label>
+        <input id="admin-coupon-codice" type="text" placeholder="es. NFH-PROMO-LISSN20" required maxlength="32">
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+          <div style="flex:1">
+            <label>Tipo sconto</label>
+            <select id="admin-coupon-tipo">
+              <option value="Percentuale">Percentuale (%)</option>
+              <option value="Fisso">Fisso (EUR)</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <label>Valore sconto</label>
+            <input id="admin-coupon-valore" type="number" min="0" step="0.01" value="10" placeholder="Valore">
+          </div>
         </div>
-        <div class="filter-row" style="margin-top:0.5rem">
-          <input id="admin-coupon-valore" type="number" min="0" step="0.01" value="10" placeholder="Valore sconto">
-          <select id="admin-coupon-target">
-            <option value="Carrello">Tutto il carrello</option>
-            <option value="Cinema">Cinema specifico</option>
-            <option value="Film">Film specifico</option>
-          </select>
+        <label style="margin-top:0.5rem">Applicabile a</label>
+        <select id="admin-coupon-target">
+          <option value="Carrello">Tutto il carrello</option>
+          <option value="Cinema">Cinema specifico</option>
+          <option value="Film">Film specifico</option>
+        </select>
+        <select id="admin-coupon-cinema" class="hidden" style="margin-top:0.5rem">
+          <option value="">Seleziona cinema</option>
+        </select>
+        <input id="admin-coupon-targetid" type="number" class="hidden" placeholder="ID target" value="0">
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+          <div style="flex:1">
+            <label>Valido dal</label>
+            <input id="admin-coupon-dal" type="date">
+          </div>
+          <div style="flex:1">
+            <label>Valido al</label>
+            <input id="admin-coupon-al" type="date">
+          </div>
         </div>
-        <div class="filter-row" style="margin-top:0.5rem">
-          <select id="admin-coupon-cinema" class="hidden" aria-label="Cinema target">
-            <option value="">Seleziona cinema</option>
-          </select>
-          <input id="admin-coupon-targetid" type="number" class="hidden" placeholder="ID target" value="0">
-        </div>
-        <div class="filter-row" style="margin-top:0.5rem">
-          <label>Valido dal: <input id="admin-coupon-dal" type="date"></label>
-          <label>Valido al: <input id="admin-coupon-al" type="date"></label>
-        </div>
-        <button id="admin-coupon-add" class="button primary" style="margin-top:0.5rem">Crea offerta</button>
+        <button id="admin-coupon-add" class="button primary" style="margin-top:0.75rem;width:100%">Crea offerta</button>
       </article>
     </section>
   </main>

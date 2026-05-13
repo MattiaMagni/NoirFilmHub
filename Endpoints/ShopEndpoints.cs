@@ -11,6 +11,37 @@ public static class ShopEndpoints
 {
     public static RouteGroupBuilder MapShop(this RouteGroupBuilder group)
     {
+        group.MapPost("/upload-image", async (HttpRequest request) =>
+        {
+            if (!request.HasFormContentType)
+                return Results.BadRequest(new { error = "Expected multipart form data" });
+
+            var form = await request.ReadFormAsync();
+            var file = form.Files.GetFile("file");
+            if (file == null || file.Length == 0)
+                return Results.BadRequest(new { error = "Nessun file caricato" });
+
+            if (file.Length > 5 * 1024 * 1024)
+                return Results.BadRequest(new { error = "File troppo grande (max 5 MB)" });
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" && ext != ".gif")
+                return Results.BadRequest(new { error = "Formato non supportato (usa JPG, PNG, WEBP, GIF)" });
+
+            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "FilmFrontend", "wwwroot", "assets", "products");
+            Directory.CreateDirectory(uploadsDir);
+
+            var fileName = $"shop_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var publicPath = $"/assets/products/{fileName}";
+            return Results.Ok(new { path = publicPath });
+        }).RequireAuthorization("AdminOnly").DisableAntiforgery();
         group.MapGet("/products", async (FilmDbContext db) =>
         {
             var products = await db.Prodotti

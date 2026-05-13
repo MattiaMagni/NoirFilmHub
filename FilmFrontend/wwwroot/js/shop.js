@@ -239,19 +239,42 @@
     const nome = document.getElementById("admin-prod-nome")?.value?.trim();
     const sku = document.getElementById("admin-prod-sku")?.value?.trim();
     if (!nome || !sku) { setStatus("Nome e SKU obbligatori", "error"); return; }
+    const btn = document.getElementById("admin-prod-add");
+    btn.disabled = true; btn.textContent = "Creazione...";
     try {
+      let immaginePath = document.getElementById("admin-prod-immagine")?.value?.trim() || "";
+      const fileInput = document.getElementById("admin-prod-upload");
+      if (fileInput?.files?.length > 0) {
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        try {
+          const token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
+          const resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, {
+            method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData
+          });
+          if (resp.ok) {
+            const result = await resp.json();
+            immaginePath = result.path || immaginePath;
+          }
+        } catch {}
+      }
       await window.ApiClient.post("/shop/products", {
         sku, nome,
         descrizione: document.getElementById("admin-prod-desc")?.value || "",
         categoria: document.getElementById("admin-prod-categoria")?.value || "Gadget",
         prezzoBase: Number(document.getElementById("admin-prod-prezzo")?.value || 9.99),
-        immaginePath: document.getElementById("admin-prod-immagine")?.value || "",
-        attivo: true
+        immaginePath, attivo: true
       });
       setStatus("Prodotto creato!", "success");
+      document.getElementById("admin-prod-nome").value = "";
+      document.getElementById("admin-prod-sku").value = "";
+      document.getElementById("admin-prod-desc").value = "";
+      document.getElementById("admin-prod-immagine").value = "";
+      if (fileInput) fileInput.value = "";
     } catch (e) {
       setStatus(`Errore: ${e.message}`, "error");
     }
+    btn.disabled = false; btn.textContent = "Crea prodotto";
   });
 
   // Admin: coupon add
@@ -318,7 +341,7 @@
         document.getElementById("shop-admin-section")?.classList.remove("hidden");
       }
       await loadCinemasForFilter();
-      await loadGiftCards();
+      await Promise.all([loadGiftCards(), loadMerch(""), loadOffers("")]);
       setStatus("Shop pronto.", "success");
     } catch (e) {
       setStatus(`Errore: ${e.message}`, "error");

@@ -386,6 +386,41 @@ using (var scope = app.Services.CreateScope())
             );
         }
 
+        if (!await db.Coupons.AnyAsync(c => c.Codice == "NFH-BENVENUTO"))
+        {
+            var today = DateTime.Today;
+            db.Coupons.AddRange(
+                new Coupon
+                {
+                    Codice = "NFH-BENVENUTO", TipoSconto = "Percentuale", ValoreSconto = 10m,
+                    TipoTarget = "Carrello", MinImportoCarrello = 15m,
+                    ValidoDal = today.AddDays(-30), ValidoAl = today.AddYears(1),
+                    MaxUtilizzi = 500, MaxPerUtente = 1, Stackable = false, Attivo = true
+                },
+                new Coupon
+                {
+                    Codice = "NFH-LISSN20", TipoSconto = "Percentuale", ValoreSconto = 20m,
+                    TipoTarget = "Cinema", TargetId = 2, MinImportoCarrello = 20m,
+                    ValidoDal = today.AddDays(-7), ValidoAl = today,
+                    MaxUtilizzi = 100, MaxPerUtente = 1, Stackable = false, Attivo = true
+                },
+                new Coupon
+                {
+                    Codice = "NFH-FLASH5", TipoSconto = "Fisso", ValoreSconto = 5m,
+                    TipoTarget = "Carrello", MinImportoCarrello = 10m,
+                    ValidoDal = today, ValidoAl = today.AddDays(7),
+                    MaxUtilizzi = 200, MaxPerUtente = 1, Stackable = false, Attivo = true
+                },
+                new Coupon
+                {
+                    Codice = "NFH-VIP15", TipoSconto = "Percentuale", ValoreSconto = 15m,
+                    TipoTarget = "Carrello", MinImportoCarrello = 30m,
+                    ValidoDal = today, ValidoAl = today.AddMonths(3),
+                    MaxUtilizzi = 300, MaxPerUtente = 2, Stackable = false, Attivo = true
+                }
+            );
+        }
+
         logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)

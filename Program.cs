@@ -368,6 +368,11 @@ using (var scope = app.Services.CreateScope())
             );
         }
 
+        if (!await db.Prodotti.AnyAsync(p => p.Sku == "NFH-FLP-GR"))
+        {
+            db.Prodotti.Add(new Product { Sku = "NFH-FLP-GR", Nome = "Felpa Logo Noir", Descrizione = "Felpa con stampa logo Noir Film Hub frontale. Disponibile in grigio melange.", Categoria = "Abbigliamento", PrezzoBase = 39.99m });
+        }
+
         if (!await db.Prodotti.AnyAsync())
         {
             db.Prodotti.AddRange(

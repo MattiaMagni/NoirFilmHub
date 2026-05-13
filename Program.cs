@@ -421,6 +421,8 @@ using (var scope = app.Services.CreateScope())
             );
         }
 
+        await db.SaveChangesAsync();
+
         logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)

@@ -12,62 +12,54 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
+  <script src="/js/modal-utils.js" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
   <main class="page-shell ops-shell">
     <section class="ops-top-hero">
-      <div><p class="eyebrow">Admin</p><h1 class="ops-title">Gestione Negozio</h1><p class="ops-subtitle">Crea prodotti, gift card template e offerte.</p></div>
+      <div><p class="eyebrow">Admin</p><h1 class="ops-title">Gestione Negozio</h1><p class="ops-subtitle">Crea e modifica prodotti, gift card template e offerte.</p></div>
     </section>
     <div id="shop-admin-status" class="status info">Caricamento...</div>
 
     <section class="panel">
       <h3>Nuovo prodotto</h3>
-      <div id="admin-prod-form">
-        <div class="filter-row">
-          <input id="admin-prod-nome" type="text" placeholder="Nome" required>
-          <input id="admin-prod-sku" type="text" placeholder="SKU" required>
-        </div>
-        <div class="filter-row" style="margin-top:0.5rem">
-          <input id="admin-prod-desc" type="text" placeholder="Descrizione">
-          <select id="admin-prod-cat">
-            <option value="Abbigliamento">Abbigliamento</option>
-            <option value="Accessori">Accessori</option>
-            <option value="Food">Food</option>
-            <option value="Gadget">Gadget</option>
-          </select>
-        </div>
-        <div class="filter-row" style="margin-top:0.5rem">
-          <input id="admin-prod-price" type="number" min="0" step="0.01" value="9.99" placeholder="Prezzo">
-          <input id="admin-prod-img" type="text" placeholder="URL immagine">
-        </div>
-        <button id="admin-prod-add" class="button primary" style="margin-top:0.5rem">Crea prodotto</button>
+      <label>Nome</label><input id="admin-prod-nome" type="text" placeholder="es. Felpa Logo Noir" required>
+      <label>SKU</label><input id="admin-prod-sku" type="text" placeholder="es. NFH-FLP-GR" required>
+      <label>Descrizione</label><input id="admin-prod-desc" type="text" placeholder="Breve descrizione">
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+        <div style="flex:1"><label>Categoria</label><select id="admin-prod-cat"><option value="Abbigliamento">Abbigliamento</option><option value="Accessori">Accessori</option><option value="Food">Food</option><option value="Gadget">Gadget</option></select></div>
+        <div style="flex:1"><label>Prezzo (EUR)</label><input id="admin-prod-price" type="number" min="0" step="0.01" value="9.99"></div>
       </div>
+      <label>Immagine URL</label><input id="admin-prod-img" type="text" placeholder="URL o percorso immagine">
+      <label>Carica da file</label><input id="admin-prod-upload" type="file" accept="image/*">
+      <button id="admin-prod-add" class="button primary" style="margin-top:0.75rem;width:100%">Crea prodotto</button>
     </section>
 
     <section class="panel" style="margin-top:1rem">
       <h3>Prodotti esistenti</h3>
-      <div id="admin-prod-list" class="grid-cards"></div>
+      <div id="admin-prod-list"></div>
     </section>
 
     <section class="panel" style="margin-top:1rem">
       <h3>Nuova offerta / coupon</h3>
-      <div class="filter-row">
-        <input id="admin-coupon-code" type="text" placeholder="Codice (NFH-PROMO-XXXX)" required maxlength="32">
-        <select id="admin-coupon-type"><option value="Percentuale">Percentuale</option><option value="Fisso">Fisso</option></select>
+      <label>Codice</label><input id="admin-coupon-code" type="text" placeholder="NFH-PROMO-XXXX" required maxlength="32">
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+        <div style="flex:1"><label>Tipo</label><select id="admin-coupon-type"><option value="Percentuale">Percentuale (%)</option><option value="Fisso">Fisso (EUR)</option></select></div>
+        <div style="flex:1"><label>Valore</label><input id="admin-coupon-val" type="number" min="0" step="0.01" value="10"></div>
       </div>
-      <div class="filter-row" style="margin-top:0.5rem">
-        <input id="admin-coupon-val" type="number" min="0" step="0.01" value="10" placeholder="Valore">
-        <select id="admin-coupon-target"><option value="Carrello">Tutto il carrello</option><option value="Cinema">Cinema specifico</option></select>
+      <label>Target</label><select id="admin-coupon-target"><option value="Carrello">Tutto il carrello</option><option value="Cinema">Cinema specifico</option></select>
+      <select id="admin-coupon-cinema" class="hidden"><option value="">Seleziona cinema</option></select>
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+        <div style="flex:1"><label>Valido dal</label><input id="admin-coupon-dal" type="date"></div>
+        <div style="flex:1"><label>Valido al</label><input id="admin-coupon-al" type="date"></div>
       </div>
-      <div class="filter-row" style="margin-top:0.5rem">
-        <select id="admin-coupon-cinema" class="hidden"><option value="">Seleziona cinema</option></select>
-      </div>
-      <div class="filter-row" style="margin-top:0.5rem">
-        <label>Dal: <input id="admin-coupon-dal" type="date"></label>
-        <label>Al: <input id="admin-coupon-al" type="date"></label>
-      </div>
-      <button id="admin-coupon-add" class="button primary" style="margin-top:0.5rem">Crea offerta</button>
+      <button id="admin-coupon-add" class="button primary" style="margin-top:0.75rem;width:100%">Crea offerta</button>
+    </section>
+
+    <section class="panel" style="margin-top:1rem">
+      <h3>Offerte esistenti</h3>
+      <div id="admin-coupon-list"></div>
     </section>
   </main>
   <div id="footer-container"></div>
@@ -78,12 +70,13 @@
       initAdminShop();
     });
 
+    function formatCurrency(v) { return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(Number(v || 0)); }
+
     async function initAdminShop() {
       var st = document.getElementById("shop-admin-status");
       function s(m,k) { st.className="status "+k; st.textContent=m; }
-      s("Pronto.","success");
+      s("Caricamento...","info");
 
-      // Load cinemas for coupon target
       try { var cinemas = await window.ApiClient.get("/cinemas"); var sel = document.getElementById("admin-coupon-cinema"); if(sel) { sel.innerHTML='<option value="">Seleziona cinema</option>'+cinemas.map(c=>'<option value="'+c.id+'">'+c.nome+' - '+c.citta+'</option>').join(""); } } catch {}
 
       document.getElementById("admin-coupon-target").addEventListener("change", function() {
@@ -95,16 +88,39 @@
         var nome = document.getElementById("admin-prod-nome").value.trim();
         var sku = document.getElementById("admin-prod-sku").value.trim();
         if(!nome||!sku) { s("Nome e SKU obbligatori.","error"); return; }
+        var btn = document.getElementById("admin-prod-add"); btn.disabled=true; btn.textContent="Creazione...";
         try {
+          var immaginePath = document.getElementById("admin-prod-img").value.trim();
+          var fileInput = document.getElementById("admin-prod-upload");
+          if(fileInput?.files?.length > 0) {
+            var formData = new FormData(); formData.append("file", fileInput.files[0]);
+            try {
+              var token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
+              var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+              if(resp.ok) { var r = await resp.json(); immaginePath = r.path || immaginePath; }
+            } catch {}
+          }
           await window.ApiClient.post("/shop/products", {
             sku, nome, descrizione: document.getElementById("admin-prod-desc").value,
             categoria: document.getElementById("admin-prod-cat").value,
             prezzoBase: Number(document.getElementById("admin-prod-price").value||9.99),
-            immaginePath: document.getElementById("admin-prod-img").value, attivo: true
+            immaginePath, attivo: true
           });
           s("Prodotto creato!","success"); loadProducts();
+          document.getElementById("admin-prod-nome").value=""; document.getElementById("admin-prod-sku").value="";
+          document.getElementById("admin-prod-desc").value=""; document.getElementById("admin-prod-img").value="";
+          if(fileInput) fileInput.value="";
         } catch(e) { s("Errore: "+e.message,"error"); }
+        btn.disabled=false; btn.textContent="Crea prodotto";
       });
+
+      function validateCoupon(tipo, valore, dal, al) {
+        if(tipo==="Percentuale" && (valore<=0 || valore>100)) return "La percentuale deve essere tra 1 e 100";
+        if(tipo==="Fisso" && valore<=0) return "Il valore fisso deve essere maggiore di 0";
+        if(dal && dal < new Date().toISOString().slice(0,10)) return "La data di inizio non puo essere nel passato";
+        if(dal && al && al < dal) return "La data di fine deve essere >= data di inizio";
+        return null;
+      }
 
       // Add coupon
       document.getElementById("admin-coupon-add").addEventListener("click", async () => {
@@ -113,16 +129,25 @@
         var tipoTarget = document.getElementById("admin-coupon-target").value;
         var targetId = tipoTarget==="Cinema" ? Number(document.getElementById("admin-coupon-cinema").value||0) : null;
         if(targetId===0) targetId=null;
+        var today = new Date().toISOString().slice(0,10);
+        var nextMonth = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+        var tipo = document.getElementById("admin-coupon-type").value;
+        var valore = Number(document.getElementById("admin-coupon-val").value||10);
+        var dal = document.getElementById("admin-coupon-dal").value||today;
+        var al = document.getElementById("admin-coupon-al").value||nextMonth;
+        var vErr = validateCoupon(tipo, valore, dal, al);
+        if(vErr) { s(vErr,"error"); return; }
         try {
           await window.ApiClient.post("/coupons", {
             codice: code, tipoSconto: document.getElementById("admin-coupon-type").value,
             valoreSconto: Number(document.getElementById("admin-coupon-val").value||10),
             tipoTarget, targetId, quantitaMinima: 1,
-            validoDal: document.getElementById("admin-coupon-dal").value||new Date().toISOString().slice(0,10),
-            validoAl: document.getElementById("admin-coupon-al").value||new Date(Date.now()+30*86400000).toISOString().slice(0,10),
+            validoDal: document.getElementById("admin-coupon-dal").value||today,
+            validoAl: document.getElementById("admin-coupon-al").value||nextMonth,
             maxUtilizzi: 0, maxPerUtente: 1, stackable: false, attivo: true
           });
-          s("Offerta creata!","success");
+          s("Offerta creata!","success"); loadCoupons();
+          document.getElementById("admin-coupon-code").value="";
         } catch(e) { s("Errore: "+e.message,"error"); }
       });
 
@@ -132,10 +157,147 @@
           var list = document.getElementById("admin-prod-list");
           if(!list) return;
           if(!prods.length) { list.innerHTML="<p class='subtle'>Nessun prodotto.</p>"; return; }
-          list.innerHTML = prods.map(p=>'<div class="card"><div class="card-body"><h4>'+p.nome+'</h4><p class="subtle">'+p.sku+' - '+p.prezzoBase.toFixed(2)+' EUR</p></div></div>').join("");
-        } catch {}
+          list.innerHTML = prods.map(p=>'<div class="card" style="padding:0.5rem;margin-bottom:0.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+p.nome+'</strong><span class="subtle" style="margin-left:0.5rem">'+p.sku+'</span><span style="margin-left:0.5rem">'+formatCurrency(p.prezzoBase)+'</span></div><div style="display:flex;gap:0.25rem"><button class="btn-small secondary edit-product-btn" data-id="'+p.id+'">Modifica</button><button class="btn-small danger delete-product-btn" data-id="'+p.id+'">Elimina</button></div></div></div>').join("");
+          list.querySelectorAll(".edit-product-btn").forEach(function(btn) {
+            btn.addEventListener("click", async function() {
+              var id = Number(this.dataset.id);
+              try { var p = await window.ApiClient.get("/shop/products/"+id); openProductEditModal(p, s, loadProducts); }
+              catch(e) { s("Errore: "+e.message,"error"); }
+            });
+          });
+          list.querySelectorAll(".delete-product-btn").forEach(function(btn) {
+            btn.addEventListener("click", async function() {
+              var id = Number(this.dataset.id);
+              if(!window.confirm("Eliminare il prodotto #"+id+"?")) return;
+              try { await window.ApiClient.delete("/shop/products/"+id); s("Prodotto eliminato.","success"); loadProducts(); }
+              catch(e) { s("Errore: "+e.message,"error"); }
+            });
+          });
+        } catch(e) { s("Errore: "+e.message,"error"); }
       }
+
+      async function loadCoupons() {
+        try {
+          var coupons = await window.ApiClient.get("/coupons");
+          var list = document.getElementById("admin-coupon-list");
+          if(!list) return;
+          if(!coupons.length) { list.innerHTML="<p class='subtle'>Nessuna offerta.</p>"; return; }
+          list.innerHTML = coupons.map(c=> {
+            var scontoLabel = c.tipoSconto === "Percentuale" ? c.valoreSconto+"%" : formatCurrency(c.valoreSconto);
+            var stato = c.attivo ? "Attiva" : "Non attiva";
+            return '<div class="card" style="padding:0.5rem;margin-bottom:0.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>'+c.codice+'</strong><span class="subtle" style="margin-left:0.5rem">'+scontoLabel+'</span><span style="margin-left:0.5rem;font-size:0.75rem">'+stato+'</span></div><div style="display:flex;gap:0.25rem"><button class="btn-small secondary edit-coupon-btn" data-id="'+c.id+'">Modifica</button><button class="btn-small danger delete-coupon-btn" data-id="'+c.id+'">Elimina</button></div></div></div>';
+          }).join("");
+          list.querySelectorAll(".edit-coupon-btn").forEach(function(btn) {
+            btn.addEventListener("click", function() {
+              var id = Number(this.dataset.id);
+              var c = coupons.find(function(x){return x.id===id;});
+              if(c) openCouponEditModal(c, s, loadCoupons);
+            });
+          });
+          list.querySelectorAll(".delete-coupon-btn").forEach(function(btn) {
+            btn.addEventListener("click", async function() {
+              var id = Number(this.dataset.id);
+              if(!window.confirm("Eliminare l'offerta #"+id+"?")) return;
+              try { await window.ApiClient.delete("/coupons/"+id); s("Offerta eliminata.","success"); loadCoupons(); }
+              catch(e) { s("Errore: "+e.message,"error"); }
+            });
+          });
+        } catch(e) { s("Errore: "+e.message,"error"); }
+      }
+
+      function openProductEditModal(p, s, reload) {
+        var content = '<h3>Modifica prodotto #'+p.id+'</h3>'+
+          '<label>Nome</label><input id="modal-prod-nome" type="text" value="'+(p.nome||"")+'">'+
+          '<label>SKU</label><input id="modal-prod-sku" type="text" value="'+(p.sku||"")+'">'+
+          '<label>Descrizione</label><input id="modal-prod-desc" type="text" value="'+(p.descrizione||"")+'">'+
+          '<div style="display:flex;gap:0.5rem;margin-top:0.5rem"><div style="flex:1"><label>Categoria</label><select id="modal-prod-cat">'+
+          ["Abbigliamento","Accessori","Food","Gadget"].map(function(c){return '<option value="'+c+'"'+(p.categoria===c?" selected":"")+'>'+c+'</option>';}).join("")+
+          '</select></div><div style="flex:1"><label>Prezzo</label><input id="modal-prod-prezzo" type="number" step="0.01" value="'+p.prezzoBase+'"></div></div>'+
+          '<label>Immagine</label><input id="modal-prod-img" type="text" value="'+(p.immaginePath||"")+'">'+
+          '<label>Carica da file</label><input id="modal-prod-upload" type="file" accept="image/*">'+
+          '<div style="text-align:right;margin-top:1rem"><button class="button primary" id="modal-save">Salva modifiche</button> <button class="button secondary" id="modal-cancel">Annulla</button></div>';
+        var card = window.ModalUtils.open(content);
+        if(!card) return;
+        card.querySelector("#modal-cancel").addEventListener("click", function() {
+          window.ModalUtils.close();
+        });
+        card.querySelector("#modal-save").addEventListener("click", async function() {
+          var nome = document.getElementById("modal-prod-nome").value.trim();
+          var sku = document.getElementById("modal-prod-sku").value.trim();
+          if(!nome||!sku) { alert("Nome e SKU obbligatori"); return; }
+          var immaginePath = document.getElementById("modal-prod-img").value.trim();
+          var fileInput = document.getElementById("modal-prod-upload");
+          if(fileInput && fileInput.files && fileInput.files.length > 0) {
+            var formData = new FormData(); formData.append("file", fileInput.files[0]);
+            try {
+              var token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
+              var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+              if(resp.ok) { var r = await resp.json(); immaginePath = r.path || immaginePath; }
+            } catch {}
+          }
+          try {
+            await window.ApiClient.put("/shop/products/"+p.id, {
+              sku, nome, descrizione: document.getElementById("modal-prod-desc").value.trim(),
+              categoria: document.getElementById("modal-prod-cat").value,
+              prezzoBase: Number(document.getElementById("modal-prod-prezzo").value),
+              immaginePath,
+              attivo: p.attivo !== false
+            });
+            window.ModalUtils.close();
+            s("Prodotto aggiornato!","success");
+            reload();
+          } catch(e) { alert("Errore: "+e.message); }
+        });
+      }
+
+      function openCouponEditModal(c, s, reload) {
+        var dal = c.validoDal ? String(c.validoDal).slice(0,10) : new Date().toISOString().slice(0,10);
+        var al = c.validoAl ? String(c.validoAl).slice(0,10) : new Date().toISOString().slice(0,10);
+        var content = '<h3>Modifica offerta #'+c.id+'</h3>'+
+          '<label>Codice</label><input id="modal-coupon-code" type="text" value="'+(c.codice||"")+'" maxlength="32">'+
+          '<div style="display:flex;gap:0.5rem;margin-top:0.5rem"><div style="flex:1"><label>Tipo</label><select id="modal-coupon-type">'+
+          ["Percentuale","Fisso"].map(function(t){return '<option value="'+t+'"'+(c.tipoSconto===t?" selected":"")+'>'+t+'</option>';}).join("")+
+          '</select></div><div style="flex:1"><label>Valore</label><input id="modal-coupon-val" type="number" step="0.01" value="'+c.valoreSconto+'"></div></div>'+
+          '<label>Target</label><select id="modal-coupon-target">'+
+          ["Carrello","Cinema","Film"].map(function(t){return '<option value="'+t+'"'+(c.tipoTarget===t?" selected":"")+'>'+t+'</option>';}).join("")+
+          '</select>'+
+          '<label>Target ID</label><input id="modal-coupon-tid" type="number" value="'+(c.targetId||0)+'">'+
+          '<div style="display:flex;gap:0.5rem;margin-top:0.5rem"><div style="flex:1"><label>Valido dal</label><input id="modal-coupon-dal" type="date" value="'+dal+'"></div><div style="flex:1"><label>Valido al</label><input id="modal-coupon-al" type="date" value="'+al+'"></div></div>'+
+          '<div style="text-align:right;margin-top:1rem"><button class="button primary" id="modal-save">Salva modifiche</button> <button class="button secondary" id="modal-cancel">Annulla</button></div>';
+        var card = window.ModalUtils.open(content);
+        if(!card) return;
+        card.querySelector("#modal-cancel").addEventListener("click", function() {
+          window.ModalUtils.close();
+        });
+        card.querySelector("#modal-save").addEventListener("click", async function() {
+          var code = document.getElementById("modal-coupon-code").value.trim();
+          if(!code) { alert("Codice obbligatorio"); return; }
+          var tipo = document.getElementById("modal-coupon-type").value;
+          var valore = Number(document.getElementById("modal-coupon-val").value);
+          var dal = document.getElementById("modal-coupon-dal").value;
+          var al = document.getElementById("modal-coupon-al").value;
+          var vErr = validateCoupon(tipo, valore, dal, al);
+          if(vErr) { alert(vErr); return; }
+          try {
+            await window.ApiClient.put("/coupons/"+c.id, {
+              codice: code, tipoSconto: document.getElementById("modal-coupon-type").value,
+              valoreSconto: Number(document.getElementById("modal-coupon-val").value),
+              tipoTarget: document.getElementById("modal-coupon-target").value,
+              targetId: Number(document.getElementById("modal-coupon-tid").value)||null,
+              quantitaMinima: c.quantitaMinima||1, validoDal: document.getElementById("modal-coupon-dal").value,
+              validoAl: document.getElementById("modal-coupon-al").value, maxUtilizzi: c.maxUtilizzi||0,
+              maxPerUtente: c.maxPerUtente||1, stackable: c.stackable||false, attivo: c.attivo !== false
+            });
+            window.ModalUtils.close();
+            s("Offerta aggiornata!","success");
+            reload();
+          } catch(e) { alert("Errore: "+e.message); }
+        });
+      }
+
       await loadProducts();
+      await loadCoupons();
+      s("Pronto.","success");
     }
   </script>
 </body>

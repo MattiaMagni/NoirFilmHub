@@ -50,8 +50,12 @@
         setStatus("Pronto per il checkout.", "success");
       }
 
-      if (!cartRefreshTimer) {
+      var hasTickets = cart.items.some(function(i) { return i.itemType === "Ticket"; });
+      if (!cartRefreshTimer && hasTickets) {
         cartRefreshTimer = setInterval(loadCart, 30000);
+      } else if (cartRefreshTimer && !hasTickets) {
+        clearInterval(cartRefreshTimer);
+        cartRefreshTimer = null;
       }
     } catch (e) {
       itemsEl.innerHTML = "<p class='subtle'>Errore caricamento carrello.</p>";

@@ -56,6 +56,7 @@ public static class CouponEndpoints
         group.MapGet("/", async (FilmDbContext db) =>
         {
             var coupons = await db.Coupons
+                .Where(c => c.Attivo)
                 .OrderByDescending(c => c.CreatoIl)
                 .ToListAsync();
 
@@ -87,7 +88,7 @@ public static class CouponEndpoints
             }));
         }).AllowAnonymous();
 
-        group.MapPost("/{id:int}/redeem", async (int id, ClaimsPrincipal user, FilmDbContext db, EmailService emailService) =>
+        group.MapPost("/{id:int}/redeem", async (int id, ClaimsPrincipal user, FilmDbContext db, HttpContext httpContext) =>
         {
             var userIdVal = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdVal, out var userId))
@@ -97,17 +98,14 @@ public static class CouponEndpoints
             if (coupon == null || !coupon.Attivo)
                 return Results.BadRequest(new { error = "Offerta non trovata" });
 
-            var now = DateTime.UtcNow;
-            if (now < coupon.ValidoDal || now > coupon.ValidoAl)
+            var today = DateTime.Today;
+            if (today < coupon.ValidoDal.Date || today > coupon.ValidoAl.Date)
                 return Results.BadRequest(new { error = "Offerta scaduta o non ancora valida" });
 
-            if (coupon.MaxUtilizzi > 0 && coupon.UtilizziAttuali >= coupon.MaxUtilizzi)
-                return Results.BadRequest(new { error = "Offerta esaurita" });
-
             var userCount = await db.CouponUsages
-                .CountAsync(cu => cu.CouponId == coupon.Id && cu.UtenteId == userId);
+                .CountAsync(cu => cu.CouponId == coupon.Id && cu.UtenteId == userId && cu.CartId != null);
             if (userCount >= coupon.MaxPerUtente)
-                return Results.BadRequest(new { error = "Hai gia riscattato questa offerta" });
+                return Results.BadRequest(new { error = "Hai gia utilizzato questa offerta" });
 
             var utente = await db.Utenti.FindAsync(userId);
             if (utente == null) return Results.Unauthorized();
@@ -119,9 +117,14 @@ public static class CouponEndpoints
                 cinemaNome = cinema != null ? $"{cinema.Nome} - {cinema.Citta}" : null;
             }
 
-            await emailService.SendCouponRedeemEmail(
-                utente.Email, utente.Nome, coupon.Codice,
-                coupon.TipoSconto, coupon.ValoreSconto, cinemaNome, coupon.ValidoAl);
+            try
+            {
+                var emailService = httpContext.RequestServices.GetRequiredService<EmailService>();
+                await emailService.SendCouponRedeemEmail(
+                    utente.Email, utente.Nome, coupon.Codice,
+                    coupon.TipoSconto, coupon.ValoreSconto, cinemaNome, coupon.ValidoAl);
+            }
+            catch { /* email non essenziale, non bloccare il riscatto */ }
 
             return Results.Ok(new
             {
@@ -139,6 +142,9 @@ public static class CouponEndpoints
             if (string.IsNullOrWhiteSpace(coupon.Codice))
                 return Results.BadRequest(new { error = "Codice obbligatorio" });
 
+            var err = ValidateCoupon(coupon);
+            if (err != null) return Results.BadRequest(new { error = err });
+
             coupon.Codice = coupon.Codice.ToUpperInvariant();
             db.Coupons.Add(coupon);
             await db.SaveChangesAsync();
@@ -149,6 +155,9 @@ public static class CouponEndpoints
         {
             var coupon = await db.Coupons.FindAsync(id);
             if (coupon == null) return Results.NotFound();
+
+            var err = ValidateCoupon(updated);
+            if (err != null) return Results.BadRequest(new { error = err });
 
             coupon.TipoSconto = updated.TipoSconto;
             coupon.ValoreSconto = updated.ValoreSconto;
@@ -194,5 +203,18 @@ public static class CouponEndpoints
     public class ValidateCouponRequest
     {
         public string Codice { get; set; } = string.Empty;
+    }
+
+    private static string? ValidateCoupon(Coupon c)
+    {
+        if (c.TipoSconto == "Percentuale" && (c.ValoreSconto <= 0 || c.ValoreSconto > 100))
+            return "La percentuale deve essere tra 1 e 100";
+        if (c.TipoSconto == "Fisso" && c.ValoreSconto <= 0)
+            return "Il valore fisso deve essere maggiore di 0";
+        if (c.ValidoDal.Date < DateTime.Today)
+            return "La data di inizio non puo essere nel passato";
+        if (c.ValidoAl.Date < c.ValidoDal.Date)
+            return "La data di fine deve essere >= data di inizio";
+        return null;
     }
 }

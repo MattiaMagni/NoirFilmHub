@@ -165,6 +165,56 @@
     };
   }
 
+  function formatCurrency(v) {
+    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(Number(v || 0));
+  }
+
+  function renderOrders(orders) {
+    var body = document.getElementById("orders-body");
+    if (!body) return;
+    if (!Array.isArray(orders) || orders.length === 0) {
+      body.innerHTML = "<p class='subtle'>Nessun ordine trovato.</p>";
+      return;
+    }
+    body.innerHTML = orders.map(o => {
+      var statoClass = o.stato === "Confermata" || o.stato === "Completato" ? "success" : o.stato === "Annullata" ? "danger" : "info";
+      var dataOrdine = o.data ? new Date(o.data).toLocaleDateString("it-IT") + " " + new Date(o.data).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }) : "";
+      var righe = (o.righe || []).map(function (r) {
+        var dett = "";
+        try {
+          var d = JSON.parse(r.dettaglio || "{}");
+          if (d.film) dett = d.film + " - " + (d.cinema || "") + " | " + (d.data || "") + " " + (d.ora || "");
+          else if (d.emailDestinatario) dett = "Per: " + d.emailDestinatario;
+          else if (r.dettaglio && r.dettaglio.length < 50) dett = r.dettaglio;
+        } catch { dett = r.dettaglio || ""; }
+        return "<div style='display:flex;justify-content:space-between;align-items:center;padding:0.25rem 0'><span>" + r.descrizione + (dett ? " <span class='subtle' style='font-size:0.75rem'>" + dett + "</span>" : "") + (r.quantita > 1 ? " x" + r.quantita : "") + "</span><strong>" + formatCurrency(r.prezzo || 0) + "</strong></div>";
+      }).join("");
+      var footer = "";
+      if (o.sconto > 0) footer += "<div style='display:flex;justify-content:space-between;font-size:0.8rem'><span>Sconto coupon</span><span style='color:var(--color-accent)'>-" + formatCurrency(o.sconto) + "</span></div>";
+      if (o.importoGiftCard > 0) footer += "<div style='display:flex;justify-content:space-between;font-size:0.8rem'><span>Saldo gift card</span><span style='color:var(--color-accent)'>-" + formatCurrency(o.importoGiftCard) + "</span></div>";
+      footer += "<div style='display:flex;justify-content:space-between;font-weight:700;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--color-border)'><span>Totale</span><span>" + formatCurrency(o.totale) + "</span></div>";
+      return `<div class="panel" style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <div><strong>${o.id}</strong> <span class="tag">${o.tipo}</span></div>
+          <div><span class="tag ${statoClass}">${o.stato}</span></div>
+        </div>
+        <p class="subtle" style="font-size:0.75rem">${dataOrdine}</p>
+        ${righe}
+        ${footer}
+      </div>`;
+    }).join("");
+  }
+
+  async function loadOrders() {
+    try {
+      var orders = await window.ApiClient.get("/orders/mine");
+      renderOrders(orders);
+    } catch {
+      var body = document.getElementById("orders-body");
+      if (body) body.innerHTML = "<p class='subtle'>Errore caricamento ordini.</p>";
+    }
+  }
+
   async function loadProfile() {
     setStatus("Caricamento...", "info");
     try {
@@ -180,6 +230,7 @@
       renderPrenotazioni(miePrenotazioni);
       renderGiftCards(giftCards);
       renderSecurity(me);
+      await loadOrders();
       setStatus("Account aggiornato.", "success");
     } catch (error) { prenotazioniBody.innerHTML = "<tr><td colspan='8' class='subtle'>Errore caricamento.</td></tr>"; setStatus(`Errore: ${error.message}`, "error"); }
   }

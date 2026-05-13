@@ -186,12 +186,13 @@
     const list = document.getElementById("offers-list");
     if (!list) return;
     try {
+      const redeemedIds = JSON.parse(sessionStorage.getItem("redeemed_coupon_ids") || "[]");
       const coupons = await window.ApiClient.get("/coupons");
       let activeCoupons = coupons.filter(c => {
         var now = new Date();
         var validoAl = new Date(c.validoAl);
         var validoDal = new Date(c.validoDal);
-        return c.attivo && now >= validoDal && now <= validoAl;
+        return c.attivo && now >= validoDal && now <= validoAl && !redeemedIds.includes(c.id);
       });
       if (cinemaId) {
         const cid = Number(cinemaId);
@@ -234,7 +235,9 @@
           btn.disabled = true;
           btn.textContent = "Riscatto...";
           try {
-            const result = await window.ApiClient.post(`/coupons/${id}/redeem`);
+            const result = await window.ApiClient.post(`/coupons/${id}/redeem`, {});
+            var redeemed = JSON.parse(sessionStorage.getItem("redeemed_coupon_ids") || "[]");
+            if (!redeemed.includes(id)) { redeemed.push(id); sessionStorage.setItem("redeemed_coupon_ids", JSON.stringify(redeemed)); }
             showRedeemToast(result);
             setStatus("Offerta riscattata! Controlla la tua email.", "success");
           } catch (e) {
@@ -379,14 +382,21 @@
     if (tipoTarget === "Cinema") targetId = Number(document.getElementById("admin-coupon-cinema")?.value || 0);
     if (tipoTarget === "Film") targetId = Number(document.getElementById("admin-coupon-targetid")?.value || 0);
     if (targetId === 0) targetId = null;
+    const tipo = document.getElementById("admin-coupon-tipo")?.value || "Fisso";
+    const valore = Number(document.getElementById("admin-coupon-valore")?.value || 10);
+    const dal = document.getElementById("admin-coupon-dal")?.value || new Date().toISOString().slice(0, 10);
+    const al = document.getElementById("admin-coupon-al")?.value || new Date(Date.now() + 30*86400000).toISOString().slice(0, 10);
+    if (tipo === "Percentuale" && (valore <= 0 || valore > 100)) { setStatus("La percentuale deve essere tra 1 e 100", "error"); return; }
+    if (tipo === "Fisso" && valore <= 0) { setStatus("Il valore fisso deve essere maggiore di 0", "error"); return; }
+    if (dal < new Date().toISOString().slice(0, 10)) { setStatus("La data di inizio non puo essere nel passato", "error"); return; }
+    if (al < dal) { setStatus("La data di fine deve essere >= data di inizio", "error"); return; }
 
     try {
       await window.ApiClient.post("/coupons", {
-        codice, tipoSconto: document.getElementById("admin-coupon-tipo")?.value || "Fisso",
-        valoreSconto: Number(document.getElementById("admin-coupon-valore")?.value || 10),
+        codice, tipoSconto: tipo,
+        valoreSconto: valore,
         tipoTarget: tipoTarget || "Carrello", targetId, quantitaMinima: 1,
-        validoDal: document.getElementById("admin-coupon-dal")?.value || new Date().toISOString().slice(0, 10),
-        validoAl: document.getElementById("admin-coupon-al")?.value || new Date(Date.now() + 30*86400000).toISOString().slice(0, 10),
+        validoDal: dal, validoAl: al,
         maxUtilizzi: 0, maxPerUtente: 1, stackable: false, attivo: true
       });
       setStatus("Offerta creata!", "success");
@@ -423,6 +433,7 @@
               <span style="margin-left:0.5rem">${formatCurrency(p.prezzoBase)}</span>
             </div>
             <button class="btn-small secondary edit-product" data-id="${p.id}">Modifica</button>
+            <button class="btn-small danger delete-product" data-id="${p.id}">Elimina</button>
           </div>
         </div>
       `).join("");
@@ -433,6 +444,14 @@
             const p = await window.ApiClient.get(`/shop/products/${id}`);
             openProductEditModal(p);
           } catch (e) { setStatus(`Errore: ${e.message}`, "error"); }
+        });
+      });
+      list.querySelectorAll(".delete-product").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.id);
+          if (!window.confirm(`Eliminare il prodotto #${id}?`)) return;
+          try { await window.ApiClient.delete(`/shop/products/${id}`); setStatus("Prodotto eliminato.", "success"); loadAdminProducts(); }
+          catch (e) { setStatus(`Errore: ${e.message}`, "error"); }
         });
       });
     } catch { list.innerHTML = ""; }
@@ -448,28 +467,38 @@
         <div style="flex:1"><label>Categoria</label><select id="modal-prod-cat">${["Abbigliamento","Accessori","Food","Gadget"].map(c => `<option value="${c}" ${p.categoria===c?"selected":""}>${c}</option>`).join("")}</select></div>
         <div style="flex:1"><label>Prezzo</label><input id="modal-prod-prezzo" type="number" step="0.01" value="${p.prezzoBase}"></div>
       </div>
-      <label style="margin-top:0.5rem">Immagine</label><input id="modal-prod-img" type="text" value="${p.immaginePath || ""}">
-      <div style="text-align:right;margin-top:1rem">
-        <button class="button primary" id="modal-prod-save">Salva modifiche</button>
-        <button class="button secondary" id="modal-prod-cancel">Annulla</button>
-      </div>`;
-    var card = window.ModalUtils.open(content);
-    if (!card) return;
-    card.querySelector("#modal-prod-cancel").addEventListener("click", () => window.ModalUtils.close());
-    card.querySelector("#modal-prod-save").addEventListener("click", async () => {
-      var nome = document.getElementById("modal-prod-nome").value.trim();
-      var sku = document.getElementById("modal-prod-sku").value.trim();
-      if (!nome || !sku) { alert("Nome e SKU obbligatori"); return; }
-      if (!window.confirm("Salvare le modifiche?")) return;
-      try {
-        await window.ApiClient.put(`/shop/products/${p.id}`, {
-          sku, nome,
-          descrizione: document.getElementById("modal-prod-desc").value.trim(),
-          categoria: document.getElementById("modal-prod-cat").value,
-          prezzoBase: Number(document.getElementById("modal-prod-prezzo").value),
-          immaginePath: document.getElementById("modal-prod-img").value.trim(),
-          attivo: p.attivo !== false
-        });
+       <label style="margin-top:0.5rem">Immagine</label><input id="modal-prod-img" type="text" value="${p.immaginePath || ""}">
+       <label style="margin-top:0.5rem">Carica da file</label><input id="modal-prod-upload" type="file" accept="image/*">
+       <div style="text-align:right;margin-top:1rem">
+         <button class="button primary" id="modal-prod-save">Salva modifiche</button>
+         <button class="button secondary" id="modal-prod-cancel">Annulla</button>
+       </div>`;
+     var card = window.ModalUtils.open(content);
+     if (!card) return;
+     card.querySelector("#modal-prod-cancel").addEventListener("click", () => window.ModalUtils.close());
+     card.querySelector("#modal-prod-save").addEventListener("click", async () => {
+       var nome = document.getElementById("modal-prod-nome").value.trim();
+       var sku = document.getElementById("modal-prod-sku").value.trim();
+       if (!nome || !sku) { alert("Nome e SKU obbligatori"); return; }
+       var immaginePath = document.getElementById("modal-prod-img").value.trim();
+       var fileInput = document.getElementById("modal-prod-upload");
+       if (fileInput && fileInput.files && fileInput.files.length > 0) {
+         var formData = new FormData(); formData.append("file", fileInput.files[0]);
+         try {
+           var token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
+           var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+           if(resp.ok) { var r = await resp.json(); immaginePath = r.path || immaginePath; }
+         } catch {}
+       }
+       try {
+         await window.ApiClient.put(`/shop/products/${p.id}`, {
+           sku, nome,
+           descrizione: document.getElementById("modal-prod-desc").value.trim(),
+           categoria: document.getElementById("modal-prod-cat").value,
+           prezzoBase: Number(document.getElementById("modal-prod-prezzo").value),
+           immaginePath,
+           attivo: p.attivo !== false
+         });
         window.ModalUtils.close();
         setStatus("Prodotto aggiornato!", "success");
         await loadAdminProducts();
@@ -492,6 +521,7 @@
               <span style="margin-left:0.5rem;font-size:0.75rem">${c.attivo ? "Attiva" : "Non attiva"}</span>
             </div>
             <button class="btn-small secondary edit-coupon" data-id="${c.id}">Modifica</button>
+            <button class="btn-small danger delete-coupon" data-id="${c.id}">Elimina</button>
           </div>
         </div>
       `).join("");
@@ -502,10 +532,17 @@
             const c = await window.ApiClient.get(`/coupons/${id}/usage`).then(() => window.ApiClient.get(`/coupons`)).then(cs => cs.find(x => x.id === id));
             openCouponEditModal(c);
           } catch (e) {
-            // fallback: use the coupon data from the list
             var item = coupons.find(x => x.id === id);
             if (item) openCouponEditModal(item);
           }
+        });
+      });
+      list.querySelectorAll(".delete-coupon").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.id);
+          if (!window.confirm(`Eliminare l'offerta #${id}?`)) return;
+          try { await window.ApiClient.delete(`/coupons/${id}`); setStatus("Offerta eliminata.", "success"); loadAdminCoupons(); }
+          catch (e) { setStatus(`Errore: ${e.message}`, "error"); }
         });
       });
     } catch { list.innerHTML = ""; }
@@ -538,11 +575,18 @@
     card.querySelector("#modal-coupon-save").addEventListener("click", async () => {
       var code = document.getElementById("modal-coupon-code").value.trim();
       if (!code) { alert("Codice obbligatorio"); return; }
-      if (!window.confirm("Salvare le modifiche?")) return;
+      var tipo = document.getElementById("modal-coupon-type").value;
+      var valore = Number(document.getElementById("modal-coupon-val").value);
+      var dal = document.getElementById("modal-coupon-dal").value;
+      var al = document.getElementById("modal-coupon-al").value;
+      if (tipo === "Percentuale" && (valore <= 0 || valore > 100)) { alert("La percentuale deve essere tra 1 e 100"); return; }
+      if (tipo === "Fisso" && valore <= 0) { alert("Il valore fisso deve essere maggiore di 0"); return; }
+      if (dal && dal < new Date().toISOString().slice(0,10)) { alert("La data di inizio non puo essere nel passato"); return; }
+      if (dal && al && al < dal) { alert("La data di fine deve essere >= data di inizio"); return; }
       try {
         await window.ApiClient.put(`/coupons/${c.id}`, {
-          codice: code, tipoSconto: document.getElementById("modal-coupon-type").value,
-          valoreSconto: Number(document.getElementById("modal-coupon-val").value),
+          codice: code, tipoSconto: tipo,
+          valoreSconto: valore,
           tipoTarget: document.getElementById("modal-coupon-target").value,
           targetId: Number(document.getElementById("modal-coupon-tid").value) || null,
           quantitaMinima: c.quantitaMinima || 1,

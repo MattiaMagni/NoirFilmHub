@@ -449,6 +449,73 @@ app.UseStatusCodePages(async statusContext =>
 
 app.MapGet("/", () => Results.Ok("FilmAPI running"));
 
+app.MapGet("/orders/mine", async (ClaimsPrincipal user, FilmDbContext db) =>
+{
+    var userIdVal = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (!int.TryParse(userIdVal, out var userId))
+        return Results.Unauthorized();
+
+    var bookings = await db.Prenotazioni
+        .AsNoTracking()
+        .Include(p => p.Proiezione).ThenInclude(pr => pr.Film)
+        .Include(p => p.Proiezione).ThenInclude(pr => pr.Cinema)
+        .Where(p => p.UtenteId == userId && (p.Stato == "Confermata" || p.Stato == "Annullata"))
+        .OrderByDescending(p => p.DataPrenotazione)
+        .Select(p => new
+        {
+            id = $"B-{p.Id}",
+            tipo = "Biglietti",
+            data = p.DataPrenotazione,
+            stato = p.Stato,
+            totale = p.TotalePrezzo,
+            sconto = 0m,
+            importoGiftCard = 0m,
+            righe = new[] { new
+            {
+                descrizione = $"{p.Proiezione.Film.Titolo} - {p.Proiezione.Cinema.Nome}",
+                dettaglio = $"{p.Proiezione.Data:yyyy-MM-dd} {p.Proiezione.Ora:HH:mm} | {p.PostiSelezionati}",
+                prezzo = p.TotalePrezzo,
+                quantita = 1
+            }}.ToList()
+        })
+        .ToListAsync();
+
+    var cartOrders = await db.Carts
+        .AsNoTracking()
+        .Include(c => c.CartItems)
+        .Where(c => c.UtenteId == userId && c.Stato == "Converted")
+        .OrderByDescending(c => c.CreatedAtUtc)
+        .ToListAsync();
+
+    var orders = cartOrders.Select(c => new
+    {
+        id = $"C-{c.Id}",
+        tipo = "Ordine shop",
+        data = c.CreatedAtUtc,
+        stato = "Completato",
+        totale = c.Totale,
+        sconto = c.ScontoCoupon,
+        importoGiftCard = c.ImportoGiftCard,
+        righe = c.CartItems.Select(ci => new
+        {
+            descrizione = ci.ItemType switch
+            {
+                "Ticket" => "Biglietto cinema",
+                "GiftCard" => $"Gift Card {ci.PrezzoUnitario:C}",
+                "Merchandise" => "Merchandise",
+                _ => ci.ItemType
+            },
+            dettaglio = ci.DettaglioJson ?? "",
+            prezzo = ci.PrezzoUnitario * ci.Quantita,
+            quantita = ci.Quantita
+        }).ToList()
+    }).ToList();
+
+    var all = bookings.Concat(orders).OrderByDescending(o => o.data).ToList();
+
+    return Results.Ok(all);
+}).RequireAuthorization();
+
 app.MapGroup("/registi").MapRegisti();
 app.MapGroup("/films").MapFilms();
 app.MapGroup("/cinemas").MapCinemas();

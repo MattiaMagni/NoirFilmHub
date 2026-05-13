@@ -76,9 +76,41 @@ public class CartService
         if (cart.CouponId.HasValue)
         {
             var coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Id == cart.CouponId.Value && c.Attivo);
-            if (coupon != null)
+            var valid = coupon != null;
+
+            if (valid)
             {
-                cart.ScontoCoupon = CalculateDiscount(coupon, cart.Subtotale);
+                var today = DateTime.Today;
+                if (today < coupon!.ValidoDal.Date || today > coupon.ValidoAl.Date)
+                    valid = false;
+
+                if (valid && coupon.MaxUtilizzi > 0 && coupon.UtilizziAttuali >= coupon.MaxUtilizzi)
+                    valid = false;
+
+                if (valid && coupon.TipoTarget != "Carrello" && coupon.TargetId.HasValue)
+                {
+                    bool targetMatch = coupon.TipoTarget switch
+                    {
+                        "Film" => items.Any(ci => ci.ItemType == "Ticket" &&
+                            _db.Proiezioni.Any(p => p.Id == ci.ItemId && p.FilmId == coupon.TargetId.Value)),
+                        "Cinema" => items.Any(ci => ci.ItemType == "Ticket" &&
+                            _db.Proiezioni.Any(p => p.Id == ci.ItemId && p.CinemaId == coupon.TargetId.Value)),
+                        _ => false
+                    };
+                    if (!targetMatch) valid = false;
+                }
+
+                if (valid && coupon.MinImportoCarrello.HasValue && cart.Subtotale < coupon.MinImportoCarrello.Value)
+                    valid = false;
+            }
+
+            if (valid)
+            {
+                cart.ScontoCoupon = CalculateDiscount(coupon!, cart.Subtotale);
+            }
+            else
+            {
+                cart.CouponId = null;
             }
         }
 
@@ -90,6 +122,7 @@ public class CartService
         cart.Totale = Math.Max(0, dopoCoupon - cart.ImportoGiftCard);
 
         cart.UpdatedAtUtc = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
     }
 
     public async Task RemoveExpiredTicketItemsAsync(Cart cart)
@@ -206,13 +239,17 @@ public class CartService
 
     public async Task<bool> ApplyCouponAsync(Cart cart, string codice, int userId)
     {
+        cart.Subtotale = await _db.CartItems
+            .Where(ci => ci.CartId == cart.Id)
+            .SumAsync(ci => ci.PrezzoUnitario * ci.Quantita);
+
         var coupon = await _db.Coupons
             .FirstOrDefaultAsync(c => c.Codice == codice.ToUpperInvariant() && c.Attivo);
 
         if (coupon == null) return false;
 
-        var now = DateTime.UtcNow;
-        if (now < coupon.ValidoDal || now > coupon.ValidoAl) return false;
+        var today = DateTime.Today;
+        if (today < coupon.ValidoDal.Date || today > coupon.ValidoAl.Date) return false;
         if (coupon.MaxUtilizzi > 0 && coupon.UtilizziAttuali >= coupon.MaxUtilizzi) return false;
 
         var userUsageCount = await _db.CouponUsages

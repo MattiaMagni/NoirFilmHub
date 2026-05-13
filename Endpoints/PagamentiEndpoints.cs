@@ -186,16 +186,23 @@ if (stripeAmount <= 0 && importoGiftCard >= totaleDopoCoupon)
     return Results.Ok(new { redirectToStripe = false, message = "Pagamento completato con gift card", cartId = cart.Id });
 }
 
-var couponLine = sconto > 0 ? new List<SessionLineItemOptions> { new()
-{
-    Quantity = 1,
-    PriceData = new SessionLineItemPriceDataOptions
+    if (sconto > 0 && lineItems.Count > 0)
     {
-        Currency = "eur",
-        UnitAmount = (long)Math.Round(-sconto * 100m, MidpointRounding.AwayFromZero),
-        ProductData = new SessionLineItemPriceDataProductDataOptions { Name = "Sconto coupon" }
+        var totalItems = lineItems.Sum(li => (decimal)(li.PriceData.UnitAmount ?? 0) * (li.Quantity ?? 1));
+        var remaining = (long)Math.Round(sconto * 100m, MidpointRounding.AwayFromZero);
+        for (int i = 0; i < lineItems.Count && remaining > 0; i++)
+        {
+            var li = lineItems[i];
+            var ua = li.PriceData.UnitAmount ?? 0;
+            var qty = li.Quantity ?? 1;
+            var itemTotal = (decimal)ua * qty;
+            var share = totalItems > 0 ? (long)Math.Round(remaining * (itemTotal / totalItems)) : 0;
+            var maxShare = ua * qty;
+            share = Math.Min(share, maxShare);
+            li.PriceData.UnitAmount = Math.Max(0, ua - share / qty);
+            remaining -= share;
+        }
     }
-}} : new List<SessionLineItemOptions>();
 
 var sessionService = new SessionService();
 var options = new SessionCreateOptions
@@ -212,16 +219,23 @@ var options = new SessionCreateOptions
         ["importoGiftCard"] = importoGiftCard.ToString(System.Globalization.CultureInfo.InvariantCulture),
         ["giftCardCode"] = cart.GiftCardCode ?? ""
     },
-    LineItems = lineItems.Concat(couponLine).ToList()
+    LineItems = lineItems
 };
 
-var session = await sessionService.CreateAsync(options);
-
-// Save stripe session reference on cart
-cart.StripeSessionId = session.Id;
-await db.SaveChangesAsync();
-
-return Results.Ok(new { sessionId = session.Id, url = session.Url });
+try
+{
+    var session = await sessionService.CreateAsync(options);
+    cart.StripeSessionId = session.Id;
+    await db.SaveChangesAsync();
+    return Results.Ok(new { sessionId = session.Id, url = session.Url });
+}
+catch (Exception ex)
+{
+    logger.LogError(ex, "Stripe session creation failed for cart {CartId}", cart.Id);
+    cart.Stato = "Active";
+    await db.SaveChangesAsync();
+    return Results.BadRequest(new { error = $"Errore pagamento: {ex.Message}" });
+}
 }).RequireAuthorization();
 
 group.MapGet("/esito", async (string session_id, ClaimsPrincipal user, FilmDbContext db, TicketPdfService pdfService, TicketEmailService emailService, ILoggerFactory loggerFactory, EmailService emailSvc) =>

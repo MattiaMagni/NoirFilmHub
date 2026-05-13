@@ -76,8 +76,12 @@ public class CartService
             }
         }
 
-        cart.Totale = cart.Subtotale - cart.ScontoCoupon - cart.ImportoGiftCard;
-        if (cart.Totale < 0) cart.Totale = 0;
+        var dopoCoupon = Math.Max(0, cart.Subtotale - cart.ScontoCoupon);
+        if (!string.IsNullOrWhiteSpace(cart.GiftCardCode) && cart.ImportoGiftCard > dopoCoupon)
+        {
+            cart.ImportoGiftCard = dopoCoupon;
+        }
+        cart.Totale = Math.Max(0, dopoCoupon - cart.ImportoGiftCard);
 
         cart.UpdatedAtUtc = DateTime.UtcNow;
     }

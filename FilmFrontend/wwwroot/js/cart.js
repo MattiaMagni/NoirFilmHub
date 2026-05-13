@@ -12,6 +12,8 @@
   }
   function parseDetail(d) { try { return d ? JSON.parse(d) : {}; } catch { return {}; } }
 
+  let cartRefreshTimer = null;
+
   async function loadCart() {
     setStatus("Caricamento carrello...", "info");
     try {
@@ -23,12 +25,16 @@
       const cart = await window.ApiClient.post("/cart", null, headers);
       if (!cart || !cart.items || cart.items.length === 0 || cart.stato === "Expired") {
         itemsEl.innerHTML = "<div class='panel' style='text-align:center;padding:2rem'><p>&#x1f6d2;</p><h3>Il tuo carrello e vuoto</h3><p class='subtle'>Aggiungi biglietti, gift card o merchandise dallo shop.</p><a class='button primary' href='/shop.html'>Vai allo shop</a></div>";
+        summaryEl.classList.add("hidden");
         setStatus("Carrello vuoto.", "info");
+        clearInterval(cartRefreshTimer);
+        cartRefreshTimer = null;
         return;
       }
       if (cart.guestToken && !cart.utenteId) sessionStorage.setItem("cart_guest_token", cart.guestToken);
       cartId = cart.id;
 
+      var prevItemCount = itemsEl.querySelectorAll(".cart-item-card").length;
       itemsEl.innerHTML = cart.items.map(item => renderCartItem(item)).join("");
       document.getElementById("cart-subtotale").textContent = formatCurrency(cart.subtotale);
       document.getElementById("cart-sconto").textContent = cart.scontoCoupon > 0 ? `-${formatCurrency(cart.scontoCoupon)}` : "-";
@@ -37,7 +43,16 @@
       summaryEl.classList.remove("hidden");
       bindEvents();
       updateBadge(cart.items.length);
-      setStatus("Pronto per il checkout.", "success");
+
+      if (cart.items.length !== prevItemCount && prevItemCount > 0) {
+        setStatus("Alcuni biglietti sono scaduti e sono stati rimossi.", "info");
+      } else {
+        setStatus("Pronto per il checkout.", "success");
+      }
+
+      if (!cartRefreshTimer) {
+        cartRefreshTimer = setInterval(loadCart, 30000);
+      }
     } catch (e) {
       itemsEl.innerHTML = "<p class='subtle'>Errore caricamento carrello.</p>";
       setStatus(`Errore: ${e.message}`, "error");

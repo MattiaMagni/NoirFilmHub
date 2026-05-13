@@ -96,12 +96,14 @@
     }
     if (item.itemType === "GiftCard") {
       var email = detail.emailDestinatario || "";
+      var messaggio = detail.messaggio || "";
       return `<div class="cart-item-card panel">
         <div class="cart-item-main">
           <div class="cart-item-icon">&#x1f381;</div>
           <div class="cart-item-info">
             <h4>Gift Card ${formatCurrency(item.prezzoUnitario)}</h4>
             ${email ? '<p class="subtle">Per: '+email+'</p>' : ''}
+            ${messaggio ? '<p class="subtle" style="font-size:0.78rem;font-style:italic">"'+messaggio+'"</p>' : ''}
           </div>
         </div>
         <div class="cart-item-right">

@@ -75,6 +75,9 @@
             <div class="filter-row" style="justify-content:center;margin-top:0.5rem">
               <input type="email" class="giftcard-email" placeholder="Email destinatario (regalo)" style="width:180px;font-size:0.85rem">
             </div>
+            <div class="filter-row" style="justify-content:center;margin-top:0.35rem">
+              <input type="text" class="giftcard-message" placeholder="Messaggio personalizzato" maxlength="200" style="width:180px;font-size:0.85rem">
+            </div>
             <button class="button primary add-giftcard" data-id="${t.id}" data-amount="${t.importo}" style="margin-top:0.5rem">Aggiungi al carrello</button>
           </div>
         </article>
@@ -84,12 +87,15 @@
         btn.addEventListener("click", async () => {
           const id = Number(btn.dataset.id);
           const amount = Number(btn.dataset.amount);
-          const emailEl = btn.parentElement.querySelector(".giftcard-email");
+          const card = btn.closest(".card-body");
+          const emailEl = card?.querySelector(".giftcard-email");
+          const msgEl = card?.querySelector(".giftcard-message");
           const email = emailEl?.value?.trim() || "";
+          const messaggio = msgEl?.value?.trim() || "";
           btn.disabled = true;
           btn.textContent = "Aggiunta...";
           try {
-            await addToCart("GiftCard", id, null, 1, amount, JSON.stringify({ emailDestinatario: email }));
+            await addToCart("GiftCard", id, null, 1, amount, JSON.stringify({ emailDestinatario: email, messaggio }));
             setStatus("Gift card aggiunta al carrello!", "success");
           } catch (e) {
             setStatus(`Errore: ${e.message}`, "error");

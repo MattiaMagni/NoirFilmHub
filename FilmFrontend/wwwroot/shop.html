@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Shop</title>
-  <link rel="stylesheet" href="/css/styles.css?v=20260513-3">
+  <link rel="stylesheet" href="/css/styles.css?v=20260513-4">
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -12,7 +12,8 @@
   <script src="/js/theme.js?v=20260409-1" defer></script>
   <script src="/js/template-loader.js" defer></script>
   <script src="/js/navbar.js" defer></script>
-  <script src="/js/shop.js?v=20260513-1" defer></script>
+  <script src="/js/modal-utils.js" defer></script>
+  <script src="/js/shop.js?v=20260513-2" defer></script>
 </head>
 <body>
   <div id="navbar-container"></div>
@@ -113,6 +114,11 @@
       </article>
 
       <article class="panel" style="margin-top:1rem">
+        <h3>Prodotti esistenti</h3>
+        <div id="admin-prod-list" class="grid-cards"></div>
+      </article>
+
+      <article class="panel" style="margin-top:1rem">
         <h3>Crea offerta / coupon</h3>
         <label>Codice offerta</label>
         <input id="admin-coupon-codice" type="text" placeholder="es. NFH-PROMO-LISSN20" required maxlength="32">
@@ -150,6 +156,11 @@
           </div>
         </div>
         <button id="admin-coupon-add" class="button primary" style="margin-top:0.75rem;width:100%">Crea offerta</button>
+      </article>
+
+      <article class="panel" style="margin-top:1rem">
+        <h3>Offerte esistenti</h3>
+        <div id="admin-coupon-list" class="grid-cards"></div>
       </article>
     </section>
   </main>

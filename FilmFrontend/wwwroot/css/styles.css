@@ -3360,3 +3360,17 @@ button.theme-toggle:focus-visible::after {
 .modal-overlay { position: fixed; inset: 0; z-index: 9998; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); }
 .modal-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0.75rem; padding: 1.5rem; max-width: 420px; width: 90%; }
 .modal-card label { display: block; margin-top: 0.5rem; font-size: 0.85rem; }
+
+/* ===== Layout fixes ===== */
+.shop-tab-content { padding-top: 0.5rem; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.grid-cards .card { margin: 0; }
+article.panel + article.panel { margin-top: 1.5rem; }
+#shop-admin-section .panel + .panel { margin-top: 1.5rem; }
+#shop-admin-section h3 { margin-top: 0; }
+#admin-prod-list .card,
+#admin-coupon-list .card { margin-bottom: 0.5rem; }
+#admin-prod-list .card:last-child,
+#admin-coupon-list .card:last-child { margin-bottom: 0; }
+label + input, label + select { margin-top: 0; }
+input + label, select + label { margin-top: 1rem; }

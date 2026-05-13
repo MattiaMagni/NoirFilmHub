@@ -408,11 +408,162 @@
     });
   });
 
+  async function loadAdminProducts() {
+    const list = document.getElementById("admin-prod-list");
+    if (!list) return;
+    try {
+      const products = await window.ApiClient.get("/shop/products");
+      if (!products.length) { list.innerHTML = "<p class='subtle'>Nessun prodotto.</p>"; return; }
+      list.innerHTML = products.map(p => `
+        <div class="card" style="padding:0.5rem">
+          <div class="card-body" style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong>${p.nome}</strong>
+              <span class="subtle" style="margin-left:0.5rem">${p.sku}</span>
+              <span style="margin-left:0.5rem">${formatCurrency(p.prezzoBase)}</span>
+            </div>
+            <button class="btn-small secondary edit-product" data-id="${p.id}">Modifica</button>
+          </div>
+        </div>
+      `).join("");
+      list.querySelectorAll(".edit-product").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.id);
+          try {
+            const p = await window.ApiClient.get(`/shop/products/${id}`);
+            openProductEditModal(p);
+          } catch (e) { setStatus(`Errore: ${e.message}`, "error"); }
+        });
+      });
+    } catch { list.innerHTML = ""; }
+  }
+
+  function openProductEditModal(p) {
+    var content = `
+      <h3>Modifica prodotto #${p.id}</h3>
+      <label>Nome</label><input id="modal-prod-nome" type="text" value="${p.nome || ""}">
+      <label style="margin-top:0.5rem">SKU</label><input id="modal-prod-sku" type="text" value="${p.sku || ""}">
+      <label style="margin-top:0.5rem">Descrizione</label><input id="modal-prod-desc" type="text" value="${p.descrizione || ""}">
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+        <div style="flex:1"><label>Categoria</label><select id="modal-prod-cat">${["Abbigliamento","Accessori","Food","Gadget"].map(c => `<option value="${c}" ${p.categoria===c?"selected":""}>${c}</option>`).join("")}</select></div>
+        <div style="flex:1"><label>Prezzo</label><input id="modal-prod-prezzo" type="number" step="0.01" value="${p.prezzoBase}"></div>
+      </div>
+      <label style="margin-top:0.5rem">Immagine</label><input id="modal-prod-img" type="text" value="${p.immaginePath || ""}">
+      <div style="text-align:right;margin-top:1rem">
+        <button class="button primary" id="modal-prod-save">Salva modifiche</button>
+        <button class="button secondary" id="modal-prod-cancel">Annulla</button>
+      </div>`;
+    var card = window.ModalUtils.open(content);
+    if (!card) return;
+    card.querySelector("#modal-prod-cancel").addEventListener("click", () => window.ModalUtils.close());
+    card.querySelector("#modal-prod-save").addEventListener("click", async () => {
+      var nome = document.getElementById("modal-prod-nome").value.trim();
+      var sku = document.getElementById("modal-prod-sku").value.trim();
+      if (!nome || !sku) { alert("Nome e SKU obbligatori"); return; }
+      if (!window.confirm("Salvare le modifiche?")) return;
+      try {
+        await window.ApiClient.put(`/shop/products/${p.id}`, {
+          sku, nome,
+          descrizione: document.getElementById("modal-prod-desc").value.trim(),
+          categoria: document.getElementById("modal-prod-cat").value,
+          prezzoBase: Number(document.getElementById("modal-prod-prezzo").value),
+          immaginePath: document.getElementById("modal-prod-img").value.trim(),
+          attivo: p.attivo !== false
+        });
+        window.ModalUtils.close();
+        setStatus("Prodotto aggiornato!", "success");
+        await loadAdminProducts();
+      } catch (e) { alert("Errore: " + e.message); }
+    });
+  }
+
+  async function loadAdminCoupons() {
+    const list = document.getElementById("admin-coupon-list");
+    if (!list) return;
+    try {
+      const coupons = await window.ApiClient.get("/coupons");
+      if (!coupons.length) { list.innerHTML = "<p class='subtle'>Nessuna offerta.</p>"; return; }
+      list.innerHTML = coupons.map(c => `
+        <div class="card" style="padding:0.5rem">
+          <div class="card-body" style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong>${c.codice}</strong>
+              <span class="subtle" style="margin-left:0.5rem">${c.tipoSconto === "Percentuale" ? c.valoreSconto+"%" : formatCurrency(c.valoreSconto)}</span>
+              <span style="margin-left:0.5rem;font-size:0.75rem">${c.attivo ? "Attiva" : "Non attiva"}</span>
+            </div>
+            <button class="btn-small secondary edit-coupon" data-id="${c.id}">Modifica</button>
+          </div>
+        </div>
+      `).join("");
+      list.querySelectorAll(".edit-coupon").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.id);
+          try {
+            const c = await window.ApiClient.get(`/coupons/${id}/usage`).then(() => window.ApiClient.get(`/coupons`)).then(cs => cs.find(x => x.id === id));
+            openCouponEditModal(c);
+          } catch (e) {
+            // fallback: use the coupon data from the list
+            var item = coupons.find(x => x.id === id);
+            if (item) openCouponEditModal(item);
+          }
+        });
+      });
+    } catch { list.innerHTML = ""; }
+  }
+
+  function openCouponEditModal(c) {
+    var today = new Date().toISOString().slice(0,10);
+    var dal = c.validoDal ? String(c.validoDal).slice(0,10) : today;
+    var al = c.validoAl ? String(c.validoAl).slice(0,10) : today;
+    var content = `
+      <h3>Modifica offerta #${c.id}</h3>
+      <label>Codice</label><input id="modal-coupon-code" type="text" value="${c.codice || ""}" maxlength="32">
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+        <div style="flex:1"><label>Tipo</label><select id="modal-coupon-type">${["Percentuale","Fisso"].map(t => `<option value="${t}" ${c.tipoSconto===t?"selected":""}>${t}</option>`).join("")}</select></div>
+        <div style="flex:1"><label>Valore</label><input id="modal-coupon-val" type="number" step="0.01" value="${c.valoreSconto}"></div>
+      </div>
+      <label style="margin-top:0.5rem">Target</label><select id="modal-coupon-target">${["Carrello","Cinema","Film"].map(t => `<option value="${t}" ${c.tipoTarget===t?"selected":""}>${t}</option>`).join("")}</select>
+      <label style="margin-top:0.5rem">Target ID</label><input id="modal-coupon-tid" type="number" value="${c.targetId || 0}">
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+        <div style="flex:1"><label>Valido dal</label><input id="modal-coupon-dal" type="date" value="${dal}"></div>
+        <div style="flex:1"><label>Valido al</label><input id="modal-coupon-al" type="date" value="${al}"></div>
+      </div>
+      <div style="text-align:right;margin-top:1rem">
+        <button class="button primary" id="modal-coupon-save">Salva modifiche</button>
+        <button class="button secondary" id="modal-coupon-cancel">Annulla</button>
+      </div>`;
+    var card = window.ModalUtils.open(content);
+    if (!card) return;
+    card.querySelector("#modal-coupon-cancel").addEventListener("click", () => window.ModalUtils.close());
+    card.querySelector("#modal-coupon-save").addEventListener("click", async () => {
+      var code = document.getElementById("modal-coupon-code").value.trim();
+      if (!code) { alert("Codice obbligatorio"); return; }
+      if (!window.confirm("Salvare le modifiche?")) return;
+      try {
+        await window.ApiClient.put(`/coupons/${c.id}`, {
+          codice: code, tipoSconto: document.getElementById("modal-coupon-type").value,
+          valoreSconto: Number(document.getElementById("modal-coupon-val").value),
+          tipoTarget: document.getElementById("modal-coupon-target").value,
+          targetId: Number(document.getElementById("modal-coupon-tid").value) || null,
+          quantitaMinima: c.quantitaMinima || 1,
+          validoDal: document.getElementById("modal-coupon-dal").value,
+          validoAl: document.getElementById("modal-coupon-al").value,
+          maxUtilizzi: c.maxUtilizzi || 0, maxPerUtente: c.maxPerUtente || 1,
+          stackable: c.stackable || false, attivo: c.attivo !== false
+        });
+        window.ModalUtils.close();
+        setStatus("Offerta aggiornata!", "success");
+        await loadAdminCoupons();
+      } catch (e) { alert("Errore: " + e.message); }
+    });
+  }
+
   async function initShopPage() {
     setStatus("Caricamento shop...", "info");
     try {
       if (isAdmin()) {
         document.getElementById("shop-admin-section")?.classList.remove("hidden");
+        await Promise.all([loadAdminProducts(), loadAdminCoupons()]);
       }
       await loadCinemasForFilter();
       await Promise.all([loadGiftCards(), loadMerch(""), loadOffers("")]);

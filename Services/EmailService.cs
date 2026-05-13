@@ -162,6 +162,26 @@ public class EmailService
         return await SendEmail(toEmail, subject, body);
     }
 
+    public async Task<bool> SendCouponRedeemEmail(string toEmail, string nome, string codice, string tipoSconto, decimal valoreSconto, string? cinemaNome, DateTime scadenza)
+    {
+        var subject = $"Offerta riscattata: {codice} - Noir Film Hub";
+        var scontoLabel = tipoSconto == "Percentuale" ? $"{valoreSconto}%" : $"{valoreSconto:C}";
+        var cinemaInfo = string.IsNullOrWhiteSpace(cinemaNome) ? "Tutti i cinema" : cinemaNome;
+        var body = $@"
+<h2>Ciao {EscapeHtml(nome)},</h2>
+<p>Hai riscattato l'offerta <strong>{EscapeHtml(codice)}</strong>.</p>
+<ul>
+<li><strong>Sconto:</strong> {scontoLabel} di sconto</li>
+<li><strong>Cinema:</strong> {EscapeHtml(cinemaInfo)}</li>
+<li><strong>Scadenza:</strong> {scadenza:dd/MM/yyyy}</li>
+</ul>
+<p>Usa il codice <strong style=""font-size:1.2rem;color:#dc2626"">{EscapeHtml(codice)}</strong> al momento del checkout per applicare lo sconto.</p>
+<p><strong>Attenzione:</strong> il codice deve essere usato entro la data di scadenza, altrimenti non sara piu valido.</p>
+<hr>
+<p style=""color:#888;font-size:12px;"">Questa e un'email automatica, non rispondere.</p>";
+        return await SendEmail(toEmail, subject, body);
+    }
+
     private string BuildLink(string page, string token, string email)
     {
         var baseUrl = _configuration["APP_BASE_URL"] ?? "http://localhost:5001";

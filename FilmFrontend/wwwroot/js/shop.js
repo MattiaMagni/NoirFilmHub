@@ -187,7 +187,12 @@
     if (!list) return;
     try {
       const coupons = await window.ApiClient.get("/coupons");
-      let activeCoupons = coupons.filter(c => c.attivo);
+      let activeCoupons = coupons.filter(c => {
+        var now = new Date();
+        var validoAl = new Date(c.validoAl);
+        var validoDal = new Date(c.validoDal);
+        return c.attivo && now >= validoDal && now <= validoAl;
+      });
       if (cinemaId) {
         const cid = Number(cinemaId);
         activeCoupons = activeCoupons.filter(c =>
@@ -199,19 +204,82 @@
         list.innerHTML = "<p class='subtle'>Nessuna offerta attiva al momento.</p>";
         return;
       }
-      list.innerHTML = activeCoupons.map(c => `
-        <article class="card">
-          <div class="card-body">
-            <h3>${c.codice}</h3>
-            <p class="subtle">${c.tipoSconto === "Percentuale" ? `${c.valoreSconto}% di sconto` : `${formatCurrency(c.valoreSconto)} di sconto`}${c.tipoTarget === "Cinema" ? " (cinema specifico)" : ""}</p>
-            <p class="subtle">Valido fino al ${new Date(c.validoAl).toLocaleDateString("it-IT")}</p>
-            <p class="subtle">Usa questo codice in fase di checkout.</p>
-          </div>
-        </article>
-      `).join("");
+      list.innerHTML = activeCoupons.map(c => {
+        var scontoLabel = c.tipoSconto === "Percentuale" ? `${c.valoreSconto}% di sconto` : `${formatCurrency(c.valoreSconto)} di sconto`;
+        var cinemaInfo = c.cinemaNome || "";
+        var scadenza = new Date(c.validoAl).toLocaleDateString("it-IT");
+        return `
+          <article class="card" style="text-align:center">
+            <div class="card-body">
+              <h3>${scontoLabel}</h3>
+              <p class="subtle">Codice: ${c.codice}</p>
+              ${cinemaInfo ? `<p class="subtle">Cinema: ${cinemaInfo}</p>` : "<p class='subtle'>Valido su tutti i cinema</p>"}
+              <p class="subtle">Scade il ${scadenza}</p>
+              ${c.minImportoCarrello > 0 ? `<p class="subtle">Min. carrello: ${formatCurrency(c.minImportoCarrello)}</p>` : ""}
+              <div style="text-align:right;margin-top:0.5rem">
+                <button class="button primary redeem-offer" data-id="${c.id}">Riscatta</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      list.querySelectorAll(".redeem-offer").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!window.AuthService || !window.AuthService.isAuthenticated()) {
+            window.location.href = `/login.html?callback=${encodeURIComponent("/shop.html")}`;
+            return;
+          }
+          const id = Number(btn.dataset.id);
+          btn.disabled = true;
+          btn.textContent = "Riscatto...";
+          try {
+            const result = await window.ApiClient.post(`/coupons/${id}/redeem`);
+            showRedeemToast(result);
+            setStatus("Offerta riscattata! Controlla la tua email.", "success");
+          } catch (e) {
+            setStatus(`Errore: ${e.message}`, "error");
+          }
+          btn.disabled = false;
+          btn.textContent = "Riscatta";
+        });
+      });
     } catch (e) {
       list.innerHTML = "<p class='subtle'>Errore caricamento offerte.</p>";
     }
+  }
+
+  function showRedeemToast(result) {
+    var existing = document.getElementById("redeem-toast-overlay");
+    if (existing) existing.remove();
+    var overlay = document.createElement("div");
+    overlay.id = "redeem-toast-overlay";
+    overlay.className = "cart-toast-overlay";
+    overlay.innerHTML = `
+      <div class="cart-toast-card" style="max-width:480px">
+        <p class="cart-toast-icon">&#x1f389;</p>
+        <h3>Offerta riscattata!</h3>
+        <p class="subtle">Il tuo codice:</p>
+        <div style="display:flex;gap:0.5rem;justify-content:center;align-items:center;margin-top:0.5rem">
+          <code style="font-size:1.4rem;font-weight:700;color:var(--color-primary);background:var(--color-surface-variant);padding:4px 12px;border-radius:6px;letter-spacing:0.05em">${result.codice}</code>
+          <button class="btn-small primary" id="redeem-copy-btn">Copia</button>
+        </div>
+        <p class="subtle" style="margin-top:0.75rem">${result.messaggio}</p>
+        <p class="subtle">Ti abbiamo inviato il codice anche via email.</p>
+        <div class="cart-toast-actions" style="margin-top:0.5rem">
+          <button class="button primary" id="redeem-toast-ok">OK</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById("redeem-copy-btn").onclick = function () {
+      navigator.clipboard.writeText(result.codice).then(() => {
+        var b = document.getElementById("redeem-copy-btn");
+        b.textContent = "Copiato!";
+        setTimeout(() => { b.textContent = "Copia"; }, 2000);
+      });
+    };
+    document.getElementById("redeem-toast-ok").onclick = function () { overlay.remove(); };
+    overlay.onclick = function (e) { if (e.target === overlay) overlay.remove(); };
   }
 
   // Gift card custom add

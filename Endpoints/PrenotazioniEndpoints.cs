@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FilmAPI.Data;
 using FilmAPI.DTOs;
 using FilmAPI.Model;
+using FilmAPI.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -113,7 +114,7 @@ public static class PrenotazioniEndpoints
             return Results.Created($"/prenotazioni/{prenotazione.Id}", new { prenotazione.Id });
         }).RequireAuthorization();
 
-        group.MapPut("/{id:int}/annulla", async (int id, ClaimsPrincipal user, FilmDbContext db) =>
+        group.MapPut("/{id:int}/annulla", async (int id, ClaimsPrincipal user, FilmDbContext db, EmailService emailService) =>
         {
             if (!TryGetUserId(user, out var userId))
             {
@@ -121,7 +122,13 @@ public static class PrenotazioniEndpoints
             }
 
             var role = user.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-            var prenotazione = await db.Prenotazioni.FindAsync(id);
+            var prenotazione = await db.Prenotazioni
+                .Include(p => p.Utente)
+                .Include(p => p.Proiezione)
+                .ThenInclude(pr => pr.Film)
+                .Include(p => p.Proiezione)
+                .ThenInclude(pr => pr.Cinema)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (prenotazione is null)
             {
                 return Results.NotFound();
@@ -133,15 +140,23 @@ public static class PrenotazioniEndpoints
                 return Results.Forbid();
             }
 
+            if (prenotazione.Stato == "Annullata")
+            {
+                return Results.BadRequest(new { error = "Prenotazione gia annullata" });
+            }
+
+            string? giftCardCodice = null;
+            decimal refundAmount = 0;
+
             if (prenotazione.Stato == "Confermata")
             {
-                var refundAmount = decimal.Round(prenotazione.TotalePrezzo * 0.5m, 2);
+                refundAmount = decimal.Round(prenotazione.TotalePrezzo * 0.5m, 2);
                 if (refundAmount > 0)
                 {
-                    var code = "NFH-RF-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
+                    giftCardCodice = "NFH-RF-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
                     db.GiftCards.Add(new GiftCard
                     {
-                        Codice = code, ImportoIniziale = refundAmount, SaldoResiduo = refundAmount,
+                        Codice = giftCardCodice, ImportoIniziale = refundAmount, SaldoResiduo = refundAmount,
                         UtenteAcquirenteId = prenotazione.UtenteId,
                         Messaggio = $"Rimborso 50% per prenotazione annullata (#{prenotazione.Id})",
                         Stato = "Active", CreatoIl = DateTime.UtcNow, Scadenza = DateTime.UtcNow.AddYears(1)
@@ -151,7 +166,24 @@ public static class PrenotazioniEndpoints
 
             prenotazione.Stato = "Annullata";
             await db.SaveChangesAsync();
-            return Results.NoContent();
+
+            if (giftCardCodice != null && prenotazione.Utente != null)
+            {
+                var filmTitolo = prenotazione.Proiezione?.Film?.Titolo ?? "N/A";
+                var cinemaNome = prenotazione.Proiezione?.Cinema?.Nome ?? "N/A";
+                _ = emailService.SendCancellationRefundEmail(
+                    prenotazione.Utente.Email,
+                    prenotazione.Utente.Nome,
+                    prenotazione.Id,
+                    prenotazione.CodiceAcquisto,
+                    filmTitolo,
+                    cinemaNome,
+                    refundAmount,
+                    giftCardCodice
+                );
+            }
+
+            return Results.Ok(new { giftCardCodice, refundAmount, stato = prenotazione.Stato });
         }).RequireAuthorization();
 
         return group;

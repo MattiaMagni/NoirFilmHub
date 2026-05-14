@@ -47,6 +47,11 @@ public static class BigliettiEndpoints
                 return Results.NotFound();
             }
 
+            if (booking.Stato == "Annullata")
+            {
+                return Results.BadRequest(new { error = "Biglietto annullato, non piu valido" });
+            }
+
             if (booking.Validato)
             {
                 return Results.Conflict(new { error = "Biglietto gia validato" });

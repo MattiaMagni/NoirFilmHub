@@ -182,6 +182,27 @@ public class EmailService
         return await SendEmail(toEmail, subject, body);
     }
 
+    public async Task<bool> SendCancellationRefundEmail(string toEmail, string nome, int prenotazioneId,
+        string codiceAcquisto, string filmTitolo, string cinemaNome, decimal refundAmount, string giftCardCodice)
+    {
+        var subject = $"Prenotazione Annullata - Rimborso - CineBase";
+        var body = $@"
+<h2>Ciao {EscapeHtml(nome)},</h2>
+<p>La tua prenotazione <strong>#{prenotazioneId}</strong> (codice: {EscapeHtml(codiceAcquisto)}) e stata annullata.</p>
+<ul>
+<li><strong>Film:</strong> {EscapeHtml(filmTitolo)}</li>
+<li><strong>Cinema:</strong> {EscapeHtml(cinemaNome)}</li>
+<li><strong>Rimborso 50%:</strong> {refundAmount:C}</li>
+</ul>
+<p>Il rimborso e stato accreditato come Gift Card con codice:</p>
+<p style=""text-align:center;font-size:1.3rem;letter-spacing:2px;padding:12px;background:#f0f0f0;border-radius:6px;margin:8px 0;""><strong>{EscapeHtml(giftCardCodice)}</strong></p>
+<p>Puoi utilizzare questo codice per acquisti futuri sulla piattaforma. La Gift Card scade tra 1 anno.</p>
+<p>Il biglietto associato a questa prenotazione non e piu valido.</p>
+<hr>
+<p style=""color:#888;font-size:12px;"">Questa e un'email automatica, non rispondere.</p>";
+        return await SendEmail(toEmail, subject, body);
+    }
+
     private string BuildLink(string page, string token, string email)
     {
         var baseUrl = _configuration["APP_BASE_URL"] ?? "http://localhost:5001";

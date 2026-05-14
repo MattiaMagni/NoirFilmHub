@@ -629,13 +629,23 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
             if (d.TryGetProperty("emailDestinatario", out var e) && e.ValueKind == System.Text.Json.JsonValueKind.String) destinatario = e.GetString();
             if (d.TryGetProperty("messaggio", out var m) && m.ValueKind == System.Text.Json.JsonValueKind.String) messaggio = m.GetString();
         } catch { }
+
+        // Resolve recipient: if email matches an existing user, associate gift card with THEM
+        int giftCardOwnerId = userId;
+        if (!string.IsNullOrWhiteSpace(destinatario))
+        {
+            var destinatarioUtente = await db.Utenti.AsNoTracking().FirstOrDefaultAsync(u => u.Email == destinatario);
+            if (destinatarioUtente != null)
+                giftCardOwnerId = destinatarioUtente.Id;
+        }
+
         for (int i = 0; i < item.Quantita; i++)
         {
             var code = "NFH-GC-" + Guid.NewGuid().ToString("N")[..8].ToUpper() + "-" + Guid.NewGuid().ToString("N")[..4].ToUpper();
             db.GiftCards.Add(new GiftCard
             {
                         Codice = code, ImportoIniziale = item.PrezzoUnitario, SaldoResiduo = item.PrezzoUnitario,
-                        UtenteAcquirenteId = userId, EmailDestinatario = destinatario, Messaggio = messaggio, Stato = "Active", CreatoIl = now, Scadenza = now.AddYears(1)
+                        UtenteAcquirenteId = giftCardOwnerId, EmailDestinatario = destinatario, Messaggio = messaggio, Stato = "Active", CreatoIl = now, Scadenza = now.AddYears(1)
             });
         }
     }
@@ -682,19 +692,25 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
         var utente = await db.Utenti.FindAsync(userId);
         var userEmail = utente?.Email ?? "";
 
-        // Collect all gift cards just created for this order
+        // Collect all gift cards just created for this order (by any owner linked to this purchase)
         var createdGc = await db.GiftCards
-            .Where(g => g.UtenteAcquirenteId == userId && g.CreatoIl >= now.AddSeconds(-30) && g.CreatoIl <= now.AddSeconds(5))
+            .Where(g => (g.UtenteAcquirenteId == userId || g.EmailDestinatario == userEmail) && g.CreatoIl >= now.AddSeconds(-30) && g.CreatoIl <= now.AddSeconds(5))
             .ToListAsync();
 
-        // Send one email per gift card code to the purchaser
+        // Send gift card emails: only to recipient if buying for someone else, otherwise to purchaser
         foreach (var gc in createdGc)
         {
             string? destinatario = gc.EmailDestinatario;
-            await emailService.SendGiftCardEmail(userEmail, gc.Codice, gc.ImportoIniziale, gc.Messaggio);
-            // If different recipient, also notify them
             if (!string.IsNullOrWhiteSpace(destinatario) && !string.Equals(destinatario, userEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                // Buying for someone else: send code ONLY to the recipient
                 await emailService.SendGiftCardEmail(destinatario, gc.Codice, gc.ImportoIniziale, gc.Messaggio);
+            }
+            else
+            {
+                // Self-purchase or no recipient: send to purchaser
+                await emailService.SendGiftCardEmail(userEmail, gc.Codice, gc.ImportoIniziale, gc.Messaggio);
+            }
         }
 
         // Send order confirmation email to purchaser (summary, no sensitive codes)

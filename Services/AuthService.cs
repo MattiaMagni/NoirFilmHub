@@ -421,6 +421,7 @@ public class AuthService
                 LocalCredentialsEnabled = u.LocalCredentialsEnabled,
                 LastLoginAtUtc = u.LastLoginAtUtc,
                 CreatedAtUtc = u.CreatedAtUtc,
+                CinemaPreferitoId = u.CinemaPreferitoId,
                 ExternalLogins = u.ExternalLogins.Select(el => el.Provider).ToList(),
                 HasPassword = u.PasswordHash != null,
                 AuthVersion = u.AuthVersion
@@ -456,6 +457,7 @@ public class AuthService
             Cognome = utente.Cognome,
             Telefono = utente.Telefono,
             Ruolo = utente.Ruolo,
+            CinemaPreferitoId = utente.CinemaPreferitoId,
             IsDisabled = utente.IsDisabled,
             EmailVerified = utente.EmailVerified,
             LocalCredentialsEnabled = utente.LocalCredentialsEnabled,
@@ -625,8 +627,8 @@ public class AuthService
         if (!RuoliValidi.Contains(dto.Ruolo))
             return (false, "Ruolo non valido", null);
 
-        if (dto.Ruolo == RuoloUtente.Utente)
-            return (false, "Usa la registrazione normale per utenti standard", null);
+        if (dto.Ruolo != RuoloUtente.Admin && dto.Ruolo != RuoloUtente.PowerUser && dto.Ruolo != RuoloUtente.Utente)
+            return (false, "Ruolo non valido", null);
 
         var exists = await _db.Utenti.AnyAsync(u => u.NormalizedEmail == normalizedEmail);
         if (exists)

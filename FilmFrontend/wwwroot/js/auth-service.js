@@ -212,6 +212,10 @@
     return window.ApiClient.post("/auth/admin/invite", { email, ruolo, nome, cognome, sendSetupEmail: true });
   }
 
+  async function assignCinema(userId, cinemaId) {
+    return window.ApiClient.put(`/auth/admin/utenti/${userId}/cinema`, { cinemaId });
+  }
+
   window.AuthService = {
     login, register, logout, refreshAccessToken, ensureValidAccessToken,
     getAccessToken, getRefreshToken, getCurrentUser, getCurrentRole,
@@ -222,7 +226,7 @@
     revokeAllSessions,
     getExternalLogins, unlinkExternalLogin,
     searchUsers, getUserDetail, changeUserRole, disableUser, enableUser,
-    forcePasswordReset, deleteUser, inviteUser,
+    forcePasswordReset, deleteUser, inviteUser, assignCinema,
     saveRedirect(path) {
       sessionStorage.setItem("auth_redirect_after_login", normalizePath(path || window.location.pathname));
     },

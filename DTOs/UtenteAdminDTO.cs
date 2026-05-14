@@ -12,6 +12,7 @@ public class UtenteAdminDTO
     public bool LocalCredentialsEnabled { get; set; }
     public DateTime? LastLoginAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; }
+    public int? CinemaPreferitoId { get; set; }
     public List<string> ExternalLogins { get; set; } = new();
     public bool HasPassword { get; set; }
     public int AuthVersion { get; set; }

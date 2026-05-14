@@ -8,6 +8,7 @@ public class UtenteAdminDetailDTO
     public string Cognome { get; set; } = null!;
     public string Telefono { get; set; } = "";
     public string Ruolo { get; set; } = null!;
+    public int? CinemaPreferitoId { get; set; }
     public bool IsDisabled { get; set; }
     public bool EmailVerified { get; set; }
     public bool LocalCredentialsEnabled { get; set; }

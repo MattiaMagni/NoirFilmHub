@@ -371,6 +371,37 @@ public static class AuthEndpoints
                 new { id = utente.Id, email = utente.Email, ruolo = utente.Ruolo });
         }).RequireAuthorization("AdminOnly");
 
+        group.MapPut("/admin/utenti/{id:int}/cinema", async (int id, CinemaPreferitoUpdateDTO dto,
+            FilmDbContext db) =>
+        {
+            var utente = await db.Utenti.FindAsync(id);
+            if (utente is null)
+                return Results.NotFound(new { error = "Utente non trovato" });
+
+            if (dto.CinemaId == 0)
+            {
+                utente.CinemaPreferitoId = null;
+                await db.SaveChangesAsync();
+                return Results.Ok(new { cinemaPreferitoId = (int?)null });
+            }
+
+            var cinema = await db.Cinemas.AsNoTracking().FirstOrDefaultAsync(c => c.Id == dto.CinemaId);
+            if (cinema is null)
+                return Results.BadRequest(new { error = "Cinema non trovato" });
+
+            utente.CinemaPreferitoId = cinema.Id;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                cinemaPreferitoId = cinema.Id,
+                cinema.Nome,
+                cinema.Citta,
+                cinema.Indirizzo,
+                cinema.CodiceLocale
+            });
+        }).RequireAuthorization("AdminOnly");
+
         // --- Legacy compat: keep old routes working ---
 
         group.MapGet("/utenti", async (AuthService authService) =>

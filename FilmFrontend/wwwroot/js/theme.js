@@ -59,10 +59,10 @@
 
   function updateThemeButton(theme) {
     const isDark = normalizeTheme(theme) === DARK;
-    const text = isDark ? "Tema chiaro" : "Tema scuro";
+    const icon = isDark ? "☀️" : "🌙";
     const label = isDark ? "Passa al tema chiaro" : "Passa al tema scuro";
     document.querySelectorAll("#theme-toggle").forEach((button) => {
-      button.textContent = text;
+      button.textContent = icon;
       button.setAttribute("aria-label", label);
     });
   }

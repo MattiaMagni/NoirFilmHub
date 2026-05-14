@@ -1593,7 +1593,8 @@ body.modal-open {
 }
 
 .quick-add-grid {
-  max-height: 58vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -1956,7 +1957,8 @@ button.theme-toggle:focus-visible::after {
   }
 
   .quick-add-grid {
-    max-height: 58vh;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 }
 

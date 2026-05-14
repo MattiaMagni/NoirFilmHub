@@ -121,7 +121,7 @@
       }
       grid.innerHTML = filtered.map(p => {
         const variants = (p.varianti || []).map(v =>
-          `<option value="${v.id}" data-price="${v.prezzoFinale}">${v.nome} - ${formatCurrency(v.prezzoFinale)} (Stock: ${v.stock})</option>`
+          `<option value="${v.id}" data-price="${v.prezzoFinale}">${v.nome} - ${formatCurrency(v.prezzoFinale)}</option>`
         ).join("");
         const hasVariants = variants.length > 0;
         const img = p.immaginePath ? `<div class="card-media" style="height:180px;overflow:hidden;border-radius:8px 8px 0 0"><img src="${p.immaginePath}" alt="${p.nome}" style="width:100%;height:100%;object-fit:cover"></div>` : "";

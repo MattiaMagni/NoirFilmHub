@@ -368,18 +368,16 @@
       const disabledAttr = disabled ? "disabled" : "";
       const badge = item.alreadyInCatalog ? "<span class='tag info'>Gia presente</span>" : "<span class='tag accent'>Nuovo</span>";
       const poster = item.posterPath
-        ? `<img src="${normalizeTmdbImage(item.posterPath, "w500")}" alt="Poster ${item.titolo}" style="width:100%;height:220px;object-fit:cover;border-radius:8px;">`
-        : `<div class="card-media"><span>Poster non disponibile</span></div>`;
+        ? `<img src="${normalizeTmdbImage(item.posterPath, "w500")}" alt="Poster ${item.titolo}" style="width:100%;aspect-ratio:2/3;object-fit:cover;display:block;">`
+        : `<div class="card-media" style="height:auto;aspect-ratio:2/3;"><span>Poster non disponibile</span></div>`;
 
       return `
         <article class="card quick-glass-card quick-add-card ${selected ? "selected" : ""} ${disabled ? "disabled" : ""}" data-quick-card-id="${item.tmdbMovieId}" data-selected="${selected ? "1" : "0"}" ${disabledAttr}>
+          ${poster}
           <div class="card-body">
-            <div style="width:100%;">
-              ${poster}
-              <h3 style="margin-top:10px;">${item.titolo || "Titolo non disponibile"}</h3>
-              <p class="subtle">${release}</p>
-              <div class="actions">${badge}</div>
-            </div>
+            <h3>${item.titolo || "Titolo non disponibile"}</h3>
+            <p class="subtle">${release}</p>
+            <div class="actions">${badge}</div>
           </div>
         </article>
       `;

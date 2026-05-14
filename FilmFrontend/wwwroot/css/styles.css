@@ -1588,7 +1588,6 @@ body.modal-open {
 .quick-add-modal-panel {
   width: min(100%, 980px);
   max-height: calc(100vh - 32px);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -1599,11 +1598,13 @@ body.modal-open {
   padding-right: 4px;
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+  gap: 20px !important;
 }
 
 .quick-add-card {
   cursor: pointer;
   border: 1px solid var(--color-border);
+  border-radius: 12px;
 }
 
 .quick-add-card.selected {
@@ -1622,6 +1623,57 @@ body.modal-open {
 
 .quick-add-card h3 {
   margin: 10px 0 4px;
+}
+
+@media (max-width: 860px) {
+  .quick-add-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+    gap: 14px !important;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .quick-add-card .card-body {
+    padding: 10px;
+  }
+
+  .quick-add-card h3 {
+    font-size: 0.9rem;
+    margin: 6px 0 2px;
+  }
+
+  .quick-add-modal-panel {
+    overflow-y: auto;
+    max-height: calc(100vh - 16px);
+    padding: 12px;
+  }
+
+  .quick-add-grid {
+    max-height: 55vh;
+  }
+}
+
+@media (max-width: 520px) {
+  .quick-add-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+    gap: 10px !important;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .quick-add-card img,
+  .quick-add-card .card-media {
+    max-height: 160px;
+    object-fit: cover;
+  }
+
+  .quick-add-card .card-body {
+    padding: 8px;
+  }
+
+  .quick-add-card h3 {
+    font-size: 0.8rem;
+  }
 }
 
 .quick-add-confirm-panel {
@@ -1951,15 +2003,6 @@ button.theme-toggle:focus-visible::after {
   .modal-poster-wrap,
   .modal-poster-fallback {
     min-height: 240px;
-  }
-
-  .quick-add-modal-panel {
-    max-height: calc(100vh - 24px);
-    padding: 12px;
-  }
-
-  .quick-add-grid {
-    max-height: 55vh;
   }
 }
 

@@ -184,11 +184,37 @@
     } catch {}
   }
 
+  function getUserId() {
+    try {
+      if (window.AuthService && window.AuthService.isAuthenticated()) {
+        var user = JSON.parse(localStorage.getItem("user") || "{}");
+        return user.id ? String(user.id) : null;
+      }
+    } catch {}
+    return null;
+  }
+
+  function getRedeemedKey() {
+    var uid = getUserId();
+    return uid ? "redeemed_coupon_ids_" + uid : "redeemed_coupon_ids";
+  }
+
+  function getRedeemedIds() {
+    try { return JSON.parse(localStorage.getItem(getRedeemedKey()) || "[]"); }
+    catch { return []; }
+  }
+
+  function addRedeemedId(id) {
+    var key = getRedeemedKey();
+    var redeemed = JSON.parse(localStorage.getItem(key) || "[]");
+    if (!redeemed.includes(id)) { redeemed.push(id); localStorage.setItem(key, JSON.stringify(redeemed)); }
+  }
+
   async function loadOffers(cinemaId) {
     const list = document.getElementById("offers-list");
     if (!list) return;
     try {
-      const redeemedIds = JSON.parse(sessionStorage.getItem("redeemed_coupon_ids") || "[]");
+      const redeemedIds = getRedeemedIds();
       const coupons = await window.ApiClient.get("/coupons");
       let activeCoupons = coupons.filter(c => {
         var now = new Date();
@@ -239,8 +265,7 @@
           btn.textContent = "Riscatto...";
           try {
             const result = await window.ApiClient.post(`/coupons/${id}/redeem`, {});
-            var redeemed = JSON.parse(sessionStorage.getItem("redeemed_coupon_ids") || "[]");
-            if (!redeemed.includes(id)) { redeemed.push(id); sessionStorage.setItem("redeemed_coupon_ids", JSON.stringify(redeemed)); }
+            addRedeemedId(id);
             showRedeemToast(result);
             setStatus("Offerta riscattata! Controlla la tua email.", "success");
           } catch (e) {

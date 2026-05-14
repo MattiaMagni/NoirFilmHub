@@ -323,28 +323,6 @@ using (var scope = app.Services.CreateScope())
                     if (categoriaId.HasValue)
                         db.FilmCategorie.Add(new FilmCategoria { FilmId = film.Id, CategoriaId = categoriaId.Value });
                 }
-        if (!await db.ProductVariants.AnyAsync(v => v.Sku == "NFH-TSH-M-S"))
-        {
-            await db.SaveChangesAsync(); // ensure products are persisted before querying
-            var clothing = await db.Prodotti.Where(p => p.Categoria == "Abbigliamento").ToListAsync();
-            var sizes = new[] { "S", "M", "L", "XL" };
-            foreach (var p in clothing)
-            {
-                foreach (var size in sizes)
-                {
-                    db.ProductVariants.Add(new ProductVariant
-                    {
-                        ProductId = p.Id,
-                        Nome = size,
-                        Sku = $"{p.Sku}-{size}",
-                        PrezzoExtra = 0,
-                        Stock = 50,
-                        Attivo = true
-                    });
-                }
-            }
-        }
-
         await db.SaveChangesAsync();
             }
         }
@@ -441,6 +419,28 @@ using (var scope = app.Services.CreateScope())
                     MaxUtilizzi = 300, MaxPerUtente = 2, Stackable = false, Attivo = true
                 }
             );
+        }
+
+        if (!await db.ProductVariants.AnyAsync(v => v.Sku == "NFH-TSH-M-S"))
+        {
+            await db.SaveChangesAsync();
+            var clothing = await db.Prodotti.Where(p => p.Categoria == "Abbigliamento").ToListAsync();
+            var sizes = new[] { "S", "M", "L", "XL" };
+            foreach (var p in clothing)
+            {
+                foreach (var size in sizes)
+                {
+                    db.ProductVariants.Add(new ProductVariant
+                    {
+                        ProductId = p.Id,
+                        Nome = size,
+                        Sku = $"{p.Sku}-{size}",
+                        PrezzoExtra = 0,
+                        Stock = 50,
+                        Attivo = true
+                    });
+                }
+            }
         }
 
         await db.SaveChangesAsync();

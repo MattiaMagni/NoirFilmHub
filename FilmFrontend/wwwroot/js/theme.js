@@ -59,7 +59,7 @@
 
   function updateThemeButton(theme) {
     const isDark = normalizeTheme(theme) === DARK;
-    const icon = isDark ? "☀️" : "🌙";
+    const icon = isDark ? "\u2600" : "\u263D";
     const label = isDark ? "Passa al tema chiaro" : "Passa al tema scuro";
     document.querySelectorAll("#theme-toggle").forEach((button) => {
       button.textContent = icon;

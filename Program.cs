@@ -323,7 +323,28 @@ using (var scope = app.Services.CreateScope())
                     if (categoriaId.HasValue)
                         db.FilmCategorie.Add(new FilmCategoria { FilmId = film.Id, CategoriaId = categoriaId.Value });
                 }
-                await db.SaveChangesAsync();
+        if (!await db.ProductVariants.AnyAsync(v => v.Sku == "NFH-TSH-M-S"))
+        {
+            var clothing = await db.Prodotti.Where(p => p.Categoria == "Abbigliamento").ToListAsync();
+            var sizes = new[] { "S", "M", "L", "XL" };
+            foreach (var p in clothing)
+            {
+                foreach (var size in sizes)
+                {
+                    db.ProductVariants.Add(new ProductVariant
+                    {
+                        ProductId = p.Id,
+                        Nome = size,
+                        Sku = $"{p.Sku}-{size}",
+                        PrezzoExtra = 0,
+                        Stock = 50,
+                        Attivo = true
+                    });
+                }
+            }
+        }
+
+        await db.SaveChangesAsync();
             }
         }
 

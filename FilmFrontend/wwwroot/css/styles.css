@@ -1570,6 +1570,7 @@ body.modal-open {
   display: grid;
   place-items: center;
   padding: 18px;
+  overflow-y: auto;
   background: rgb(11 15 20 / 0.72);
   backdrop-filter: blur(6px);
 }

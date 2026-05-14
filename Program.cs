@@ -325,6 +325,7 @@ using (var scope = app.Services.CreateScope())
                 }
         if (!await db.ProductVariants.AnyAsync(v => v.Sku == "NFH-TSH-M-S"))
         {
+            await db.SaveChangesAsync(); // ensure products are persisted before querying
             var clothing = await db.Prodotti.Where(p => p.Categoria == "Abbigliamento").ToListAsync();
             var sizes = new[] { "S", "M", "L", "XL" };
             foreach (var p in clothing)

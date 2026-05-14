@@ -222,6 +222,16 @@ if (stripeAmount <= 0 && importoGiftCard >= totaleDopoCoupon)
         }
     }
 
+    var lineTotal = lineItems.Sum(li => (li.PriceData.UnitAmount ?? 0) * (li.Quantity ?? 1));
+    var expectedTotal = (long)Math.Round(stripeAmount * 100m, MidpointRounding.AwayFromZero);
+    if (lineTotal != expectedTotal && lineItems.Count > 0)
+    {
+        var lastLi = lineItems[^1];
+        var diff = expectedTotal - lineTotal;
+        var lastQty = lastLi.Quantity ?? 1;
+        lastLi.PriceData.UnitAmount = Math.Max(0, (lastLi.PriceData.UnitAmount ?? 0) + diff / lastQty);
+    }
+
 var sessionService = new SessionService();
 var options = new SessionCreateOptions
 {

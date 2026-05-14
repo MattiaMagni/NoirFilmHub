@@ -121,7 +121,7 @@
       }
       grid.innerHTML = filtered.map(p => {
         const variants = (p.varianti || []).map(v =>
-          `<option value="${v.id}" data-price="${v.prezzoFinale}">${v.nome} - ${formatCurrency(v.prezzoFinale)}</option>`
+          `<option value="${v.id}" data-price="${v.prezzoFinale}" data-name="${v.nome.replace(/"/g, '&quot;')}">${v.nome} - ${formatCurrency(v.prezzoFinale)}</option>`
         ).join("");
         const hasVariants = variants.length > 0;
         const img = p.immaginePath ? `<div class="card-media" style="height:180px;overflow:hidden;border-radius:8px 8px 0 0"><img src="${p.immaginePath}" alt="${p.nome}" style="width:100%;height:100%;object-fit:cover"></div>` : "";
@@ -133,7 +133,7 @@
               <p class="subtle">${p.descrizione?.slice(0, 120) || ""}</p>
               <p>${hasVariants ? `Da ${formatCurrency(p.prezzoBase)}` : formatCurrency(p.prezzoBase)}</p>
               ${hasVariants ? `<select class="merch-variant" data-product="${p.id}">${variants}</select>` : ""}
-              <button class="button primary add-merch" data-product="${p.id}" data-price="${p.prezzoBase}" data-has-variants="${hasVariants}">Aggiungi al carrello</button>
+              <button class="button primary add-merch" data-product="${p.id}" data-name="${p.nome.replace(/"/g, '&quot;')}" data-price="${p.prezzoBase}" data-has-variants="${hasVariants}">Aggiungi al carrello</button>
             </div>
           </article>
         `;
@@ -142,19 +142,23 @@
       grid.querySelectorAll(".add-merch").forEach(btn => {
         btn.addEventListener("click", async () => {
           const productId = Number(btn.dataset.product);
+          const productName = btn.dataset.name || "";
           let price = Number(btn.dataset.price);
           let variantId = null;
+          let variantName = "";
           if (btn.dataset.hasVariants === "true") {
             const sel = btn.parentElement.querySelector(".merch-variant");
             if (sel) {
               variantId = Number(sel.value);
               price = Number(sel.selectedOptions[0].dataset.price);
+              variantName = sel.selectedOptions[0].dataset.name || "";
             }
           }
           btn.disabled = true;
           btn.textContent = "Aggiunta...";
           try {
-            await addToCart("Merchandise", productId, variantId, 1, price, null);
+            var detail = JSON.stringify({ nome: productName, taglia: variantName || null });
+            await addToCart("Merchandise", productId, variantId, 1, price, detail);
             setStatus("Prodotto aggiunto al carrello!", "success");
           } catch (e) {
             setStatus(`Errore: ${e.message}`, "error");

@@ -483,24 +483,25 @@ app.MapGet("/orders/mine", async (ClaimsPrincipal user, FilmDbContext db) =>
         .Include(p => p.Proiezione).ThenInclude(pr => pr.Cinema)
         .Where(p => p.UtenteId == userId && (p.Stato == "Confermata" || p.Stato == "Annullata"))
         .OrderByDescending(p => p.DataPrenotazione)
-        .Select(p => new
-        {
-            id = $"B-{p.Id}",
-            tipo = "Biglietti",
-            data = p.DataPrenotazione,
-            stato = p.Stato,
-            totale = p.TotalePrezzo,
-            sconto = 0m,
-            importoGiftCard = 0m,
-            righe = new[] { new
-            {
-                descrizione = $"{p.Proiezione.Film.Titolo} - {p.Proiezione.Cinema.Nome}",
-                dettaglio = $"{p.Proiezione.Data:yyyy-MM-dd} {p.Proiezione.Ora:HH:mm} | {p.PostiSelezionati}",
-                prezzo = p.TotalePrezzo,
-                quantita = 1
-            }}.ToList()
-        })
         .ToListAsync();
+
+    var bookingOrders = bookings.Select(p => new
+    {
+        id = $"B-{p.Id}",
+        tipo = "Biglietti",
+        data = p.DataPrenotazione,
+        stato = p.Stato,
+        totale = p.TotalePrezzo,
+        sconto = 0m,
+        importoGiftCard = 0m,
+        righe = new[] { new
+        {
+            descrizione = $"{p.Proiezione?.Film?.Titolo ?? "Film"} - {p.Proiezione?.Cinema?.Nome ?? "Cinema"}",
+            dettaglio = $"{p.Proiezione?.Data:yyyy-MM-dd} {p.Proiezione?.Ora:HH:mm} | {p.PostiSelezionati}",
+            prezzo = p.TotalePrezzo,
+            quantita = 1
+        }}.ToList()
+    }).ToList();
 
     var cartOrders = await db.Carts
         .AsNoTracking()
@@ -524,7 +525,7 @@ app.MapGet("/orders/mine", async (ClaimsPrincipal user, FilmDbContext db) =>
             {
                 "Ticket" => "Biglietto cinema",
                 "GiftCard" => $"Gift Card {ci.PrezzoUnitario:C}",
-                "Merchandise" => "Merchandise",
+                "Merchandise" => TryGetProductName(ci.DettaglioJson, ci.ItemId),
                 _ => ci.ItemType
             },
             dettaglio = ci.DettaglioJson ?? "",
@@ -533,7 +534,28 @@ app.MapGet("/orders/mine", async (ClaimsPrincipal user, FilmDbContext db) =>
         }).ToList()
     }).ToList();
 
-    var all = bookings.Concat(orders).OrderByDescending(o => o.data).ToList();
+    static string TryGetProductName(string? dettaglioJson, int itemId)
+    {
+        if (string.IsNullOrWhiteSpace(dettaglioJson)) return $"Prodotto #{itemId}";
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(dettaglioJson);
+            if (doc.RootElement.TryGetProperty("nome", out var nome) && nome.ValueKind == System.Text.Json.JsonValueKind.String)
+            {
+                var n = nome.GetString() ?? "";
+                if (doc.RootElement.TryGetProperty("taglia", out var taglia) && taglia.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    var t = taglia.GetString();
+                    if (!string.IsNullOrWhiteSpace(t)) n += $" ({t})";
+                }
+                return n;
+            }
+        }
+        catch { }
+        return $"Prodotto #{itemId}";
+    }
+
+    var all = bookingOrders.Concat(orders).OrderByDescending(o => o.data).ToList();
 
     return Results.Ok(all);
 }).RequireAuthorization();

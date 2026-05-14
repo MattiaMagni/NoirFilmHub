@@ -21,21 +21,35 @@ public class CartService
         {
             cart = await _db.Carts
                 .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.UtenteId == userId && c.Stato == "Active");
+                .FirstOrDefaultAsync(c => c.UtenteId == userId && (c.Stato == "Active" || c.Stato == "Checkout"));
         }
         else if (!string.IsNullOrWhiteSpace(guestToken))
         {
             cart = await _db.Carts
                 .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.GuestToken == guestToken && c.Stato == "Active" && c.UtenteId == null);
+                .FirstOrDefaultAsync(c => c.GuestToken == guestToken && (c.Stato == "Active" || c.Stato == "Checkout") && c.UtenteId == null);
         }
 
         if (cart != null)
         {
+            var now = DateTime.UtcNow;
+            // If the cart was in checkout state (user returned from Stripe without paying), revert to active.
+            // BUT: if checkout is recent (<30s) and has a StripeSessionId, keep it — payment is still in progress.
+            if (cart.Stato == "Checkout")
+            {
+                if (cart.StripeSessionId != null && cart.UpdatedAtUtc > now.AddSeconds(-30))
+                {
+                    // Payment in progress, leave unchanged
+                }
+                else
+                {
+                    cart.Stato = "Active";
+                    cart.StripeSessionId = null;
+                }
+            }
             // Clean up expired ticket items (seat locks released)
             await RemoveExpiredTicketItemsAsync(cart);
             // Extend active locks by 5 minutes to prevent expiry while user is on cart page
-            var now = DateTime.UtcNow;
             var extendUntil = now.AddMinutes(5);
             await _db.SeatLocks
                 .Where(l => l.CartId == cart.Id && l.ExpiresAtUtc > now && l.ExpiresAtUtc < extendUntil)

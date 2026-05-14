@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace FilmAPI.Endpoints;
 
@@ -346,7 +347,9 @@ public static class CartEndpoints
 
     public class SeatList
     {
+        [JsonPropertyName("posti")]
         public List<string> Posti { get; set; } = new();
+        [JsonPropertyName("tipo")]
         public string? Tipo { get; set; }
     }
 }

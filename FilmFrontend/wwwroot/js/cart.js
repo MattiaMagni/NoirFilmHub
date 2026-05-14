@@ -116,11 +116,15 @@
         </div>
       </div>`;
     }
+    var prodName = detail.nome || `Prodotto #${item.itemId}`;
+    var variantLabel = detail.taglia ? `Taglia: ${detail.taglia}` : "";
     return `<div class="cart-item-card panel">
       <div class="cart-item-main">
         <div class="cart-item-icon">&#x1f455;</div>
         <div class="cart-item-info">
-          <h4>Merchandise #${item.itemId}</h4>
+          <h4>${prodName}</h4>
+          ${variantLabel ? '<p class="subtle" style="font-size:0.78rem">'+variantLabel+'</p>' : ''}
+          <p class="subtle">${formatCurrency(item.prezzoUnitario)} cad.</p>
           <div class="cart-qty-row">
             <button class="btn-small secondary cart-qty-dec" data-item-id="${item.id}">−</button>
             <span class="cart-qty-val" data-item-id="${item.id}">${item.quantita}</span>

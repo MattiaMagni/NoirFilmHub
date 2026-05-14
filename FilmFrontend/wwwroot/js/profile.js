@@ -185,6 +185,8 @@
           var d = JSON.parse(r.dettaglio || "{}");
           if (d.film) dett = d.film + " - " + (d.cinema || "") + " | " + (d.data || "") + " " + (d.ora || "");
           else if (d.emailDestinatario) dett = "Per: " + d.emailDestinatario;
+          else if (d.nome) dett = d.nome + (d.taglia ? " - Taglia: " + d.taglia : "");
+          else if (d.posti && d.posti.length) dett = "Posti: " + d.posti.join(", ");
           else if (r.dettaglio && r.dettaglio.length < 50) dett = r.dettaglio;
         } catch { dett = r.dettaglio || ""; }
         return "<div style='display:flex;justify-content:space-between;align-items:center;padding:0.25rem 0'><span>" + r.descrizione + (dett ? " <span class='subtle' style='font-size:0.75rem'>" + dett + "</span>" : "") + (r.quantita > 1 ? " x" + r.quantita : "") + "</span><strong>" + formatCurrency(r.prezzo || 0) + "</strong></div>";
@@ -209,9 +211,9 @@
     try {
       var orders = await window.ApiClient.get("/orders/mine");
       renderOrders(orders);
-    } catch {
+    } catch (err) {
       var body = document.getElementById("orders-body");
-      if (body) body.innerHTML = "<p class='subtle'>Errore caricamento ordini.</p>";
+      if (body) body.innerHTML = "<p class='subtle'>Errore caricamento ordini: " + (err && err.message ? err.message : "errore sconosciuto") + "</p>";
     }
   }
 

@@ -444,9 +444,7 @@
 						});
 					}
 
-					showCartToast();
-					setStatus("Ticket aggiunto al carrello!", "success");
-					addCartBtn.textContent = "Aggiunto!";
+					window.location.href = "/cart.html";
 				} catch (error) {
 					setStatus(`Errore: ${error.message}`, "error");
 					addCartBtn.disabled = false;

@@ -74,6 +74,28 @@
       }
 
       // Single booking
+      if (result.stato === "Confermata") {
+        bodyEl.innerHTML = `
+          <article class="panel">
+            <h3>Pagamento completato</h3>
+            <p class="subtle"><strong>Codice acquisto:</strong> ${result.codiceAcquisto || "-"}</p>
+            <p class="subtle"><strong>Film:</strong> ${result.film || "-"}</p>
+            <p class="subtle"><strong>Cinema:</strong> ${result.cinema || "-"}</p>
+            <p class="subtle"><strong>Posti:</strong> ${result.postiSelezionati || "-"}</p>
+            <p class="subtle"><strong>Totale:</strong> ${Number(result.totalePrezzo || 0).toFixed(2)} EUR</p>
+            <div class="actions">
+              <button class="button" type="button" id="download-ticket-pdf">Scarica PDF</button>
+              <a class="button secondary" href="/programmazione.html">Torna alla programmazione</a>
+              <a class="button primary" href="/profile.html">Vai al profilo</a>
+            </div>
+          </article>
+        `;
+        const downloadBtn = document.getElementById("download-ticket-pdf");
+        if (downloadBtn) {
+          downloadBtn.addEventListener("click", () => downloadTicketPdf(result.codiceAcquisto));
+        }
+        setStatus("Esito pagamento caricato.", "success");
+      } else {
         setStatus("Pagamento registrato ma prenotazione non ancora finalizzata. Riprova tra pochi secondi.", "info");
         bodyEl.innerHTML = `
           <article class="panel">
@@ -89,29 +111,7 @@
         if (retryBtn) {
           retryBtn.addEventListener("click", () => window.location.reload());
         }
-        return;
       }
-
-      bodyEl.innerHTML = `
-        <article class="panel">
-          <h3>Pagamento completato</h3>
-          <p class="subtle"><strong>Codice acquisto:</strong> ${result.codiceAcquisto || "-"}</p>
-          <p class="subtle"><strong>Film:</strong> ${result.film || "-"}</p>
-          <p class="subtle"><strong>Cinema:</strong> ${result.cinema || "-"}</p>
-          <p class="subtle"><strong>Posti:</strong> ${result.postiSelezionati || "-"}</p>
-          <p class="subtle"><strong>Totale:</strong> ${Number(result.totalePrezzo || 0).toFixed(2)} EUR</p>
-          <div class="actions">
-            <button class="button" type="button" id="download-ticket-pdf">Scarica PDF</button>
-            <a class="button secondary" href="/programmazione.html">Torna alla programmazione</a>
-            <a class="button primary" href="/profile.html">Vai al profilo</a>
-          </div>
-        </article>
-      `;
-      const downloadBtn = document.getElementById("download-ticket-pdf");
-      if (downloadBtn) {
-        downloadBtn.addEventListener("click", () => downloadTicketPdf(result.codiceAcquisto));
-      }
-      setStatus("Esito pagamento caricato.", "success");
     } catch (error) {
       setStatus(`Errore caricamento esito: ${error.message}`, "error");
       bodyEl.innerHTML = "";

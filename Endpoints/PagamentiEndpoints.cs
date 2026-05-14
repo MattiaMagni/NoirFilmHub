@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 using Stripe.Checkout;
+using System.Text.Json.Serialization;
 
 namespace FilmAPI.Endpoints;
 
@@ -122,10 +123,17 @@ if (string.IsNullOrWhiteSpace(stripeSecret))
 
 var cart = await db.Carts
     .Include(c => c.CartItems)
-    .FirstOrDefaultAsync(c => c.Id == req.CartId && c.UtenteId == userId && c.Stato == "Active");
+    .FirstOrDefaultAsync(c => c.Id == req.CartId && c.UtenteId == userId && (c.Stato == "Active" || c.Stato == "Checkout"));
 
 if (cart == null) return Results.BadRequest(new { error = "Carrello non trovato o non attivo" });
 if (cart.CartItems.Count == 0) return Results.BadRequest(new { error = "Carrello vuoto" });
+
+// If cart was in checkout state from a previous attempt, reset it
+if (cart.Stato == "Checkout")
+{
+    cart.Stato = "Active";
+    cart.StripeSessionId = null;
+}
 
 var now = DateTime.UtcNow;
 var appBaseUrl = (Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001").TrimEnd('/');
@@ -254,6 +262,7 @@ try
 {
     var session = await sessionService.CreateAsync(options);
     cart.StripeSessionId = session.Id;
+    cart.Stato = "Checkout";
     await db.SaveChangesAsync();
     return Results.Ok(new { sessionId = session.Id, url = session.Url });
 }
@@ -267,6 +276,8 @@ catch (Exception ex)
 group.MapGet("/esito", async (string session_id, ClaimsPrincipal user, FilmDbContext db, TicketPdfService pdfService, TicketEmailService emailService, ILoggerFactory loggerFactory, EmailService emailSvc) =>
 {
 var logger = loggerFactory.CreateLogger("PagamentiEndpoints");
+try
+{
 
 if (!TryGetUserId(user, out var userId))
 {
@@ -287,20 +298,26 @@ var booking = await db.Prenotazioni
 
 if (booking is null)
 {
-// Check if this is a cart checkout
+ // Check if this is a cart checkout
 var cart = await db.Carts
     .Include(c => c.CartItems)
-    .FirstOrDefaultAsync(c => c.StripeSessionId == session_id && c.UtenteId == userId && c.Stato == "Checkout");
+    .FirstOrDefaultAsync(c => c.StripeSessionId == session_id && c.UtenteId == userId && (c.Stato == "Checkout" || c.Stato == "Active" || c.Stato == "Converted"));
+
+logger.LogInformation("Esito cart checkout: session_id={SessionId}, userId={UserId}, cartFound={Found}, stripeSecret={HasSecret}",
+    session_id, userId, cart != null, !string.IsNullOrWhiteSpace(stripeSecret));
 
 if (cart != null && !string.IsNullOrWhiteSpace(stripeSecret))
 {
     try
     {
-        var sessionService = new SessionService();
-        var stripeSession = await sessionService.GetAsync(session_id);
-        if (stripeSession.PaymentStatus == "paid")
+        if (cart.Stato != "Converted")
         {
-            await FinalizeCartOrderAsync(db, cart, userId, logger, emailSvc);
+            var sessionService = new SessionService();
+            var stripeSession = await sessionService.GetAsync(session_id);
+            if (stripeSession.PaymentStatus == "paid")
+            {
+                await FinalizeCartOrderAsync(db, cart, userId, logger, emailSvc, pdfService, emailService);
+            }
         }
         return Results.Ok(new { stato = cart.Stato, cartId = cart.Id, items = cart.CartItems.Count });
     }
@@ -310,6 +327,14 @@ if (cart != null && !string.IsNullOrWhiteSpace(stripeSecret))
         return Results.Ok(new { stato = "Errore" });
     }
 }
+
+// Debug: list all user carts to help diagnose
+var userCarts = await db.Carts
+    .Where(c => c.UtenteId == userId)
+    .Select(c => new { c.Id, c.Stato, c.StripeSessionId })
+    .ToListAsync();
+logger.LogWarning("Cart checkout 404: no match for session_id={SessionId}. User {UserId} has {Count} carts: {@Carts}",
+    session_id, userId, userCarts.Count, userCarts);
 
 return Results.NotFound();
 }
@@ -343,6 +368,12 @@ booking.TotalePrezzo,
 film = booking.Proiezione.Film.Titolo,
 cinema = booking.Proiezione.Cinema.Nome
 });
+}
+catch (Exception ex)
+{
+    logger.LogError(ex, "Unhandled error in /esito for session {SessionId}", session_id);
+    return Results.Json(new { error = $"Errore interno: {ex.Message}" }, statusCode: 500);
+}
 }).RequireAuthorization();
 
 group.MapPost("/conferma", async (PrenotazioneCreateDTO dto, ClaimsPrincipal user, FilmDbContext db) =>
@@ -542,7 +573,7 @@ return Results.Ok(new { received = true });
 return group;
 }
 
-private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, int userId, ILogger logger, EmailService? emailService = null)
+private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, int userId, ILogger logger, EmailService? emailService = null, TicketPdfService? pdfService = null, TicketEmailService? ticketEmailService = null)
 {
     var now = DateTime.UtcNow;
 
@@ -668,6 +699,32 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
 
         // Send order confirmation email to purchaser (summary, no sensitive codes)
         await emailService.SendOrderConfirmationEmail(userEmail, cart.Id, cart.Subtotale, cart.ScontoCoupon, cart.ImportoGiftCard, cart.Totale, createdGc.Count, cart.CartItems.Count(ci => ci.ItemType == "Ticket"));
+
+        // Send ticket PDF emails for each booking
+        if (pdfService != null && ticketEmailService != null)
+        {
+            var appBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001";
+            foreach (var booking in allBookings)
+            {
+                try
+                {
+                    await db.Entry(booking).Reference(p => p.Utente).LoadAsync();
+                    await db.Entry(booking).Reference(p => p.Proiezione).LoadAsync();
+                    await db.Entry(booking.Proiezione).Reference(p => p.Film).LoadAsync();
+                    await db.Entry(booking.Proiezione).Reference(p => p.Cinema).LoadAsync();
+                    await db.Entry(booking.Proiezione).Reference(p => p.Sala!).LoadAsync();
+
+                    var pdfBytes = pdfService.GenerateOrderPdf(booking, appBaseUrl);
+                    var emailSent = await ticketEmailService.SendTicketEmailAsync(booking.Utente.Email, booking.CodiceAcquisto, pdfBytes);
+                    if (!emailSent)
+                        logger.LogWarning("Email biglietto non inviata per ordine {CodiceAcquisto} a {Email}", booking.CodiceAcquisto, booking.Utente.Email);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Errore durante generazione PDF o invio email biglietto per ordine {CodiceAcquisto}", booking.CodiceAcquisto);
+                }
+            }
+        }
 
         // Notify about gift card balance used
         if (!string.IsNullOrWhiteSpace(cart.GiftCardCode) && cart.ImportoGiftCard > 0)
@@ -867,6 +924,7 @@ public class CartCheckoutRequest
 
 public class SeatInfo
 {
+    [JsonPropertyName("posti")]
     public List<string> Posti { get; set; } = new();
 }
 }

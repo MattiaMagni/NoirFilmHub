@@ -250,7 +250,12 @@ public class CartService
 
         var today = DateTime.Today;
         if (today < coupon.ValidoDal.Date || today > coupon.ValidoAl.Date) return false;
-        if (coupon.MaxUtilizzi > 0 && coupon.UtilizziAttuali >= coupon.MaxUtilizzi) return false;
+        if (coupon.MaxUtilizzi > 0)
+        {
+            var usedCount = coupon.UtilizziAttuali;
+            var pendingCount = await _db.Carts.CountAsync(c => c.CouponId == coupon.Id && c.Stato == "Active" && c.Id != cart.Id);
+            if (usedCount + pendingCount >= coupon.MaxUtilizzi) return false;
+        }
 
         var userUsageCount = await _db.CouponUsages
             .CountAsync(cu => cu.CouponId == coupon.Id && cu.UtenteId == userId);
@@ -283,15 +288,6 @@ public class CartService
         }
 
         var sconto = CalculateDiscount(coupon, cart.Subtotale);
-
-        coupon.UtilizziAttuali++;
-        _db.CouponUsages.Add(new CouponUsage
-        {
-            CouponId = coupon.Id,
-            UtenteId = userId,
-            CartId = cart.Id,
-            ScontoApplicato = sconto
-        });
 
         cart.CouponId = coupon.Id;
         await RecalculateAsync(cart);

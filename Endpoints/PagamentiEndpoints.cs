@@ -148,7 +148,6 @@ var totaleDopoCoupon = Math.Max(0, subtotale - sconto);
 var importoGiftCard = cart.ImportoGiftCard;
 var stripeAmount = Math.Max(0, totaleDopoCoupon - importoGiftCard);
 
-cart.Stato = "Checkout";
 cart.UpdatedAtUtc = now;
 
 // Build line items for Stripe
@@ -233,8 +232,6 @@ try
 catch (Exception ex)
 {
     logger.LogError(ex, "Stripe session creation failed for cart {CartId}", cart.Id);
-    cart.Stato = "Active";
-    await db.SaveChangesAsync();
     return Results.BadRequest(new { error = $"Errore pagamento: {ex.Message}" });
 }
 }).RequireAuthorization();
@@ -592,6 +589,23 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
         {
             var variant = await db.ProductVariants.FindAsync(item.VariantId.Value);
             if (variant != null) variant.Stock = Math.Max(0, variant.Stock - item.Quantita);
+        }
+    }
+
+    // Track coupon usage if applied
+    if (cart.CouponId.HasValue)
+    {
+        var coupon = await db.Coupons.FindAsync(cart.CouponId.Value);
+        if (coupon != null)
+        {
+            coupon.UtilizziAttuali++;
+            db.CouponUsages.Add(new CouponUsage
+            {
+                CouponId = coupon.Id,
+                UtenteId = userId,
+                CartId = cart.Id,
+                ScontoApplicato = cart.ScontoCoupon
+            });
         }
     }
 

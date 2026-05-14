@@ -194,7 +194,7 @@
         var now = new Date();
         var validoAl = new Date(c.validoAl);
         var validoDal = new Date(c.validoDal);
-        return c.attivo && now >= validoDal && now <= validoAl && !redeemedIds.includes(c.id);
+        return c.attivo && now >= validoDal && now <= validoAl;
       });
       if (cinemaId) {
         const cid = Number(cinemaId);
@@ -211,8 +211,9 @@
         var scontoLabel = c.tipoSconto === "Percentuale" ? `${c.valoreSconto}% di sconto` : `${formatCurrency(c.valoreSconto)} di sconto`;
         var cinemaInfo = c.cinemaNome || "";
         var scadenza = new Date(c.validoAl).toLocaleDateString("it-IT");
+        var redeemed = redeemedIds.includes(c.id);
         return `
-          <article class="card" style="text-align:center">
+          <article class="card" style="text-align:center;${redeemed ? 'opacity:0.5;' : ''}">
             <div class="card-body">
               <h3>${scontoLabel}</h3>
               <p class="subtle">Codice: ${c.codice}</p>
@@ -220,7 +221,7 @@
               <p class="subtle">Scade il ${scadenza}</p>
               ${c.minImportoCarrello > 0 ? `<p class="subtle">Min. carrello: ${formatCurrency(c.minImportoCarrello)}</p>` : ""}
               <div style="text-align:right;margin-top:0.5rem">
-                <button class="button primary redeem-offer" data-id="${c.id}">Riscatta</button>
+                <button class="button ${redeemed ? 'secondary' : 'primary'} redeem-offer" data-id="${c.id}" ${redeemed ? 'disabled' : ''}>${redeemed ? 'Già riscattato' : 'Riscatta'}</button>
               </div>
             </div>
           </article>

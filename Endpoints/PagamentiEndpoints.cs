@@ -171,11 +171,12 @@ foreach (var item in cart.CartItems)
             UnitAmount = (long)Math.Round(item.PrezzoUnitario * 100m, MidpointRounding.AwayFromZero),
             ProductData = new SessionLineItemPriceDataProductDataOptions
             {
-                Name = desc,
-                Description = item.DettaglioJson ?? ""
+                Name = desc
             }
         }
     });
+    if (!string.IsNullOrWhiteSpace(item.DettaglioJson))
+        lineItems[^1].PriceData.ProductData.Description = item.DettaglioJson;
 }
 
 // If gift card covers everything, stripe amount is 0; still create session for record

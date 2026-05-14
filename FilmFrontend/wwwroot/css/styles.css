@@ -1587,25 +1587,22 @@ body.modal-open {
 
 .quick-add-modal-panel {
   width: min(100%, 980px);
-  max-height: 85vh;
-  overflow-y: auto;
+  max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
 }
 
 .quick-add-grid {
-  flex: 1 1 auto;
-  min-height: 0;
+  max-height: 60vh;
   overflow-y: auto;
+  padding-right: 4px;
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
-  gap: 16px !important;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
 }
 
 .quick-add-card {
   cursor: pointer;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
 }
 
 .quick-add-card.selected {
@@ -1624,66 +1621,6 @@ body.modal-open {
 
 .quick-add-card h3 {
   margin: 10px 0 4px;
-}
-
-@media (max-width: 860px) {
-  .quick-add-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
-    gap: 12px !important;
-  }
-
-  .quick-add-card .card-body {
-    padding: 10px;
-  }
-
-  .quick-add-card h3 {
-    font-size: 0.9rem;
-    margin: 6px 0 2px;
-  }
-
-  .quick-add-modal-panel {
-    max-height: calc(100vh - 16px);
-    padding: 12px;
-  }
-
-  .quick-add-card .card-body {
-    padding: 10px;
-  }
-
-  .quick-add-card h3 {
-    font-size: 0.9rem;
-    margin: 6px 0 2px;
-  }
-
-  .quick-add-modal-panel {
-    overflow-y: auto;
-    max-height: calc(100vh - 16px);
-    padding: 12px;
-  }
-
-  .quick-add-grid {
-    max-height: 55vh;
-  }
-}
-
-@media (max-width: 520px) {
-  .quick-add-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .quick-add-card img,
-  .quick-add-card .card-media {
-    max-height: 140px;
-  }
-
-  .quick-add-card .card-body {
-    padding: 8px;
-  }
-
-  .quick-add-card h3 {
-    font-size: 0.8rem;
-  }
 }
 
 .quick-add-confirm-panel {
@@ -2013,6 +1950,15 @@ button.theme-toggle:focus-visible::after {
   .modal-poster-wrap,
   .modal-poster-fallback {
     min-height: 240px;
+  }
+
+  .quick-add-modal-panel {
+    max-height: calc(100vh - 24px);
+    padding: 12px;
+  }
+
+  .quick-add-grid {
+    max-height: 55vh;
   }
 }
 

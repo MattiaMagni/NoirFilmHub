@@ -124,8 +124,10 @@
           `<option value="${v.id}" data-price="${v.prezzoFinale}">${v.nome} - ${formatCurrency(v.prezzoFinale)} (Stock: ${v.stock})</option>`
         ).join("");
         const hasVariants = variants.length > 0;
+        const img = p.immaginePath ? `<div class="card-media" style="height:180px;overflow:hidden;border-radius:8px 8px 0 0"><img src="${p.immaginePath}" alt="${p.nome}" style="width:100%;height:100%;object-fit:cover"></div>` : "";
         return `
           <article class="card">
+            ${img}
             <div class="card-body">
               <h3>${p.nome}</h3>
               <p class="subtle">${p.descrizione?.slice(0, 120) || ""}</p>
@@ -326,8 +328,9 @@
         formData.append("file", fileInput.files[0]);
         try {
           const token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
+          const h = token ? { Authorization: "Bearer "+token } : {};
           const resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, {
-            method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData
+            method: "POST", headers: h, body: formData
           });
           if (resp.ok) {
             const result = await resp.json();
@@ -486,7 +489,8 @@
          var formData = new FormData(); formData.append("file", fileInput.files[0]);
          try {
            var token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
-           var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+           var h = token ? { Authorization: "Bearer "+token } : {};
+           var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: h, body: formData });
            if(resp.ok) { var r = await resp.json(); immaginePath = r.path || immaginePath; }
          } catch {}
        }

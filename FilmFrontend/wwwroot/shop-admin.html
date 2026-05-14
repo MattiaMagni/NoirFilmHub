@@ -96,9 +96,11 @@
             var formData = new FormData(); formData.append("file", fileInput.files[0]);
             try {
               var token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
-              var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+              var h = token ? { Authorization: "Bearer "+token } : {};
+              var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: h, body: formData });
               if(resp.ok) { var r = await resp.json(); immaginePath = r.path || immaginePath; }
-            } catch {}
+              else { var txt = await resp.text(); try { var j = JSON.parse(txt); s("Upload: "+j.error,"error"); } catch { s("Upload fallito ("+resp.status+")","error"); } }
+            } catch(e) { s("Upload: "+e.message,"error"); }
           }
           await window.ApiClient.post("/shop/products", {
             sku, nome, descrizione: document.getElementById("admin-prod-desc").value,
@@ -231,9 +233,11 @@
             var formData = new FormData(); formData.append("file", fileInput.files[0]);
             try {
               var token = window.AuthService ? await window.AuthService.ensureValidAccessToken() : null;
-              var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
+              var h = token ? { Authorization: "Bearer "+token } : {};
+              var resp = await fetch(`${window.AppConfig.API_BASE_URL}/shop/upload-image`, { method:"POST", headers: h, body: formData });
               if(resp.ok) { var r = await resp.json(); immaginePath = r.path || immaginePath; }
-            } catch {}
+              else { var txt = await resp.text(); try { var j = JSON.parse(txt); alert("Upload: "+j.error); } catch { alert("Upload fallito ("+resp.status+")"); } }
+            } catch(e) { alert("Upload: "+e.message); }
           }
           try {
             await window.ApiClient.put("/shop/products/"+p.id, {

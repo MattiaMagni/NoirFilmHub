@@ -187,8 +187,12 @@
   function getUserId() {
     try {
       if (window.AuthService && window.AuthService.isAuthenticated()) {
-        var user = JSON.parse(localStorage.getItem("user") || "{}");
-        return user.id ? String(user.id) : null;
+        var token = window.AuthService.getAccessToken ? window.AuthService.getAccessToken() : (localStorage.getItem("access_token") || "");
+        if (token) {
+          var payload = JSON.parse(atob(token.split(".")[1]));
+          var id = payload.sub || payload.nameid || payload.uid;
+          if (id) return String(id);
+        }
       }
     } catch {}
     return null;
@@ -268,6 +272,7 @@
             addRedeemedId(id);
             showRedeemToast(result);
             setStatus("Offerta riscattata! Controlla la tua email.", "success");
+            await loadOffers(document.getElementById("offers-cinema-filter")?.value || "");
           } catch (e) {
             setStatus(`Errore: ${e.message}`, "error");
           }

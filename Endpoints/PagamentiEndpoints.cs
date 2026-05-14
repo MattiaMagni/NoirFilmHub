@@ -204,6 +204,24 @@ if (stripeAmount <= 0 && importoGiftCard >= totaleDopoCoupon)
         }
     }
 
+    if (importoGiftCard > 0 && lineItems.Count > 0)
+    {
+        var totalItems = lineItems.Sum(li => (decimal)(li.PriceData.UnitAmount ?? 0) * (li.Quantity ?? 1));
+        var remaining = (long)Math.Round(importoGiftCard * 100m, MidpointRounding.AwayFromZero);
+        for (int i = 0; i < lineItems.Count && remaining > 0; i++)
+        {
+            var li = lineItems[i];
+            var ua = li.PriceData.UnitAmount ?? 0;
+            var qty = li.Quantity ?? 1;
+            var itemTotal = (decimal)ua * qty;
+            var share = totalItems > 0 ? (long)Math.Round(remaining * (itemTotal / totalItems)) : 0;
+            var maxShare = ua * qty;
+            share = Math.Min(share, maxShare);
+            li.PriceData.UnitAmount = Math.Max(0, ua - share / qty);
+            remaining -= share;
+        }
+    }
+
 var sessionService = new SessionService();
 var options = new SessionCreateOptions
 {

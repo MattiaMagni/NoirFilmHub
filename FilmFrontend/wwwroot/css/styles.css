@@ -1593,10 +1593,11 @@ body.modal-open {
 }
 
 .quick-add-grid {
-  flex: 1 1 auto;
-  min-height: 0;
+  max-height: 60vh;
   overflow-y: auto;
   padding-right: 4px;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
 }
 
 .quick-add-card {
@@ -1957,8 +1958,7 @@ button.theme-toggle:focus-visible::after {
   }
 
   .quick-add-grid {
-    flex: 1 1 auto;
-    min-height: 0;
+    max-height: 55vh;
   }
 }
 

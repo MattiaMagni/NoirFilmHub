@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY FilmAPI.csproj ./
+RUN dotnet restore FilmAPI.csproj
+COPY . .
+RUN dotnet publish FilmAPI.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+COPY --from=build /app .
+ENV ASPNETCORE_URLS=http://+:5000
+ENV RUN_SEEDER=false
+EXPOSE 5000
+ENTRYPOINT ["dotnet", "FilmAPI.dll"]

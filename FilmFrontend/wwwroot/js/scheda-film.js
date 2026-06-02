@@ -157,7 +157,22 @@
 
     const tipologie = selected.tipologie
       .map((tipologia) => {
-        const buttons = tipologia.orari
+        const now = new Date();
+        const todayIso = window.DateUtils.toIsoDate(now);
+        const isToday = selectedDate === todayIso;
+
+        const visibleOrari = isToday
+          ? tipologia.orari.filter(item => {
+              const [h, m] = item.ora.split(':').map(Number);
+              const showTime = new Date();
+              showTime.setHours(h, m, 0, 0);
+              return showTime > now;
+            })
+          : tipologia.orari;
+
+        if (!visibleOrari.length) return '';
+
+        const buttons = visibleOrari
           .map((item) => {
             return `<button class="btn-small primary showtime-btn" data-proiezione-id="${item.proiezioneId}" data-sala-id="${item.salaId}" data-url="${bookingUrl(item)}">${item.ora}</button>`;
           })

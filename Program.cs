@@ -5,6 +5,7 @@ using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using FilmAPI.Data;
 using FilmAPI.Endpoints;
+using FilmAPI.Helpers;
 using FilmAPI.Model;
 using FilmAPI.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -14,7 +15,58 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using QuestPDF.Infrastructure;
 
-Env.Load();
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (!File.Exists(envPath))
+{
+    envPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env"));
+}
+if (!File.Exists(envPath))
+{
+    envPath = Path.Combine(AppContext.BaseDirectory, ".env");
+}
+
+if (File.Exists(envPath))
+{
+    Env.Load(envPath);
+}
+else
+{
+    Env.Load();
+}
+
+// Se il token TMDB ancora non risulta, prova a leggerlo manualmente dal file
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TMDB_API_READ_TOKEN")))
+{
+    foreach (var tryPath in new[] {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env")),
+        Path.Combine(AppContext.BaseDirectory, ".env")
+    })
+    {
+        if (File.Exists(tryPath))
+        {
+            foreach (var line in File.ReadAllLines(tryPath))
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith('#'))
+                    continue;
+                var eqIndex = trimmed.IndexOf('=');
+                if (eqIndex <= 0 || eqIndex >= trimmed.Length - 1)
+                    continue;
+                var key = trimmed[..eqIndex].Trim();
+                var value = trimmed[(eqIndex + 1)..].Trim();
+                if (!string.IsNullOrEmpty(key) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable(key)))
+                    Environment.SetEnvironmentVariable(key, value);
+            }
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TMDB_API_READ_TOKEN")))
+                break;
+        }
+    }
+}
+
+// Log diagnostico TMDB all'avvio
+var tmdbTokenDiag = Environment.GetEnvironmentVariable("TMDB_API_READ_TOKEN");
+Console.WriteLine($"[DIAG] TMDB_API_READ_TOKEN presente: {(!string.IsNullOrEmpty(tmdbTokenDiag))} (lunghezza: {tmdbTokenDiag?.Length ?? 0})");
 
 var builder = WebApplication.CreateBuilder(args);
 QuestPDF.Settings.License = LicenseType.Community;
@@ -46,14 +98,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<TmdbService>();
 builder.Services.AddScoped<TicketPdfService>();
 builder.Services.AddScoped<TicketEmailService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<SecurityAuditService>();
 builder.Services.AddScoped<SocialAuthService>();
 builder.Services.AddScoped<CartService>();
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<TmdbService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+});
 builder.Services.AddHostedService<TmdbSyncHostedService>();
 builder.Services.AddHostedService<CleanupHostedService>();
 
@@ -150,6 +205,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.SerializerOptions.Converters.Add(new UtcDateTimeConverter());
 });
 
 var host2 = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
@@ -204,6 +260,15 @@ using (var scope = app.Services.CreateScope())
     {
         db.Database.Migrate();
 
+        var runSeeder = (Environment.GetEnvironmentVariable("RUN_SEEDER") ?? "true")
+            .Equals("true", StringComparison.OrdinalIgnoreCase);
+
+        if (!runSeeder)
+        {
+            logger.LogInformation("RUN_SEEDER=false — skipping database seed.");
+        }
+        else
+        {
         // Cleanup: delete all existing users, then create ONLY the admin
         var resetUsers = (Environment.GetEnvironmentVariable("RESET_USERS") ?? "false")
             .Equals("true", StringComparison.OrdinalIgnoreCase);
@@ -217,6 +282,14 @@ using (var scope = app.Services.CreateScope())
             await db.Prenotazioni.ExecuteDeleteAsync();
             await db.Utenti.ExecuteDeleteAsync();
             logger.LogInformation("All users and related data deleted for reset.");
+        }
+
+        var reseedProiezioni = (Environment.GetEnvironmentVariable("RESEED_PROIEZIONI") ?? "false")
+            .Equals("true", StringComparison.OrdinalIgnoreCase);
+        if (reseedProiezioni)
+        {
+            await db.Proiezioni.ExecuteDeleteAsync();
+            logger.LogInformation("All projections deleted for reseed.");
         }
 
         var usersWithNullNormalized = await db.Utenti
@@ -333,23 +406,36 @@ using (var scope = app.Services.CreateScope())
             var sale = await db.Sale.AsNoTracking().ToListAsync();
             var today = DateTime.Today;
             var random = new Random(42);
+            var timeSlots = new[] { 13, 15, 16, 18, 20, 21, 22 };
+            var totalDays = 14;
+
             foreach (var s in sale)
             {
-                for (var d = 0; d < 7; d++)
+                for (var d = 0; d < totalDays; d++)
                 {
                     var date = today.AddDays(d);
-                    var film = films[(s.Id + d) % films.Count];
-                    var starts = new[] { 16, 19, 21 };
-                    foreach (var startHour in starts)
+                    var shift = s.Id + d;
+                    foreach (var startHour in timeSlots)
                     {
+                        var filmIndex = (shift + startHour) % films.Count;
+                        var film = films[filmIndex];
+                        var minute = random.Next(0, 4) * 15;
+                        var prezzo = s.Tipologia switch
+                        {
+                            "ISENSE" => 12.90m,
+                            "XL" => 11.90m,
+                            "3D" => 10.90m,
+                            _ => 8.90m
+                        };
+
                         db.Proiezioni.Add(new Proiezione
                         {
                             CinemaId = s.CinemaId,
                             SalaId = s.Id,
                             FilmId = film.Id,
                             Data = date,
-                            Ora = new DateTime(date.Year, date.Month, date.Day, startHour, random.Next(0, 2) * 30, 0),
-                            PrezzoBase = s.Tipologia == "ISENSE" ? 12.90m : s.Tipologia == "XL" ? 11.90m : s.Tipologia == "3D" ? 10.90m : 8.90m
+                            Ora = new DateTime(date.Year, date.Month, date.Day, startHour, minute, 0),
+                            PrezzoBase = prezzo
                         });
                     }
                 }
@@ -446,6 +532,7 @@ using (var scope = app.Services.CreateScope())
         await db.SaveChangesAsync();
 
         logger.LogInformation("Database migrations applied successfully.");
+        } // end if (runSeeder)
     }
     catch (Exception ex)
     {
@@ -477,32 +564,6 @@ app.MapGet("/orders/mine", async (ClaimsPrincipal user, FilmDbContext db) =>
     if (!int.TryParse(userIdVal, out var userId))
         return Results.Unauthorized();
 
-    var bookings = await db.Prenotazioni
-        .AsNoTracking()
-        .Include(p => p.Proiezione).ThenInclude(pr => pr.Film)
-        .Include(p => p.Proiezione).ThenInclude(pr => pr.Cinema)
-        .Where(p => p.UtenteId == userId && (p.Stato == "Confermata" || p.Stato == "Annullata"))
-        .OrderByDescending(p => p.DataPrenotazione)
-        .ToListAsync();
-
-    var bookingOrders = bookings.Select(p => new
-    {
-        id = $"B-{p.Id}",
-        tipo = "Biglietti",
-        data = p.DataPrenotazione,
-        stato = p.Stato,
-        totale = p.TotalePrezzo,
-        sconto = 0m,
-        importoGiftCard = 0m,
-        righe = new[] { new
-        {
-            descrizione = $"{p.Proiezione?.Film?.Titolo ?? "Film"} - {p.Proiezione?.Cinema?.Nome ?? "Cinema"}",
-            dettaglio = $"{p.Proiezione?.Data:yyyy-MM-dd} {p.Proiezione?.Ora:HH:mm} | {p.PostiSelezionati}",
-            prezzo = p.TotalePrezzo,
-            quantita = 1
-        }}.ToList()
-    }).ToList();
-
     var cartOrders = await db.Carts
         .AsNoTracking()
         .Include(c => c.CartItems)
@@ -514,7 +575,7 @@ app.MapGet("/orders/mine", async (ClaimsPrincipal user, FilmDbContext db) =>
     {
         id = $"C-{c.Id}",
         tipo = "Ordine shop",
-        data = c.CreatedAtUtc,
+        data = DateTime.SpecifyKind(c.CreatedAtUtc, DateTimeKind.Utc),
         stato = "Completato",
         totale = c.Totale,
         sconto = c.ScontoCoupon,
@@ -555,9 +616,7 @@ app.MapGet("/orders/mine", async (ClaimsPrincipal user, FilmDbContext db) =>
         return $"Prodotto #{itemId}";
     }
 
-    var all = bookingOrders.Concat(orders).OrderByDescending(o => o.data).ToList();
-
-    return Results.Ok(all);
+    return Results.Ok(orders);
 }).RequireAuthorization();
 
 app.MapGroup("/registi").MapRegisti();
@@ -578,6 +637,7 @@ app.MapGroup("/cart").MapCart();
 app.MapGroup("/shop").MapShop();
 app.MapGroup("/coupons").MapCoupons();
 app.MapGroup("/giftcards").MapGiftCards();
+app.MapGroup("/ritiri").MapRitiri();
 
 app.Run();
 

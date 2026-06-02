@@ -52,6 +52,15 @@ public static class CartEndpoints
                     .AnyAsync(l => l.ProiezioneId == req.ItemId && l.UtenteId == userId && l.ExpiresAtUtc > DateTime.UtcNow);
                 if (!existingLock)
                     return Results.BadRequest(new { error = "Nessun lock attivo per i posti selezionati. Seleziona i posti prima di aggiungere al carrello." });
+
+                var show = await db.Proiezioni
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == req.ItemId);
+                if (show is null)
+                    return Results.BadRequest(new { error = "Proiezione non trovata" });
+                var showDateTime = show.Data.Date + show.Ora.TimeOfDay;
+                if (showDateTime <= DateTime.UtcNow)
+                    return Results.BadRequest(new { error = "Lo spettacolo e' gia' iniziato o terminato." });
             }
 
             if (req.ItemType == "Merchandise" && req.VariantId.HasValue)

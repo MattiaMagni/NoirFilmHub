@@ -1,4 +1,4 @@
-# Tutorial: Nuovo Sistema di Autenticazione CineBase (Iterazione 5)
+## Tutorial: Nuovo Sistema di Autenticazione CineBase (Iterazione 5)
 
 **Autore:** AI Assistant  
 **Data:** 10 Maggio 2026  

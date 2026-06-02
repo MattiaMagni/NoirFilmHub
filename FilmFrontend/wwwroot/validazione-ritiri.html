@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noir Film Hub - Validazione ritiri</title>
+  <link rel="stylesheet" href="/css/styles.css?v=20260513-4">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="/js/api-config.js" defer></script>
+  <script src="/js/api-client.js" defer></script>
+  <script src="/js/auth-service.js" defer></script>
+  <script src="/js/auth-guard.js" defer></script>
+  <script src="/js/theme.js?v=20260409-1" defer></script>
+  <script src="/js/template-loader.js" defer></script>
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/validazione-ritiri.js?v=20260531-1" defer></script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+
+  <main class="page-shell ops-shell">
+    <section class="ops-top-hero">
+      <div>
+        <p class="eyebrow">Ritiro articoli</p>
+        <h1 class="ops-title">Validazione ritiri</h1>
+        <p class="ops-subtitle">Verifica e conferma il ritiro di articoli merchandising e food inserendo il codice o scansionando il QR.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="search-panel">
+      <div id="ritiro-status" class="status info">Inserisci un codice di ritiro o scansiona il QR.</div>
+      <div class="form-grid">
+        <div>
+          <label for="ritiro-code">Codice ritiro</label>
+          <input id="ritiro-code" type="text" placeholder="NFH-RT-XXXXXXXX">
+        </div>
+      </div>
+      <div class="actions" style="margin-bottom:1rem">
+        <button id="ritiro-lookup" class="secondary" type="button">Cerca</button>
+        <button id="ritiro-scan-toggle" class="secondary" type="button">Scansiona QR</button>
+      </div>
+      <div id="qr-scanner" style="max-width:400px;margin-bottom:1rem"></div>
+      <div id="ritiro-details" class="panel" style="display:none">
+        <p class="subtle">Nessun ordine caricato.</p>
+      </div>
+      <div id="ritiro-actions" class="actions" style="display:none">
+        <button id="ritiro-confirm" class="primary" type="button">Conferma ritiro</button>
+      </div>
+      <div id="ritiro-summary" class="panel" style="display:none">
+        <p class="subtle">Riepilogo consegna.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.AuthGuard || !window.AuthGuard.requireRole(["admin", "power_user"], window.location.pathname + window.location.search)) {
+        return;
+      }
+      await window.bootstrapLayout();
+      await window.initValidazioneRitiriPage();
+    });
+  </script>
+</body>
+</html>

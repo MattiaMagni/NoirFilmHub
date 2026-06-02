@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noir Film Hub - Validazione biglietti</title>
   <link rel="stylesheet" href="/css/styles.css?v=20260513-4">
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="/js/api-config.js" defer></script>
   <script src="/js/api-client.js" defer></script>
   <script src="/js/auth-service.js" defer></script>
@@ -37,7 +38,9 @@
       <div class="actions">
         <button id="ticket-lookup" class="secondary" type="button">Cerca biglietto</button>
         <button id="ticket-validate" class="primary" type="button">Conferma validazione</button>
+        <button id="ticket-scan-toggle" class="secondary" type="button">Scansiona QR</button>
       </div>
+      <div id="qr-scanner" style="max-width:400px;margin-bottom:1rem"></div>
       <div id="ticket-details" class="panel">
         <p class="subtle">Nessun biglietto caricato.</p>
       </div>

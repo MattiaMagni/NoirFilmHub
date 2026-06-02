@@ -33,6 +33,9 @@
     <Compile Remove="FilmFrontend\**\*.cs" />
     <Content Remove="FilmFrontend\**\*" />
     <None Remove="FilmFrontend\**\*" />
+    <Compile Remove="FilmApiSeeder\**\*.cs" />
+    <Content Remove="FilmApiSeeder\**\*" />
+    <None Remove="FilmApiSeeder\**\*" />
   </ItemGroup>
 
 </Project>

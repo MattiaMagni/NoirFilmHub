@@ -1,0 +1,13 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY FilmFrontend/FilmFrontend.csproj ./FilmFrontend/
+RUN dotnet restore FilmFrontend/FilmFrontend.csproj
+COPY FilmFrontend/ ./FilmFrontend/
+RUN dotnet publish FilmFrontend/FilmFrontend.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+COPY --from=build /app .
+ENV ASPNETCORE_URLS=http://+:5001
+EXPOSE 5001
+ENTRYPOINT ["dotnet", "FilmFrontend.dll"]

@@ -1,0 +1,49 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.DotSettings
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs and plans
+docs/
+PLAN.md
+*.md
+
+# Tests
+tests/
+
+# Local env (use .env.docker instead)
+.env
+.env.local
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Node (not used, but exclude anyway)
+node_modules/
+
+# Seed data files
+seed_*.json
+
+# Scripts
+scripts/
+
+# Misc
+.opencode/
+.sln
+*.sln
+
+# SDK version pin (Docker image has its own SDK version)
+global.json

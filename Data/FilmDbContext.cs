@@ -33,6 +33,7 @@ public class FilmDbContext : DbContext
     public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
     public DbSet<InventoryReservation> InventoryReservations => Set<InventoryReservation>();
     public DbSet<NotificationSubscription> NotificationSubscriptions => Set<NotificationSubscription>();
+    public DbSet<RitiroOrdine> RitiriOrdine => Set<RitiroOrdine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -338,6 +339,22 @@ public class FilmDbContext : DbContext
             .HasOne(p => p.Cart)
             .WithMany(c => c.Prenotazioni)
             .HasForeignKey(p => p.CartId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<RitiroOrdine>()
+            .HasIndex(r => r.CodiceRitiro)
+            .IsUnique();
+
+        modelBuilder.Entity<RitiroOrdine>()
+            .HasOne(r => r.Cart)
+            .WithMany()
+            .HasForeignKey(r => r.CartId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RitiroOrdine>()
+            .HasOne(r => r.RitiratoDaUtente)
+            .WithMany()
+            .HasForeignKey(r => r.RitiratoDaUtenteId)
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Categoria>().HasData(

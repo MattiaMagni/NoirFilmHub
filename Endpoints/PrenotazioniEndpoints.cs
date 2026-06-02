@@ -28,6 +28,8 @@ public static class PrenotazioniEndpoints
 
             var prenotazioni = await QueryPrenotazioni(db)
                 .Where(p => p.UtenteId == userId)
+                .OrderByDescending(p => p.Data)
+                .ThenByDescending(p => p.Ora)
                 .ToListAsync();
             return Results.Ok(prenotazioni);
         }).RequireAuthorization();
@@ -80,6 +82,12 @@ public static class PrenotazioniEndpoints
             if (proiezione is null)
             {
                 return Results.BadRequest(new { error = "Proiezione non trovata" });
+            }
+
+            var showDateTime = proiezione.Data.Date + proiezione.Ora.TimeOfDay;
+            if (showDateTime <= DateTime.UtcNow)
+            {
+                return Results.BadRequest(new { error = "Lo spettacolo e' gia' iniziato o terminato." });
             }
 
             var postiGiaPrenotati = await db.Prenotazioni

@@ -6,6 +6,8 @@
   const detailsEl = document.getElementById("ticket-details");
 
   let currentTicket = null;
+  let scanner = null;
+  let scanning = false;
 
   function setStatus(message, kind) {
     statusEl.className = `status ${kind}`;
@@ -15,6 +17,18 @@
   function getCodeFromUrl() {
     const params = new URLSearchParams(window.location.search);
     return (params.get("codice") || "").trim();
+  }
+
+  function extractCodeFromQrText(text) {
+    if (!text) return "";
+    try {
+      const url = new URL(text);
+      const codeParam = url.searchParams.get("codice");
+      if (codeParam) return codeParam;
+      const segments = url.pathname.split("/").filter(Boolean);
+      if (segments.length > 0) return segments[segments.length - 1];
+    } catch {}
+    return text.trim();
   }
 
   function renderTicketDetails(ticket) {
@@ -88,8 +102,71 @@
       codeInput.value = fromUrl;
     }
 
+    const scanToggleBtn = document.getElementById("ticket-scan-toggle");
+    const scannerDiv = document.getElementById("qr-scanner");
+
     lookupBtn.addEventListener("click", lookupTicket);
     validateBtn.addEventListener("click", validateTicket);
+
+    function startScanner() {
+      if (scanning) return;
+      scannerDiv.innerHTML = "";
+      scanning = true;
+      scanToggleBtn.textContent = "Ferma scansione";
+
+      scanner = new Html5Qrcode("qr-scanner");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          const code = extractCodeFromQrText(decodedText);
+          scanner.stop().then(() => {
+            scanning = false;
+            scanToggleBtn.textContent = "Scansiona QR";
+            scannerDiv.innerHTML = "";
+            scanner = null;
+            if (code) {
+              codeInput.value = code;
+              lookupTicket();
+            }
+          }).catch(() => {
+            scanning = false;
+            scanToggleBtn.textContent = "Scansiona QR";
+            scannerDiv.innerHTML = "";
+            scanner = null;
+          });
+        },
+        () => {}
+      ).catch(err => {
+        setStatus("Errore fotocamera: " + (err.message || err), "error");
+        scanning = false;
+        scanToggleBtn.textContent = "Scansiona QR";
+        scannerDiv.innerHTML = "";
+        scanner = null;
+      });
+    }
+
+    function stopScanner() {
+      if (scanner) {
+        scanner.stop().then(() => {
+          scanning = false;
+          scanToggleBtn.textContent = "Scansiona QR";
+          scannerDiv.innerHTML = "";
+          scanner = null;
+        }).catch(() => {
+          scanning = false;
+          scanToggleBtn.textContent = "Scansiona QR";
+          scannerDiv.innerHTML = "";
+          scanner = null;
+        });
+      }
+    }
+
+    if (scanToggleBtn) {
+      scanToggleBtn.addEventListener("click", () => {
+        if (scanning) { stopScanner(); } else { startScanner(); }
+      });
+    }
 
     if (fromUrl) {
       await lookupTicket();

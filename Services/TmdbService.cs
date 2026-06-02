@@ -10,16 +10,18 @@ namespace FilmAPI.Services;
 public class TmdbService
 {
     private readonly FilmDbContext _db;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<TmdbService> _logger;
     private readonly string _token;
     private readonly string _baseUrl;
     private readonly string _language;
     private readonly string _fallbackLanguage;
 
-    public TmdbService(FilmDbContext db, IHttpClientFactory httpClientFactory)
+    public TmdbService(FilmDbContext db, HttpClient httpClient, ILogger<TmdbService> logger)
     {
         _db = db;
-        _httpClientFactory = httpClientFactory;
+        _httpClient = httpClient;
+        _logger = logger;
         _token = Environment.GetEnvironmentVariable("TMDB_API_READ_TOKEN") ?? string.Empty;
         _baseUrl = Environment.GetEnvironmentVariable("TMDB_BASE_URL") ?? "https://api.themoviedb.org/3";
         _language = Environment.GetEnvironmentVariable("TMDB_LANGUAGE") ?? "it-IT";
@@ -32,6 +34,7 @@ public class TmdbService
     {
         if (!IsConfigured())
         {
+            _logger.LogWarning("GetLatestReleasesAsync chiamato ma TMDB non configurato");
             return [];
         }
 
@@ -46,11 +49,21 @@ public class TmdbService
         var url =
             $"{_baseUrl}/discover/movie?include_adult=false&include_video=false&language={Uri.EscapeDataString(_language)}&sort_by=primary_release_date.desc&page={safePage}&region={Uri.EscapeDataString(region)}&primary_release_date.lte={todayIso}&primary_release_date.gte={oneYearAgoIso}";
 
+        _logger.LogInformation("GetLatestReleasesAsync — URL: {Url}", url);
         var doc = await GetJsonAsync(url);
-        if (doc is null || !doc.RootElement.TryGetProperty("results", out var results) || results.ValueKind != JsonValueKind.Array)
+        if (doc is null)
         {
+            _logger.LogWarning("GetLatestReleasesAsync — GetJsonAsync ha ritornato null per l'URL: {Url}", url);
             return [];
         }
+
+        if (!doc.RootElement.TryGetProperty("results", out var results) || results.ValueKind != JsonValueKind.Array)
+        {
+            _logger.LogWarning("GetLatestReleasesAsync — Risposta TMDB senza 'results' array. Keys: {Keys}", string.Join(",", doc.RootElement.EnumerateObject().Select(p => p.Name)));
+            return [];
+        }
+
+        _logger.LogInformation("GetLatestReleasesAsync — Ricevuti {Count} risultati da TMDB", results.GetArrayLength());
 
         var existingTmdbIds = await _db.Films
             .AsNoTracking()
@@ -242,37 +255,45 @@ public class TmdbService
     {
         if (!IsConfigured())
         {
+            _logger.LogWarning("SyncFilmAsync({FilmId}) fallito: TMDB non configurato (token vuoto)", filmId);
             return (false, "TMDB non configurato: manca TMDB_API_READ_TOKEN");
         }
 
         var film = await _db.Films.FirstOrDefaultAsync(f => f.Id == filmId);
         if (film is null)
         {
-            return (false, "Film non trovato");
+            _logger.LogWarning("SyncFilmAsync({FilmId}) fallito: film non trovato nel DB", filmId);
+            return (false, $"Film con ID {filmId} non trovato");
         }
+
+        _logger.LogInformation("SyncFilmAsync({FilmId}) — Film: {Titolo}, TmdbMovieId: {TmdbId}", filmId, film.Titolo, film.TmdbMovieId);
 
         var year = (film.DataUscita ?? film.DataProduzione).Year;
         var movieId = film.TmdbMovieId ?? await SearchMovieIdAsync(film.Titolo, year);
         if (!movieId.HasValue)
         {
+            _logger.LogWarning("SyncFilmAsync({FilmId}) — Nessun match TMDB per '{Titolo}' (anno: {Year})", filmId, film.Titolo, year);
             film.TmdbSyncStato = "NotFound";
             film.UltimaSyncTmdbUtc = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            return (false, "Nessun match TMDB trovato");
+            return (false, $"Nessun match TMDB trovato per '{film.Titolo}'");
         }
 
+        _logger.LogInformation("SyncFilmAsync({FilmId}) — TmdbMovieId trovato: {TmdbId}, recupero dettagli...", filmId, movieId.Value);
         var details = await GetMovieDetailsAsync(movieId.Value, _language) ?? await GetMovieDetailsAsync(movieId.Value, _fallbackLanguage);
         if (details is null)
         {
+            _logger.LogError("SyncFilmAsync({FilmId}) — Dettagli TMDB non disponibili per movieId {TmdbId} (simple e fallback fallite)", filmId, movieId.Value);
             film.TmdbSyncStato = "Failed";
             film.UltimaSyncTmdbUtc = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            return (false, "Dettagli TMDB non disponibili");
+            return (false, $"Dettagli TMDB non disponibili per movie ID {movieId.Value}");
         }
 
         ApplyDetails(film, details, movieId.Value);
         await UpdateDirectorAsync(film, details);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("SyncFilmAsync({FilmId}) — Completata con successo (TmdbMovieId: {TmdbId})", filmId, movieId.Value);
         return (true, "Sync TMDB completata");
     }
 
@@ -334,20 +355,24 @@ public class TmdbService
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var client = _httpClientFactory.CreateClient();
-            using var response = await client.SendAsync(request);
+            using var response = await _httpClient.SendAsync(request);
+
             if (!response.IsSuccessStatusCode)
             {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogError("TMDB API GET {Url} → {StatusCode} — Body: {Body}",
+                    url, (int)response.StatusCode,
+                    body.Length > 500 ? body[..500] : body);
                 return null;
             }
 
-            var stream = await response.Content.ReadAsStreamAsync();
-            return await JsonDocument.ParseAsync(stream);
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonDocument.Parse(json);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Eccezione in GetJsonAsync({Url})", url);
             return null;
         }
     }

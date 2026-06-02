@@ -26,7 +26,7 @@ public class TicketPdfService
         }
 
         var barcodeBytes = BuildPngBarcode(booking.CodiceAcquisto, BarcodeFormat.CODE_128, 720, 180, 4);
-        var qrUrl = $"{validateBaseUrl.TrimEnd('/')}/tickets/validate/{Uri.EscapeDataString(booking.CodiceAcquisto)}";
+        var qrUrl = $"{validateBaseUrl.TrimEnd('/')}/validazione-biglietti.html?codice={Uri.EscapeDataString(booking.CodiceAcquisto)}";
         var qrBytes = BuildPngBarcode(qrUrl, BarcodeFormat.QR_CODE, 320, 320, 1);
         var eventDate = booking.Proiezione.Data.Date.Add(booking.Proiezione.Ora.TimeOfDay);
         var salaNome = booking.Proiezione.Sala?.Nome ?? $"SALA {booking.Proiezione.SalaId}";
@@ -78,7 +78,7 @@ public class TicketPdfService
             .ToList();
     }
 
-    private static byte[] BuildPngBarcode(string content, BarcodeFormat format, int width, int height, int margin)
+    internal static byte[] BuildPngBarcode(string content, BarcodeFormat format, int width, int height, int margin)
     {
         var writer = new BarcodeWriterPixelData
         {

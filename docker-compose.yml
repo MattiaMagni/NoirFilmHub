@@ -4,7 +4,7 @@ services:
     image: mariadb:10.11
     container_name: mariadb-dev
     env_file:
-      - .env
+      - .env.docker
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
@@ -13,19 +13,129 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - noirnet
 
-  stripe-listener:
-    image: stripe/stripe-cli:latest
-    container_name: stripe-listener
-    profiles: ["stripe"]
+  filmapiseeder:
+    build:
+      context: .
+      dockerfile: Dockerfile.seeder
+    container_name: filmapiseeder
     env_file:
-      - .env
-    command: listen --api-key ${STRIPE_SECRET_KEY} --forward-to http://host.docker.internal:5000/pagamenti/stripe/webhook
-    restart: unless-stopped
+      - .env.docker
+    environment:
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL}
+      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD}
+      - TMDB_API_READ_TOKEN=${TMDB_API_READ_TOKEN}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - noirnet
+    profiles:
+      - seed
+
+  filmapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: filmapi
+    env_file:
+      - .env.docker
+    environment:
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PROVIDER=${DB_PROVIDER}
+      - DB_SERVER_VERSION=${DB_SERVER_VERSION}
+      - DB_USE_AUTODETECT=${DB_USE_AUTODETECT}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ISSUER=${JWT_ISSUER}
+      - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_ACCESS_TOKEN_EXPIRY_MINUTES=${JWT_ACCESS_TOKEN_EXPIRY_MINUTES}
+      - JWT_REFRESH_TOKEN_EXPIRY_DAYS=${JWT_REFRESH_TOKEN_EXPIRY_DAYS}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - TMDB_API_READ_TOKEN=${TMDB_API_READ_TOKEN}
+      - TMDB_BASE_URL=${TMDB_BASE_URL}
+      - TMDB_LANGUAGE=${TMDB_LANGUAGE}
+      - TMDB_FALLBACK_LANGUAGE=${TMDB_FALLBACK_LANGUAGE}
+      - TMDB_REGION=${TMDB_REGION}
+      - TMDB_SYNC_ENABLED=${TMDB_SYNC_ENABLED}
+      - TMDB_SYNC_HOUR=${TMDB_SYNC_HOUR}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID}
+      - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET}
+      - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL}
+      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD}
+      - AUTH_ENABLED=${AUTH_ENABLED}
+      - RUN_SEEDER=false
+      - RESET_USERS=false
+      - RESEED_PROIEZIONI=false
+      - FEATURE_SOCIAL_LOGIN=${FEATURE_SOCIAL_LOGIN}
+      - FEATURE_SOCIAL_GOOGLE_ENABLED=${FEATURE_SOCIAL_GOOGLE_ENABLED}
+      - FEATURE_SOCIAL_MICROSOFT_ENABLED=${FEATURE_SOCIAL_MICROSOFT_ENABLED}
+      - FEATURE_AUDIT_LOGGING=${FEATURE_AUDIT_LOGGING}
+      - FEATURE_RATE_LIMITING=${FEATURE_RATE_LIMITING}
+      - FEATURE_IP_TRACKING=${FEATURE_IP_TRACKING}
+      - RATE_LIMIT_LOGIN_PER_MINUTE=${RATE_LIMIT_LOGIN_PER_MINUTE}
+      - RATE_LIMIT_REGISTER_PER_15MIN=${RATE_LIMIT_REGISTER_PER_15MIN}
+      - RATE_LIMIT_FORGOT_PASSWORD_PER_15MIN=${RATE_LIMIT_FORGOT_PASSWORD_PER_15MIN}
+      - ACCOUNT_TOKEN_PASSWORD_RESET_TTL_MINUTES=${ACCOUNT_TOKEN_PASSWORD_RESET_TTL_MINUTES}
+      - ACCOUNT_TOKEN_PASSWORD_SETUP_TTL_MINUTES=${ACCOUNT_TOKEN_PASSWORD_SETUP_TTL_MINUTES}
+      - ACCOUNT_TOKEN_ADMIN_INVITE_TTL_HOURS=${ACCOUNT_TOKEN_ADMIN_INVITE_TTL_HOURS}
+    ports:
+      - "5000:5000"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - noirnet
+
+  filmfrontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: filmfrontend
+    env_file:
+      - .env.docker
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:5001
+      - APP_BASE_URL=${APP_BASE_URL}
+    ports:
+      - "5001:5001"
+    depends_on:
+      - filmapi
+    networks:
+      - noirnet
+
+networks:
+  noirnet:
+    driver: bridge
 
 volumes:
   mariadb_data:

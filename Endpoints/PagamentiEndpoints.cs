@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Stripe;
 using Stripe.Checkout;
 using System.Text.Json.Serialization;
+using ZXing;
 
 namespace FilmAPI.Endpoints;
 
@@ -298,10 +299,23 @@ var booking = await db.Prenotazioni
 
 if (booking is null)
 {
- // Check if this is a cart checkout
-var cart = await db.Carts
+ // Check if this is a cart checkout — first try with user match
+ var cart = await db.Carts
     .Include(c => c.CartItems)
     .FirstOrDefaultAsync(c => c.StripeSessionId == session_id && c.UtenteId == userId && (c.Stato == "Checkout" || c.Stato == "Active" || c.Stato == "Converted"));
+
+ // Fallback: lookup without UtenteId filter (handles re-auth / session mismatch)
+ if (cart is null)
+ {
+    cart = await db.Carts
+        .Include(c => c.CartItems)
+        .FirstOrDefaultAsync(c => c.StripeSessionId == session_id && (c.Stato == "Checkout" || c.Stato == "Active" || c.Stato == "Converted"));
+    if (cart is not null)
+    {
+        logger.LogWarning("Esito: found cart {CartId} by StripeSessionId only, UtenteId mismatch (expected {ExpectedUserId}, actual {ActualUserId})",
+            cart.Id, userId, cart.UtenteId);
+    }
+ }
 
 logger.LogInformation("Esito cart checkout: session_id={SessionId}, userId={UserId}, cartFound={Found}, stripeSecret={HasSecret}",
     session_id, userId, cart != null, !string.IsNullOrWhiteSpace(stripeSecret));
@@ -316,7 +330,7 @@ if (cart != null && !string.IsNullOrWhiteSpace(stripeSecret))
             var stripeSession = await sessionService.GetAsync(session_id);
             if (stripeSession.PaymentStatus == "paid")
             {
-                await FinalizeCartOrderAsync(db, cart, userId, logger, emailSvc, pdfService, emailService);
+                await FinalizeCartOrderAsync(db, cart, cart.UtenteId ?? userId, logger, emailSvc, pdfService, emailService);
             }
         }
         return Results.Ok(new { stato = cart.Stato, cartId = cart.Id, items = cart.CartItems.Count });
@@ -336,7 +350,7 @@ var userCarts = await db.Carts
 logger.LogWarning("Cart checkout 404: no match for session_id={SessionId}. User {UserId} has {Count} carts: {@Carts}",
     session_id, userId, userCarts.Count, userCarts);
 
-return Results.NotFound();
+return Results.NotFound(new { error = "Ordine non trovato. Il pagamento potrebbe essere ancora in elaborazione — riprova tra qualche secondo." });
 }
 
 if (booking.Stato == "PendingStripe" && !string.IsNullOrWhiteSpace(stripeSecret))
@@ -491,7 +505,7 @@ stato = "PendingStripe"
 });
 }).RequireAuthorization();
 
-group.MapPost("/stripe/webhook", async (HttpRequest request, FilmDbContext db, TicketPdfService pdfService, TicketEmailService emailService, ILoggerFactory loggerFactory) =>
+group.MapPost("/stripe/webhook", async (HttpRequest request, FilmDbContext db, TicketPdfService pdfService, TicketEmailService ticketEmailService, ILoggerFactory loggerFactory, EmailService emailService) =>
 {
 var logger = loggerFactory.CreateLogger("PagamentiEndpoints");
 
@@ -531,6 +545,7 @@ if (session is null)
 return Results.BadRequest(new { error = "Sessione Stripe non valida" });
 }
 
+// 1) Check single booking (legacy flow with /pagamenti/checkout-session)
 var booking = await db.Prenotazioni
 .Include(p => p.Proiezione)
 .ThenInclude(pr => pr.Film)
@@ -538,33 +553,53 @@ var booking = await db.Prenotazioni
 .ThenInclude(pr => pr.Cinema)
 .FirstOrDefaultAsync(p => p.StripeSessionId == session.Id);
 
-if (booking is null)
+if (booking is not null)
 {
-return Results.NotFound();
+    if (booking.Stato == "Confermata")
+    {
+        return Results.Ok(new { received = true, idempotent = true });
+    }
+
+    if (booking.Stato != "PendingStripe")
+    {
+        return Results.Conflict(new { error = "Stato prenotazione non valido per conferma" });
+    }
+
+    if (session.PaymentStatus != "paid")
+    {
+        return Results.Ok(new { received = true, ignored = true });
+    }
+
+    var finalized = await FinalizeBookingAsync(db, booking, requireLocks: false, pdfService, ticketEmailService, logger);
+    if (!finalized)
+    {
+        booking.Stato = "Fallita";
+        await db.SaveChangesAsync();
+        return Results.Conflict(new { error = "Validazione posti fallita durante conferma webhook" });
+    }
+
+    return Results.Ok(new { received = true });
 }
 
-if (booking.Stato == "Confermata")
-{
-return Results.Ok(new { received = true, idempotent = true });
-}
+// 2) No booking — check cart checkout (/pagamenti/cart-checkout)
+var cart = await db.Carts
+    .Include(c => c.CartItems)
+    .FirstOrDefaultAsync(c => c.StripeSessionId == session.Id && c.Stato == "Checkout");
 
-if (booking.Stato != "PendingStripe")
+if (cart is null)
 {
-return Results.Conflict(new { error = "Stato prenotazione non valido per conferma" });
+    logger.LogWarning("Stripe webhook: nessuna prenotazione ne cart trovati per session_id={SessionId}", session.Id);
+    return Results.NotFound();
 }
 
 if (session.PaymentStatus != "paid")
 {
-return Results.Ok(new { received = true, ignored = true });
+    return Results.Ok(new { received = true, ignored = true, type = "cart", cartId = cart.Id });
 }
 
-var finalized = await FinalizeBookingAsync(db, booking, requireLocks: false, pdfService, emailService, logger);
-if (!finalized)
-{
-booking.Stato = "Fallita";
-await db.SaveChangesAsync();
-return Results.Conflict(new { error = "Validazione posti fallita durante conferma webhook" });
-}
+logger.LogInformation("Stripe webhook: finalizing cart {CartId} for session {SessionId}", cart.Id, session.Id);
+await FinalizeCartOrderAsync(db, cart, cart.UtenteId ?? 0, logger, emailService, pdfService, ticketEmailService);
+return Results.Ok(new { received = true, type = "cart", cartId = cart.Id });
 }
 
 return Results.Ok(new { received = true });
@@ -661,6 +696,46 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
         }
     }
 
+    // Generate pickup code for merchandise/food orders
+    RitiroOrdine? ritiroOrdine = null;
+    byte[]? qrBytes = null;
+    List<string>? articoliRitiro = null;
+    if (merchItems.Count > 0)
+    {
+        var codiceRitiro = "NFH-RT-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
+        var frontendBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001";
+        var qrUrl = $"{frontendBaseUrl.TrimEnd('/')}/validazione-ritiri.html?codice={Uri.EscapeDataString(codiceRitiro)}";
+        qrBytes = TicketPdfService.BuildPngBarcode(qrUrl, BarcodeFormat.QR_CODE, 320, 320, 1);
+
+        ritiroOrdine = new RitiroOrdine
+        {
+            CartId = cart.Id,
+            CodiceRitiro = codiceRitiro,
+            Stato = "In Attesa",
+            CreatoIl = now
+        };
+        db.RitiriOrdine.Add(ritiroOrdine);
+
+        articoliRitiro = merchItems.Select(ci =>
+        {
+            var nome = $"Prodotto #{ci.ItemId}";
+            if (!string.IsNullOrWhiteSpace(ci.DettaglioJson))
+            {
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(ci.DettaglioJson);
+                    if (doc.RootElement.TryGetProperty("nome", out var n) && n.ValueKind == System.Text.Json.JsonValueKind.String)
+                        nome = n.GetString() ?? nome;
+                    if (doc.RootElement.TryGetProperty("taglia", out var t) && t.ValueKind == System.Text.Json.JsonValueKind.String)
+                        nome += $" ({t.GetString()})";
+                    nome += $" x{ci.Quantita}";
+                }
+                catch { }
+            }
+            return nome;
+        }).ToList();
+    }
+
     // Track coupon usage if applied
     if (cart.CouponId.HasValue)
     {
@@ -753,6 +828,16 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
                     await emailService.SendGiftCardBalanceEmail(gcOwner.Email, gcUsed.Codice, gcUsed.SaldoResiduo);
             }
         }
+
+        // Send pickup email for merchandise/food
+        if (ritiroOrdine != null && qrBytes != null && articoliRitiro != null && articoliRitiro.Count > 0)
+        {
+            var merchOwner = await db.Utenti.FindAsync(userId);
+            if (merchOwner != null)
+            {
+                _ = emailService.SendMerchPickupEmail(merchOwner.Email, cart.Id, ritiroOrdine.CodiceRitiro, qrBytes, articoliRitiro);
+            }
+        }
     }
 }
 
@@ -777,6 +862,12 @@ var show = await db.Proiezioni
 if (show is null)
 {
 return (false, Results.BadRequest(new { error = "Show non trovato" }), null, null, null);
+}
+
+var showDateTime = show.Data.Date + show.Ora.TimeOfDay;
+if (showDateTime <= DateTime.UtcNow)
+{
+return (false, Results.BadRequest(new { error = "Lo spettacolo e' gia' iniziato o terminato." }), null, null, null);
 }
 
 var utente = await db.Utenti.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);

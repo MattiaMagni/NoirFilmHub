@@ -37,7 +37,7 @@ public class CartService
             // BUT: if checkout is recent (<30s) and has a StripeSessionId, keep it — payment is still in progress.
             if (cart.Stato == "Checkout")
             {
-                if (cart.StripeSessionId != null && cart.UpdatedAtUtc > now.AddSeconds(-30))
+                if (cart.StripeSessionId != null && cart.UpdatedAtUtc > now.AddMinutes(-15))
                 {
                     // Payment in progress, leave unchanged
                 }

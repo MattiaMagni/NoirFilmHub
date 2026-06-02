@@ -61,15 +61,25 @@
       prenotazioniBody.innerHTML = "<tr><td colspan='8' class='subtle'>Nessun biglietto acquistato.</td></tr>";
       return;
     }
-    prenotazioniBody.innerHTML = rows.map(p => `
-      <tr>
-        <td>#${p.id}</td><td>${p.titoloFilm || `Film #${p.filmId}`}</td><td>${p.nomeCinema || `Cinema #${p.cinemaId}`}</td>
-        <td>${formatDate(p.data)}</td><td>${formatTime(p.ora)}</td><td>${p.numeroPosti}</td>
-        <td><span class="tag ${p.stato === 'Confermata' ? 'success' : p.stato === 'Annullata' ? 'danger' : 'info'}">${p.stato}</span></td>
-        <td>
-          ${p.stato === "Confermata" ? `<button class="btn-small" data-action="download" data-code="${p.codiceAcquisto || ""}">PDF</button> <button class="btn-small danger" data-action="cancel" data-id="${p.id}">Annulla</button>` : "-"}
-        </td>
-      </tr>`).join("");
+    var now = new Date();
+    prenotazioniBody.innerHTML = rows.map(p => {
+      var dataDate = new Date(p.data);
+      var oraDate = new Date(p.ora);
+      var showDateTime = new Date(dataDate.getFullYear(), dataDate.getMonth(), dataDate.getDate(), oraDate.getHours(), oraDate.getMinutes());
+      var isExpired = showDateTime < now;
+      var displayStato = isExpired ? "Scaduto" : p.stato;
+      var statoClass = isExpired ? "disabled" : p.stato === "Confermata" ? "success" : p.stato === "Annullata" ? "danger" : "info";
+      var actions = (p.stato === "Confermata" && !isExpired)
+        ? `<button class="btn-small" data-action="download" data-code="${p.codiceAcquisto || ""}">PDF</button> <button class="btn-small danger" data-action="cancel" data-id="${p.id}">Annulla</button>`
+        : "-";
+      return `
+        <tr>
+          <td>#${p.id}</td><td>${p.titoloFilm || `Film #${p.filmId}`}</td><td>${p.nomeCinema || `Cinema #${p.cinemaId}`}</td>
+          <td>${formatDate(p.data)}</td><td>${formatTime(p.ora)}</td><td>${p.numeroPosti}</td>
+          <td><span class="tag ${statoClass}">${displayStato}</span></td>
+          <td>${actions}</td>
+        </tr>`;
+    }).join("");
   }
 
   function renderGiftCards(cards) {
@@ -84,6 +94,7 @@
         <div><strong>...${c.codice.slice(-4)}</strong></div>
         <div><span style="font-size:1.2rem;font-weight:700;color:var(--color-primary)">${c.saldoResiduo.toFixed(2)} EUR</span></div>
       </div>
+      <p class="subtle" style="margin-bottom:0.1rem">Acquistata il: ${c.creatoIl ? new Date(c.creatoIl).toLocaleDateString("it-IT") : "N/D"}</p>
       <p class="subtle">Scadenza: ${c.scadenza ? new Date(c.scadenza).toLocaleDateString("it-IT") : "Nessuna scadenza"}</p>
     </div>`).join("");
   }

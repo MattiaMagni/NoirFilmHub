@@ -1,0 +1,21 @@
+properties:
+  template:
+    containers:
+      - name: filmapi
+        image: noirfilmhubacr.azurecr.io/filmapi:latest
+        env:
+          - name: DB_HOST
+            value: localhost
+        resources:
+          cpu: 0.5
+          memory: 1Gi
+      - name: mariadb
+        image: mariadb:10.11
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            secretRef: mariadb-root-password
+          - name: MYSQL_DATABASE
+            value: film-api-db
+        resources:
+          cpu: 0.5
+          memory: 1Gi

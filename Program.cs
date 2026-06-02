@@ -80,7 +80,11 @@ builder.Services.AddCors(options =>
             {
                 if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri)) return false;
                 var host = uri.Host.ToLowerInvariant();
-                return host == "localhost" || host == "127.0.0.1";
+                return host == "localhost"
+                    || host == "127.0.0.1"
+                    || host.EndsWith(".noirfilmhub.it")
+                    || host == "noirfilmhub.it"
+                    || host.EndsWith(".azurecontainerapps.io");
             })
             .AllowAnyHeader()
             .AllowAnyMethod();

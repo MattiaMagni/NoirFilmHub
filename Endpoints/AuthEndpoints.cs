@@ -247,7 +247,8 @@ public static class AuthEndpoints
         group.MapGet("/external/{provider}", async (string provider, string? returnUrl, string? mode,
             SocialAuthService socialAuth, HttpContext httpContext) =>
         {
-            var apiBaseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+            var apiBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL")
+                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
             var (authUrl, error) = await socialAuth.InitiateAsync(provider, returnUrl, mode, apiBaseUrl);
             if (authUrl is null)
                 return Results.BadRequest(new { error });
@@ -258,7 +259,8 @@ public static class AuthEndpoints
         group.MapGet("/external/callback", async (string code, string state,
             SocialAuthService socialAuth, HttpContext httpContext) =>
         {
-            var apiBaseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+            var apiBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL")
+                ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
             var frontendBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL")
                 ?? "http://localhost:5001";
             var ip = httpContext.Connection.RemoteIpAddress?.ToString();

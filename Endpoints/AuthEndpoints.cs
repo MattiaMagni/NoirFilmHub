@@ -261,7 +261,8 @@ public static class AuthEndpoints
         {
             var apiBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL")
                 ?? $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-            var frontendBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL")
+            var frontendBaseUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL")
+                ?? Environment.GetEnvironmentVariable("APP_BASE_URL")
                 ?? "http://localhost:5001";
             var ip = httpContext.Connection.RemoteIpAddress?.ToString();
             var ua = httpContext.Request.Headers.UserAgent.ToString();

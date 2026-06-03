@@ -48,7 +48,7 @@ var now = DateTime.UtcNow;
 var vipSeats = FilmAPI.Services.SeatPricingUtils.GetVipSeats(show.Sala?.NumeroFile ?? 10, show.Sala?.PostiPerFila ?? 12, show.Sala?.MappaPostiJson);
 var total = FilmAPI.Services.SeatPricingUtils.CalculateTotal(show.PrezzoBase, requestedSeats, vipSeats);
 
-var appBaseUrl = (Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001").TrimEnd('/');
+var appBaseUrl = ((Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001")).TrimEnd('/');
 var seatsRawEncoded = Uri.EscapeDataString(string.Join(',', requestedSeats));
 var cancelUrl = $"{appBaseUrl}/pagamento.html?idShow={show.Id}&idFilm={show.FilmId}&idCinema={show.CinemaId}&posti={seatsRawEncoded}&cancelled=1";
 var successUrl = $"{appBaseUrl}/esito-pagamento.html?session_id={{CHECKOUT_SESSION_ID}}";
@@ -137,7 +137,7 @@ if (cart.Stato == "Checkout")
 }
 
 var now = DateTime.UtcNow;
-var appBaseUrl = (Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001").TrimEnd('/');
+var appBaseUrl = ((Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001")).TrimEnd('/');
 var userEmail = (await db.Utenti.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId))?.Email ?? "";
 
 // Validate ticket items
@@ -435,7 +435,7 @@ var now = DateTime.UtcNow;
 var vipSeats = FilmAPI.Services.SeatPricingUtils.GetVipSeats(show.Sala?.NumeroFile ?? 10, show.Sala?.PostiPerFila ?? 12, show.Sala?.MappaPostiJson);
 var total = FilmAPI.Services.SeatPricingUtils.CalculateTotal(show.PrezzoBase, requestedSeats, vipSeats);
 
-var appBaseUrl = (Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001").TrimEnd('/');
+var appBaseUrl = ((Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001")).TrimEnd('/');
 var seatsRawEncoded = Uri.EscapeDataString(string.Join(',', requestedSeats));
 var cancelUrl = $"{appBaseUrl}/pagamento.html?idShow={show.Id}&idFilm={show.FilmId}&idCinema={show.CinemaId}&posti={seatsRawEncoded}&cancelled=1";
 var successUrl = $"{appBaseUrl}/esito-pagamento.html?session_id={{CHECKOUT_SESSION_ID}}";
@@ -703,7 +703,7 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
     if (merchItems.Count > 0)
     {
         var codiceRitiro = "NFH-RT-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
-        var frontendBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001";
+        var frontendBaseUrl = (Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001");
         var qrUrl = $"{frontendBaseUrl.TrimEnd('/')}/validazione-ritiri.html?codice={Uri.EscapeDataString(codiceRitiro)}";
         qrBytes = TicketPdfService.BuildPngBarcode(qrUrl, BarcodeFormat.QR_CODE, 320, 320, 1);
 
@@ -794,7 +794,7 @@ private static async Task FinalizeCartOrderAsync(FilmDbContext db, Cart cart, in
         // Send ticket PDF emails for each booking
         if (pdfService != null && ticketEmailService != null)
         {
-            var appBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001";
+            var appBaseUrl = (Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001");
             foreach (var booking in allBookings)
             {
                 try
@@ -979,7 +979,7 @@ await db.Entry(booking.Proiezione).Reference(p => p.Film).LoadAsync();
 await db.Entry(booking.Proiezione).Reference(p => p.Cinema).LoadAsync();
 await db.Entry(booking.Proiezione).Reference(p => p.Sala!).LoadAsync();
 
-var validateBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001";
+var validateBaseUrl = (Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001");
 var pdfBytes = pdfService.GenerateOrderPdf(booking, validateBaseUrl);
 var emailSent = await emailService.SendTicketEmailAsync(booking.Utente.Email, booking.CodiceAcquisto, pdfBytes);
 if (!emailSent)

@@ -226,7 +226,7 @@ public class EmailService
 
     private string BuildLink(string page, string token, string email)
     {
-        var baseUrl = _configuration["APP_BASE_URL"] ?? "http://localhost:5001";
+        var baseUrl = _configuration["FRONTEND_BASE_URL"] ?? _configuration["APP_BASE_URL"] ?? "http://localhost:5001";
         return $"{baseUrl.TrimEnd('/')}/{page}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
     }
 

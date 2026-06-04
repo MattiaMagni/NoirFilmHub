@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Programmare con l'AI Agent</title>
+<style>
+  @page { size: 1920px 1080px; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #e6edf3; }
+  .slide { width: 1920px; height: 1080px; display: flex; flex-direction: column; justify-content: center; padding: 100px 120px; page-break-after: always; position: relative; overflow: hidden; }
+  .slide:last-child { page-break-after: avoid; }
+  .slide-1 { background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a0a1e 100%); }
+  .slide-2 { background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); }
+  .slide-3 { background: linear-gradient(135deg, #1a0a1e 0%, #0d1117 100%); }
+  .slide-4 { background: linear-gradient(135deg, #0d1117 0%, #1a1a0a 100%); }
+  .slide-5 { background: linear-gradient(135deg, #1a0a0a 0%, #0d1117 100%); }
+  .slide-6 { background: linear-gradient(135deg, #0d1117 0%, #162036 100%); }
+  h1 { font-size: 72px; font-weight: 800; margin-bottom: 30px; background: linear-gradient(90deg, #58a6ff, #bc8cff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  h2 { font-size: 52px; font-weight: 700; margin-bottom: 40px; color: #58a6ff; }
+  h3 { font-size: 36px; font-weight: 600; margin-bottom: 20px; color: #bc8cff; }
+  p, li { font-size: 30px; line-height: 1.7; color: #c9d1d9; }
+  ul { margin-left: 40px; }
+  li { margin-bottom: 12px; }
+  .subtitle { font-size: 34px; color: #8b949e; margin-top: 16px; }
+  .tag { display: inline-block; background: rgba(88, 166, 255, 0.15); color: #58a6ff; padding: 6px 18px; border-radius: 20px; font-size: 26px; font-weight: 600; margin-right: 12px; margin-bottom: 12px; }
+  .accent { color: #ffa657; }
+  .highlight { background: rgba(188, 140, 255, 0.12); padding: 3px 10px; border-radius: 6px; font-weight: 600; color: #bc8cff; }
+  .big-number { font-size: 120px; font-weight: 900; background: linear-gradient(135deg, #58a6ff, #bc8cff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .row { display: flex; gap: 40px; align-items: flex-start; }
+  .col { flex: 1; }
+  .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 40px; }
+  .card h3 { margin-bottom: 16px; }
+  .flow { display: flex; align-items: center; gap: 24px; font-size: 28px; }
+  .flow-step { background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.25); border-radius: 16px; padding: 20px 28px; text-align: center; min-width: 160px; }
+  .flow-arrow { color: #58a6ff; font-size: 36px; }
+  .footer { position: absolute; bottom: 40px; left: 120px; font-size: 22px; color: #484f58; }
+  .page-num { position: absolute; bottom: 40px; right: 120px; font-size: 22px; color: #484f58; }
+</style>
+</head>
+<body>
+
+<!-- Slide 1 -->
+<div class="slide slide-1">
+  <div style="margin-bottom:60px">
+    <h1 style="font-size:80px">Programmare con l'AI Agent</h1>
+    <div class="subtitle">Come l'intelligenza artificiale sta cambiando <br>lo sviluppo software</div>
+  </div>
+  <div style="margin-top:40px">
+    <span class="tag">Dalla scrittura manuale del codice</span>
+    <span class="tag">All'assistente intelligente</span>
+  </div>
+  <div class="footer">NoirFilmHub — Workshop AI Agent Development</div>
+  <div class="page-num">1 / 6</div>
+</div>
+
+<!-- Slide 2 -->
+<div class="slide slide-2">
+  <h2>Cos'è un AI Agent per programmare</h2>
+  <div class="row">
+    <div class="col card">
+      <h3>Non è un code-completion</h3>
+      <ul>
+        <li>Non suggerisce solo la prossima riga</li>
+        <li>Lavora a <span class="highlight">livello di progetto</span>, non di singolo file</li>
+        <li>Legge decine di file in parallelo per capire l'architettura</li>
+      </ul>
+    </div>
+    <div class="col card">
+      <h3>È un assistente completo</h3>
+      <ul>
+        <li><span class="accent">Esplora</span> la codebase automaticamente</li>
+        <li><span class="accent">Pianifica</span> le modifiche necessarie</li>
+        <li><span class="accent">Implementa</span> scrivendo codice</li>
+        <li><span class="accent">Esegue build</span> e fixa gli errori</li>
+        <li><span class="accent">Fai il deploy</span> su cloud</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:50px">
+    <p style="color:#8b949e">Strumenti: <span class="highlight">OpenCode</span> &nbsp;·&nbsp; Claude Code &nbsp;·&nbsp; GitHub Copilot X &nbsp;·&nbsp; Cursor &nbsp;·&nbsp; Windsurf</p>
+  </div>
+  <div class="footer">NoirFilmHub — Workshop AI Agent Development</div>
+  <div class="page-num">2 / 6</div>
+</div>
+
+<!-- Slide 3 -->
+<div class="slide slide-3">
+  <h2>Come funziona il flusso di lavoro</h2>
+  <div style="display:flex; align-items:center; gap:20px; margin:50px 0; flex-wrap:wrap; justify-content:center">
+    <div class="flow-step">1. Sviluppatore<br><span style="font-size:22px;color:#8b949e">descrive il task</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">2. Agente<br><span style="font-size:22px;color:#8b949e">esplora la codebase</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">3. Agente<br><span style="font-size:22px;color:#8b949e">propone un piano</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">4. Sviluppatore<br><span style="font-size:22px;color:#8b949e">approva o corregge</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">5. Agente<br><span style="font-size:22px;color:#8b949e">implementa e builda</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">6. Sviluppatore<br><span style="font-size:22px;color:#8b949e">verifica e testa</span></div>
+  </div>
+  <div class="card" style="margin-top:30px">
+    <h3>Esempio concreto</h3>
+    <p>Richiesta: <span class="highlight">"Aggiungi email per ritiro merchandising con QR code"</span></p>
+    <ul>
+      <li>Agente ha letto <span class="accent">16 file</span> in parallelo per capire modelli, endpoint e servizi esistenti</li>
+      <li>Prodotto un piano con <span class="accent">10 file</span> da creare/modificare (modelli, endpoint, email, frontend)</li>
+      <li>Implementato tutto in <span class="accent">20 minuti</span> — nuovo modello DB, API, email HTML con QR inline, pagina scanner QR</li>
+    </ul>
+  </div>
+  <div class="footer">NoirFilmHub — Workshop AI Agent Development</div>
+  <div class="page-num">3 / 6</div>
+</div>
+
+<!-- Slide 4 -->
+<div class="slide slide-4">
+  <h2>Impatto sulla produttività</h2>
+  <div class="row">
+    <div class="col" style="text-align:center">
+      <div class="big-number">113</div>
+      <p style="font-size:28px">file backend .cs</p>
+      <div class="big-number" style="margin-top:30px">80+</div>
+      <p style="font-size:28px">endpoint API</p>
+      <div class="big-number" style="margin-top:30px">6</div>
+      <p style="font-size:28px">iterazioni di sviluppo</p>
+    </div>
+    <div class="col card">
+      <h3>Sviluppo tradizionale vs AI Agent</h3>
+      <ul>
+        <li><span class="accent">Esplorare codebase</span>: ore/giorni → minuti</li>
+        <li><span class="accent">Trovare root cause di un bug</span>: ore di Stack Overflow → 3 messaggi</li>
+        <li><span class="accent">Deploy su Azure</span>: giorni di documentazione → agente esegue i comandi e fixa gli errori in tempo reale</li>
+        <li><span class="accent">Refactoring cross-file</span>: grep manuale rischioso → agente trova e modifica tutte le occorrenze</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:40px; text-align:center">
+    <p style="font-size:34px">Progetto <span class="highlight">NoirFilmHub</span>: sviluppato da <span class="accent">uno studente + AI agent</span> in 3-4 mesi part-time</p>
+  </div>
+  <div class="footer">NoirFilmHub — Workshop AI Agent Development</div>
+  <div class="page-num">4 / 6</div>
+</div>
+
+<!-- Slide 5 -->
+<div class="slide slide-5">
+  <h2>Limiti e rischi</h2>
+  <div class="row">
+    <div class="col card" style="border-color:rgba(255,100,100,0.2)">
+      <h3 style="color:#ff6b6b">Cosa può andare storto</h3>
+      <ul>
+        <li><span class="highlight">Allucinazioni</span>: inventa metodi o API che non esistono</li>
+        <li><span class="highlight">Overconfidence</span>: propone soluzioni complesse quando ne basta una semplice</li>
+        <li><span class="highlight">Sensibilità al prompt</span>: richieste ambigue → risultati scadenti</li>
+        <li><span class="highlight">Costo computazionale</span>: migliaia di token per sessione</li>
+      </ul>
+    </div>
+    <div class="col card" style="border-color:rgba(255,200,100,0.2)">
+      <h3 style="color:#ffa657">Cosa NON sa fare</h3>
+      <ul>
+        <li>Prendere <span class="highlight">decisioni architetturali</span> autonome</li>
+        <li>Capire il <span class="highlight">dominio di business</span> (es. regole di rimborso)</li>
+        <li><span class="highlight">Testare visivamente</span> l'interfaccia utente</li>
+        <li>Dire <span class="highlight">"questa feature non va fatta"</span></li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:60px; text-align:center">
+    <p style="font-size:36px">Il codice generato <span class="accent">va sempre rivisto</span> — <br>come un <span class="highlight">junior developer</span> molto veloce</p>
+  </div>
+  <div class="footer">NoirFilmHub — Workshop AI Agent Development</div>
+  <div class="page-num">5 / 6</div>
+</div>
+
+<!-- Slide 6 -->
+<div class="slide slide-6">
+  <h2>Competenze per il futuro</h2>
+  <div class="row">
+    <div class="col card">
+      <h3>Cosa resta fondamentale</h3>
+      <ul>
+        <li><span class="highlight">Saper programmare</span>: per capire, correggere, validare</li>
+        <li><span class="highlight">Architettura software</span>: l'agente propone, tu decidi</li>
+        <li><span class="highlight">Pensiero critico</span>: valutare se il codice generato è corretto e sicuro</li>
+      </ul>
+    </div>
+    <div class="col card">
+      <h3>Nuove skill da sviluppare</h3>
+      <ul>
+        <li><span class="accent">Prompt engineering</span>: descrivere task in modo preciso e strutturato</li>
+        <li><span class="accent">AI supervision</span>: saper valutare, testare e iterare con l'agente</li>
+        <li><span class="accent">Lavoro aumentato</span>: usare l'AI come moltiplicatore, non come sostituto</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top:80px; text-align:center; padding:50px; background:rgba(88,166,255,0.05); border-radius:24px; border:1px solid rgba(88,166,255,0.15)">
+    <p style="font-size:44px; font-weight:700; color:#e6edf3">
+      "L'AI Agent è un <span class="accent">acceleratore</span>, non un sostituto.<br>
+      <span style="font-size:34px;font-weight:400;color:#8b949e">Imparate a usarlo, non a dipenderne."</span>
+    </p>
+  </div>
+  <div class="footer">NoirFilmHub — Workshop AI Agent Development</div>
+  <div class="page-num">6 / 6</div>
+</div>
+
+</body>
+</html>

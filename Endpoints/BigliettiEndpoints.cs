@@ -113,7 +113,7 @@ public static class BigliettiEndpoints
                 return Results.Forbid();
             }
 
-            var validateBaseUrl = Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001";
+            var validateBaseUrl = (Environment.GetEnvironmentVariable("FRONTEND_BASE_URL") ?? Environment.GetEnvironmentVariable("APP_BASE_URL") ?? "http://localhost:5001");
             var pdfBytes = pdfService.GenerateOrderPdf(booking, validateBaseUrl);
             var fileName = $"ticket-{booking.CodiceAcquisto}.pdf";
             return Results.File(pdfBytes, "application/pdf", fileName);
